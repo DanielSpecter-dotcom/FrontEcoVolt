@@ -1,0 +1,355 @@
+<div class="dispositivos-container" (click)="closeAllMenus()">
+  <!-- 1. LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span>EcoVolt</span>
+      </div>
+      <div class="brand-subtitle">INTELIGENCIA ENERGÉTICA</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li>
+          <a [routerLink]="['/dashboard']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Dashboard
+          </a>
+        </li>
+        <li class="active">
+          <a [routerLink]="['/dispositivos']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            Dispositivos
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/consumo']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Consumo
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/rutinas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Rutinas
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/alertas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Alertas
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <a [routerLink]="['/perfil']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              Perfil
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/configuracion']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              Configuración
+            </a>
+          </li>
+          <li>
+            <a href="#" (click)="logout()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Salir
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <button class="optimize-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-leaf-icon">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 9.8A7 7 0 0 1 11 20z"/>
+          <path d="M9 22v-6"/>
+        </svg>
+        OPTIMIZAR ENERGÍA
+      </button>
+    </div>
+  </aside>
+
+  <!-- 2. MAIN CONTENT AREA -->
+  <main class="main-content">
+    <!-- Top Header / Bar -->
+    <header class="top-bar">
+      <div class="search-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input 
+          type="text" 
+          placeholder="Buscar dispositivos..." 
+          [(ngModel)]="searchTerm" 
+          class="search-input"
+          (click)="$event.stopPropagation()"
+        >
+      </div>
+
+      <div class="top-bar-actions">
+        <button class="icon-btn" aria-label="Notificaciones">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </button>
+        <button class="icon-btn" aria-label="Ajustes">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+
+        <div class="user-profile-circle" (click)="logout()" title="Cerrar Sesión">
+          <img src="/images/carlos_avatar.png" alt="Usuario avatar">
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Title & Add Button -->
+    <section class="page-title-section">
+      <div class="title-text">
+        <h1>Mis Dispositivos</h1>
+        <p>Administra y monitorea el consumo de tu red inteligente.</p>
+      </div>
+      <button class="add-device-btn" (click)="openModal(); $event.stopPropagation()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="add-btn-icon">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        AGREGAR DISPOSITIVO
+      </button>
+    </section>
+
+    <!-- Device List Table -->
+    <section class="device-table-container">
+      <table class="device-table">
+        <thead>
+          <tr>
+            <th>DISPOSITIVO</th>
+            <th>TIPO</th>
+            <th>UBICACIÓN</th>
+            <th>CARGA</th>
+            <th>ESTADO</th>
+            <th>CONSUMO (HOY)</th>
+            <th>MODO</th>
+            <th class="actions-column"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (device of filteredDevices; track device.id) {
+            <tr [class.row-inactive]="!device.estado">
+              <td class="device-name-cell">{{ device.nombre }}</td>
+              <td>{{ device.tipo }}</td>
+              <td>{{ device.ubicacion }}</td>
+              <td>{{ device.carga }}</td>
+              <td>
+                <span class="status-cell-badge" [ngClass]="device.estado ? 'status-activo' : 'status-inactivo'">
+                  <span class="dot"></span>
+                  {{ device.estado ? 'ACTIVO' : 'INACTIVO' }}
+                </span>
+              </td>
+              <td class="consumption-cell">{{ device.consumoHoy | number:'1.1-1' }} kWh</td>
+              <td>
+                <span class="modo-cell-badge" [ngClass]="device.modo === 'AUTO' ? 'modo-auto' : 'modo-manual'">
+                  {{ device.modo }}
+                </span>
+              </td>
+              <td class="actions-column">
+                <div class="menu-container">
+                  <button class="dot-menu-btn" (click)="toggleMenu(device, $event)" aria-label="Acciones">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="dots-icon">
+                      <circle cx="12" cy="12" r="1.5"/>
+                      <circle cx="12" cy="5" r="1.5"/>
+                      <circle cx="12" cy="19" r="1.5"/>
+                    </svg>
+                  </button>
+
+                  <!-- Actions Dropdown -->
+                  @if (device.showMenu) {
+                    <div class="actions-dropdown" (click)="$event.stopPropagation()">
+                      <button (click)="toggleState(device, $event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="drop-icon">
+                          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                          <line x1="8" y1="21" x2="16" y2="21"/>
+                        </svg>
+                        {{ device.estado ? 'Desactivar' : 'Activar' }}
+                      </button>
+                      <button (click)="toggleModo(device, $event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="drop-icon">
+                          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        Modo {{ device.modo === 'AUTO' ? 'Manual' : 'Auto' }}
+                      </button>
+                      <hr>
+                      <button class="delete-action" (click)="deleteDevice(device, $event)">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="drop-icon">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Eliminar
+                      </button>
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+          @if (filteredDevices.length === 0) {
+            <tr>
+              <td colspan="8" class="empty-table-cell">
+                No se encontraron dispositivos que coincidan con la búsqueda.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Bottom Summary Cards -->
+    <section class="summary-cards-grid">
+      <!-- Card 1: Consumo Total (Dark Green) -->
+      <div class="summary-card total-consumption-card">
+        <div class="card-bg-thunder">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <span class="summary-card-label">CONSUMO TOTAL</span>
+        <div class="summary-card-value">{{ totalConsumption }} <span class="summary-unit">kWh</span></div>
+        <p class="summary-card-sub text-teal-light">Eficiencia óptima hoy</p>
+      </div>
+
+      <!-- Card 2: Peak Load -->
+      <div class="summary-card peak-load-card">
+        <span class="summary-card-label text-muted">PICO DE CARGA</span>
+        <div class="summary-card-value dark-text">{{ peakLoad }} <span class="summary-unit">kW</span></div>
+        <p class="summary-card-sub text-green-active">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="trend-arrow">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <polyline points="19 12 12 19 5 12"/>
+          </svg>
+          12% menor que ayer
+        </p>
+      </div>
+
+      <!-- Card 3: Network Status -->
+      <div class="summary-card network-status-card">
+        <div class="network-icon-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 9.8A7 7 0 0 1 11 20z"/>
+          </svg>
+        </div>
+        <div class="network-status-text">
+          <h3 class="network-title">Estado de Red</h3>
+          <p class="network-subtitle">Sostenible & Segura</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tips Energy Saving Banner -->
+    <section class="tips-banner" style="background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/images/banner_laundry.png');">
+      <div class="tips-content">
+        <span class="tips-badge">TIPS DE ECOVOLT</span>
+        <h2>Optimiza tu Lavadora en horas valle para ahorrar un 15%.</h2>
+      </div>
+    </section>
+  </main>
+
+  <!-- 3. ADD DEVICE MODAL -->
+  @if (showAddModal) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <h2>Agregar Nuevo Dispositivo</h2>
+          <button class="modal-close-btn" (click)="closeModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </header>
+
+        <form class="modal-form" (submit)="addDevice(); $event.preventDefault()">
+          <div class="form-group">
+            <label for="devName">Nombre del Dispositivo *</label>
+            <input type="text" id="devName" [(ngModel)]="newNombre" name="nombre" placeholder="Ej: Aire Acondicionado" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="devType">Tipo *</label>
+              <select id="devType" [(ngModel)]="newTipo" name="tipo">
+                @for (type of tiposDisponibles; track type) {
+                  <option [value]="type">{{ type }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="devLoc">Ubicación *</label>
+              <input type="text" id="devLoc" [(ngModel)]="newUbicacion" name="ubicacion" placeholder="Ej: Sala, Cocina" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="devPower">Carga (Watts) *</label>
+              <input type="text" id="devPower" [(ngModel)]="newCarga" name="carga" placeholder="Ej: 1500W o 1500" required>
+            </div>
+
+            <div class="form-group">
+              <label for="devMode">Modo inicial</label>
+              <select id="devMode" [(ngModel)]="newModo" name="modo">
+                <option value="AUTO">Automático (AUTO)</option>
+                <option value="MANUAL">Manual (MANUAL)</option>
+              </select>
+            </div>
+          </div>
+
+          <footer class="modal-footer">
+            <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
+            <button type="submit" class="btn-submit">Registrar Dispositivo</button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  }
+</div>
