@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { StateService } from '../../servicios/state.service';
 
 @Component({
   selector: 'app-configuracion',
@@ -13,62 +14,41 @@ import { RouterModule, Router } from '@angular/router';
 export class Configuracion {
   guardadoExitoso = false;
 
-  // Hogar Virtual
-  hogar = {
-    nombrePropiedad: 'Casa San Isidro',
-    ubicacion: 'Lima, Perú',
-    tipoPropiedad: 'CASA',
-    metrosCuadrados: 120,
-  };
+  constructor(
+    private router: Router,
+    public stateService: StateService
+  ) {
+    this.stateService.loadState();
+  }
 
-  // Preferencias de Energía
-  energia = {
-    moneda: 'SOLES',
-    unidad: 'KWH',
-    limiteConsumodiario: 15,
-    limiteConsumomensual: 350,
-    presupuestomensual: 180,
-  };
+  // Getters to stateService objects for reference binding
+  get hogar() {
+    return this.stateService.hogar;
+  }
 
-  // Apariencia
-  apariencia = {
-    tema: 'CLARO',
-    idioma: 'ES',
-    zonaHoraria: 'America/Lima',
-  };
+  get energia() {
+    return this.stateService.energia;
+  }
 
-  // Notificaciones
-  notificaciones = {
-    consumoCritico: true,
-    reporteMensual: true,
-    mantenimiento: false,
-    alertasSeguridad: true,
-    recordatoriosRutina: false,
-  };
+  get apariencia() {
+    return this.stateService.apariencia;
+  }
 
-  // Integración
-  integracion = {
-    googleHome: false,
-    alexa: false,
-    smartThings: false,
-  };
+  get notificaciones() {
+    return this.stateService.notificaciones;
+  }
 
-  // Tarifas de Energía
-  tarifa = {
-    tipoTarifa: 'FLEXIBLE', // 'FLEXIBLE' o 'FIJA'
-    costoKwhBase: 0.48, // costo base en moneda local
-    costoKwhPico: 0.75, // costo en hora punta
-    horaPuntaInicio: '18:00',
-    horaPuntaFin: '23:00',
-  };
+  get integracion() {
+    return this.stateService.integracion;
+  }
 
-  // Asistente Eco-IA
-  ecoIA = {
-    sugerenciasActivas: true,
-    frecuenciaConsejos: 'DIARIO', // 'DIARIO', 'SEMANAL', 'MINIMO'
-    autoApagadoEco: true,
-    umbralAhorroObjetivo: 15, // meta de ahorro en %
-  };
+  get tarifa() {
+    return this.stateService.tarifa;
+  }
+
+  get ecoIA() {
+    return this.stateService.ecoIA;
+  }
 
   tiposPropiedades = ['CASA', 'APARTAMENTO', 'OFICINA', 'LOCAL'];
   zonaHorariaOpciones = ['America/Lima', 'America/Bogota', 'America/Santiago', 'America/Buenos_Aires', 'America/Mexico_City'];
@@ -88,23 +68,36 @@ export class Configuracion {
       : `$ ${this.energia.presupuestomensual}`;
   }
 
-  setMoneda(m: string) { this.energia.moneda = m; }
-  setUnidad(u: string) { this.energia.unidad = u; }
-  setTema(t: string) { this.apariencia.tema = t; }
-  setTipoTarifa(t: string) { this.tarifa.tipoTarifa = t; }
-  setFrecuenciaConsejos(f: string) { this.ecoIA.frecuenciaConsejos = f; }
+  setMoneda(m: string) { 
+    this.energia.moneda = m; 
+  }
+  
+  setUnidad(u: string) { 
+    this.energia.unidad = u; 
+  }
+  
+  setTema(t: string) { 
+    this.apariencia.tema = t; 
+  }
+  
+  setTipoTarifa(t: string) { 
+    this.tarifa.tipoTarifa = t; 
+  }
+  
+  setFrecuenciaConsejos(f: string) { 
+    this.ecoIA.frecuenciaConsejos = f; 
+  }
 
   guardarCambios() {
+    // Sync configured location back to profile city
+    this.stateService.usuario.ciudad = this.hogar.ubicacion;
     this.guardadoExitoso = true;
     setTimeout(() => (this.guardadoExitoso = false), 3000);
   }
 
   cancelar() {
-    // reset a los valores originales (simplificado)
     this.guardadoExitoso = false;
   }
-
-  constructor(private router: Router) {}
 
   logout() {
     this.router.navigate(['/login']);

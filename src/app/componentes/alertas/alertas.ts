@@ -1,20 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-
-interface Alerta {
-  id: string;
-  tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO';
-  titulo: string;
-  descripcion: string;
-  dispositivo: string;
-  icono: string;
-  fecha: string;
-  hora: string;
-  leida: boolean;
-  activa: boolean;
-}
+import { StateService, Alerta } from '../../servicios/state.service';
 
 @Component({
   selector: 'app-alertas',
@@ -24,97 +12,68 @@ interface Alerta {
   styleUrl: './alertas.css',
 })
 export class Alertas {
+  // Dropdown states
+  showProfileMenu = false;
+  showNotifications = false;
+
   filtroActivo: 'TODAS' | 'CRITICA' | 'ADVERTENCIA' | 'INFO' | 'NO_LEIDAS' = 'TODAS';
   busqueda = '';
   mostrarModal = false;
   alertaSeleccionada: Alerta | null = null;
 
-  alertas: Alerta[] = [
-    {
-      id: '1',
-      tipo: 'CRITICA',
-      titulo: 'Consumo Excesivo Detectado',
-      descripcion: 'El aire acondicionado ha superado el umbral de consumo diario permitido (15 kWh). Se recomienda reducir la temperatura o apagar el dispositivo.',
-      dispositivo: 'Aire Acondicionado Sala',
-      icono: 'ac',
-      fecha: 'Hoy',
-      hora: '14:32',
-      leida: false,
-      activa: true
-    },
-    {
-      id: '2',
-      tipo: 'ADVERTENCIA',
-      titulo: 'Dispositivo sin respuesta',
-      descripcion: 'La lavadora no responde a los comandos enviados en los últimos 10 minutos. Verifique la conexión de red o el estado físico del dispositivo.',
-      dispositivo: 'Lavadora Samsung',
-      icono: 'washer',
-      fecha: 'Hoy',
-      hora: '12:15',
-      leida: false,
-      activa: true
-    },
-    {
-      id: '3',
-      tipo: 'INFO',
-      titulo: 'Rutina ejecutada exitosamente',
-      descripcion: 'La rutina "Modo Noche" se ejecutó correctamente a las 11:00 PM. Todos los dispositivos fueron apagados según la programación.',
-      dispositivo: 'Sistema de Rutinas',
-      icono: 'routine',
-      fecha: 'Hoy',
-      hora: '11:00',
-      leida: true,
-      activa: false
-    },
-    {
-      id: '4',
-      tipo: 'ADVERTENCIA',
-      titulo: 'Batería de respaldo baja',
-      descripcion: 'El sistema de batería solar tiene un nivel inferior al 20%. Si el consumo continúa, el sistema cambiará a red eléctrica en las próximas horas.',
-      dispositivo: 'Panel Solar EcoVolt',
-      icono: 'solar',
-      fecha: 'Ayer',
-      hora: '09:45',
-      leida: true,
-      activa: false
-    },
-    {
-      id: '5',
-      tipo: 'CRITICA',
-      titulo: 'Pico de voltaje detectado',
-      descripcion: 'Se detectó un pico de voltaje de 250V en el circuito principal. El dispositivo de protección se activó automáticamente para prevenir daños.',
-      dispositivo: 'Circuito Principal',
-      icono: 'lightning',
-      fecha: 'Ayer',
-      hora: '03:22',
-      leida: true,
-      activa: false
-    },
-    {
-      id: '6',
-      tipo: 'INFO',
-      titulo: 'Actualización de firmware disponible',
-      descripcion: 'Hay una nueva actualización de firmware (v2.3.1) disponible para el termostato inteligente. Se recomienda actualizar para mejorar la eficiencia.',
-      dispositivo: 'Termostato Inteligente',
-      icono: 'thermostat',
-      fecha: 'Hace 2 días',
-      hora: '10:00',
-      leida: true,
-      activa: false
-    },
-    {
-      id: '7',
-      tipo: 'INFO',
-      titulo: 'Meta de ahorro alcanzada',
-      descripcion: 'Has alcanzado tu meta mensual de ahorro energético: 120 kWh ahorrados este mes. ¡Sigue así para mantener tu huella de carbono reducida!',
-      dispositivo: 'Sistema EcoVolt',
-      icono: 'leaf',
-      fecha: 'Hace 3 días',
-      hora: '08:00',
-      leida: true,
-      activa: false
-    }
-  ];
+  constructor(
+    private router: Router,
+    public stateService: StateService
+  ) {
+    this.stateService.loadState();
+  }
+
+  @HostListener('document:click')
+  closeMenus() {
+    this.showProfileMenu = false;
+    this.showNotifications = false;
+  }
+
+  toggleProfileMenu(event: Event) {
+    event.stopPropagation();
+    this.showProfileMenu = !this.showProfileMenu;
+    this.showNotifications = false;
+  }
+
+  toggleNotifications(event: Event) {
+    event.stopPropagation();
+    this.showNotifications = !this.showNotifications;
+    this.showProfileMenu = false;
+  }
+
+  get userEmail(): string {
+    return this.stateService.usuario.email;
+  }
+
+  get userName(): string {
+    return this.stateService.usuario.nombre;
+  }
+
+  get notificationsList() {
+    return this.stateService.notificationsList;
+  }
+
+  get unreadNotificationsCount(): number {
+    return this.stateService.notificationsList.filter(n => !n.leido).length;
+  }
+
+  markAllNotificationsAsRead() {
+    this.stateService.notificationsList.forEach(n => n.leido = true);
+    this.stateService.saveStateToStorage();
+  }
+
+  get alertas(): Alerta[] {
+    return this.stateService.alertas;
+  }
+
+  get userAvatar(): string | null {
+    return this.stateService.usuario.avatar;
+  }
 
   get alertasFiltradas(): Alerta[] {
     return this.alertas.filter(a => {
@@ -171,7 +130,7 @@ export class Alertas {
   }
 
   eliminarAlerta(id: string) {
-    this.alertas = this.alertas.filter(a => a.id !== id);
+    this.stateService.alertas = this.alertas.filter(a => a.id !== id);
     if (this.alertaSeleccionada?.id === id) this.cerrarModal();
   }
 
@@ -187,8 +146,6 @@ export class Alertas {
     };
     return icons[icono] || 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
   }
-
-  constructor(private router: Router) {}
 
   logout() {
     this.router.navigate(['/login']);

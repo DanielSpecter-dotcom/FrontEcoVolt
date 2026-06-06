@@ -1,4 +1,34 @@
-<div class="consumo-container">
+<div class="consumo-container" [class.sidebar-minimized]="stateService.sidebarMinimized">
+  <!-- MOBILE HEADER (visible on mobile only) -->
+  <header class="mobile-top-bar">
+    <a [routerLink]="['/dashboard']" class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span>EcoVolt</span>
+    </a>
+    <div class="mobile-actions">
+      <a [routerLink]="['/configuracion']" class="mobile-icon-link" title="Configuración">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mobile-svg-icon">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </a>
+      <a [routerLink]="['/perfil']" class="mobile-profile-link" title="Perfil">
+        <div class="mobile-avatar-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mobile-svg-icon">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+      </a>
+      <button class="logout-link-mobile" (click)="logout()" title="Cerrar Sesión">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+      </button>
+    </div>
+  </header>
   <!-- 1. LEFT SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -6,8 +36,17 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
         </svg>
-        <span>EcoVolt</span>
+        <span class="logo-text">EcoVolt</span>
       </div>
+      <button type="button" class="sidebar-toggle-btn" (click)="stateService.toggleSidebar()" [title]="stateService.sidebarMinimized ? 'Expandir' : 'Minimizar'">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toggle-icon">
+          @if (stateService.sidebarMinimized) {
+            <polyline points="9 18 15 12 9 6"/>
+          } @else {
+            <polyline points="15 18 9 12 15 6"/>
+          }
+        </svg>
+      </button>
       <div class="brand-subtitle">INTELIGENCIA ENERGÉTICA</div>
     </div>
 
@@ -19,7 +58,7 @@
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
               <polyline points="9 22 9 12 15 12 15 22"/>
             </svg>
-            Dashboard
+            <span class="nav-text">Dashboard</span>
           </a>
         </li>
         <li>
@@ -29,7 +68,7 @@
               <line x1="8" y1="21" x2="16" y2="21"/>
               <line x1="12" y1="17" x2="12" y2="21"/>
             </svg>
-            Dispositivos
+            <span class="nav-text">Dispositivos</span>
           </a>
         </li>
         <li class="active">
@@ -37,7 +76,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
               <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
-            Consumo
+            <span class="nav-text">Consumo</span>
           </a>
         </li>
         <li>
@@ -45,7 +84,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
-            Rutinas
+            <span class="nav-text">Rutinas</span>
           </a>
         </li>
         <li>
@@ -55,7 +94,7 @@
               <line x1="12" y1="9" x2="12" y2="13"/>
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
-            Alertas
+            <span class="nav-text">Alertas</span>
           </a>
         </li>
       </ul>
@@ -70,7 +109,7 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
-              Perfil
+              <span class="nav-text">Perfil</span>
             </a>
           </li>
           <li>
@@ -79,7 +118,7 @@
                 <circle cx="12" cy="12" r="3"/>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
-              Configuración
+              <span class="nav-text">Configuración</span>
             </a>
           </li>
           <li>
@@ -89,7 +128,7 @@
                 <polyline points="16 17 21 12 16 7"/>
                 <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Salir
+              <span class="nav-text">Salir</span>
             </a>
           </li>
         </ul>
@@ -114,25 +153,57 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input type="text" placeholder="Buscar ambientes o reportes..." class="search-input">
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar ambientes o reportes..." class="search-input">
       </div>
 
       <div class="top-bar-actions">
-        <button class="icon-btn" aria-label="Notificaciones">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </button>
-        <button class="icon-btn" aria-label="Ajustes">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </button>
+        <div class="notification-btn-container">
+          <button class="icon-btn" (click)="toggleNotifications($event)" aria-label="Notificaciones">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            @if (unreadNotificationsCount > 0) {
+              <span class="notif-badge">{{ unreadNotificationsCount }}</span>
+            }
+          </button>
+          @if (showNotifications) {
+            <div class="notifications-dropdown" (click)="$event.stopPropagation()">
+              <div class="notifications-header">
+                <h4>Notificaciones</h4>
+                <button class="mark-read-btn" (click)="markAllNotificationsAsRead(); $event.stopPropagation()">Marcar leídas</button>
+              </div>
+              <div class="notifications-list">
+                @if (notificationsList.length === 0) {
+                  <div class="empty-notifications">No hay notificaciones</div>
+                } @else {
+                  @for (notif of notificationsList; track notif.id) {
+                    <div class="notification-item" [class.unread]="!notif.leido">
+                      <p class="notification-text">{{ notif.texto }}</p>
+                      <span class="notification-time">{{ notif.tiempo }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
 
-        <div class="user-profile-circle" (click)="logout()" title="Cerrar Sesión">
-          <img src="/images/carlos_avatar.png" alt="Usuario avatar">
+        <div class="profile-circle-container">
+          <div class="user-profile-circle" (click)="toggleProfileMenu($event)" title="Perfil de Usuario">
+            <img [src]="userAvatar || '/images/carlos_avatar.png'" alt="Usuario avatar">
+          </div>
+          @if (showProfileMenu) {
+            <div class="profile-dropdown circle-dropdown" (click)="$event.stopPropagation()">
+              <div class="dropdown-header">
+                <p class="dropdown-email">{{ userEmail }}</p>
+              </div>
+              <div class="dropdown-actions">
+                <a [routerLink]="['/perfil']" class="dropdown-item">Ir a Perfil</a>
+                <button (click)="logout()" class="dropdown-item logout-btn">Cerrar Sesión</button>
+              </div>
+            </div>
+          }
         </div>
       </div>
     </header>
@@ -168,20 +239,29 @@
             <svg class="donut-svg" viewBox="0 0 42 42">
               <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" stroke-width="4"></circle>
               
-              <!-- Lavandería: 16% (dash: 16, offset: 100 - 16 = 84) -->
-              <circle class="donut-segment segment-lavanderia" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2dd4bf" stroke-width="4.5" stroke-dasharray="16 84" stroke-dashoffset="100"></circle>
+              <!-- Lavandería: pct -->
+              <circle class="donut-segment segment-lavanderia" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2dd4bf" stroke-width="4.5" 
+                      [attr.stroke-dasharray]="roomStats.lavanderia.pct + ' ' + (100 - roomStats.lavanderia.pct)" 
+                      [attr.stroke-dashoffset]="100"></circle>
               
-              <!-- Dormitorio: 22% (dash: 22, offset: 84 - 22 = 62) -->
-              <circle class="donut-segment segment-dormitorio" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4ade80" stroke-width="4.5" stroke-dasharray="22 78" stroke-dashoffset="84"></circle>
+              <!-- Dormitorio: pct -->
+              <circle class="donut-segment segment-dormitorio" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4ade80" stroke-width="4.5" 
+                      [attr.stroke-dasharray]="roomStats.dormitorio.pct + ' ' + (100 - roomStats.dormitorio.pct)" 
+                      [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct"></circle>
               
-              <!-- Cocina: 28% (dash: 28, offset: 62 - 28 = 34) -->
-              <circle class="donut-segment segment-cocina" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" stroke-width="4.5" stroke-dasharray="28 72" stroke-dashoffset="62"></circle>
+              <!-- Cocina: pct -->
+              <circle class="donut-segment segment-cocina" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" stroke-width="4.5" 
+                      [attr.stroke-dasharray]="roomStats.cocina.pct + ' ' + (100 - roomStats.cocina.pct)" 
+                      [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct - roomStats.dormitorio.pct"></circle>
               
-              <!-- Sala: 34% (dash: 34, offset: 34 - 34 = 0) -->
-              <circle class="donut-segment segment-sala" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0c5a47" stroke-width="4.5" stroke-dasharray="34 66" stroke-dashoffset="34"></circle>
+              <!-- Sala: pct -->
+              <circle class="donut-segment segment-sala" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0d9488" stroke-width="4.5" 
+                      [attr.stroke-dasharray]="roomStats.sala.pct + ' ' + (100 - roomStats.sala.pct)" 
+                      [attr.stroke-dashoffset]="roomStats.sala.pct"></circle>
             </svg>
-            <div class="donut-text">
-              <span class="donut-val">S/. {{ totalMes }}</span>
+            
+            <div class="donut-center-label">
+              <span class="donut-value">S/.{{ totalMes }}</span>
               <span class="donut-lbl">TOTAL MES</span>
             </div>
           </div>
@@ -190,20 +270,20 @@
         <!-- Donut Legends -->
         <div class="donut-legends-grid">
           <div class="legend-item">
-            <span class="legend-dot" style="background-color: #0c5a47;"></span>
-            <span class="legend-txt">SALA 34%</span>
+            <span class="legend-dot" style="background-color: #0d9488;"></span>
+            <span class="legend-txt">SALA {{ roomStats.sala.pct }}%</span>
           </div>
           <div class="legend-item">
             <span class="legend-dot" style="background-color: #16a34a;"></span>
-            <span class="legend-txt">COCINA 28%</span>
+            <span class="legend-txt">COCINA {{ roomStats.cocina.pct }}%</span>
           </div>
           <div class="legend-item">
             <span class="legend-dot" style="background-color: #4ade80;"></span>
-            <span class="legend-txt">DORMITORIO 22%</span>
+            <span class="legend-txt">DORMITORIO {{ roomStats.dormitorio.pct }}%</span>
           </div>
           <div class="legend-item">
             <span class="legend-dot" style="background-color: #2dd4bf;"></span>
-            <span class="legend-txt">LAVANDERÍA 16%</span>
+            <span class="legend-txt">LAVANDERÍA {{ roomStats.lavanderia.pct }}%</span>
           </div>
         </div>
       </div>
@@ -212,7 +292,7 @@
       <div class="chart-card weekly-history-card">
         <header class="card-header-tf">
           <div class="card-title-lbl">
-            <h3>Historial Semanal</h3>
+            <h3>Historial</h3>
             <span class="card-sub-label">CONSUMO EN KWH</span>
           </div>
 
@@ -328,4 +408,77 @@
       </div>
     </section>
   </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION -->
+  <nav class="mobile-bottom-nav">
+    <a [routerLink]="['/dashboard']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Dashboard</span>
+    </a>
+    <a [routerLink]="['/dispositivos']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Dispositivos</span>
+    </a>
+    <a [routerLink]="['/consumo']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      <span>Consumo</span>
+    </a>
+    <a [routerLink]="['/rutinas']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span>Rutinas</span>
+    </a>
+    <a [routerLink]="['/alertas']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Alertas</span>
+    </a>
+  </nav>
+
+  <!-- GLOBAL TOAST NOTIFICATIONS -->
+  <div class="global-toasts-container">
+    @for (toast of stateService.toasts; track toast.id) {
+      <div class="toast-item" [class]="toast.tipo.toLowerCase()" (click)="stateService.removeToast(toast.id)">
+        <div class="toast-icon-wrap">
+          @if (toast.tipo === 'CRITICA') {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          } @else if (toast.tipo === 'ADVERTENCIA') {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          }
+        </div>
+        <div class="toast-content">
+          <h5>{{ toast.titulo }}</h5>
+          <p>{{ toast.descripcion }}</p>
+        </div>
+        <button class="toast-close-btn">&times;</button>
+      </div>
+    }
+  </div>
 </div>

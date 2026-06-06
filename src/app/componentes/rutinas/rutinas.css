@@ -927,3 +927,85 @@ input:checked + .slider:before {
     display: none;
   }
 }
+
+/* EMPTY STATE FOR ROUTINE EDIT PANEL */
+.empty-edit-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: #94a3b8;
+  text-align: center;
+  min-height: 300px;
+}
+
+.empty-edit-panel .empty-icon {
+  width: 48px;
+  height: 48px;
+  color: rgba(255, 255, 255, 0.15);
+  margin-bottom: 16px;
+}
+
+.empty-edit-panel p {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ADD ACTION CONTROLS & SELECT DROPDOWN */
+.add-action-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.device-select {
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  outline: none;
+  transition: var(--transition);
+  min-width: 200px;
+}
+
+.device-select:focus {
+  border-color: var(--primary);
+  background: white;
+}
+
+/* DELETE ROUTINE BUTTON IN CARD */
+.delete-routine-card-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  margin-top: 8px;
+  margin-left: auto;
+}
+
+.delete-routine-card-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.trash-icon-mini {
+  width: 12px;
+  height: 12px;
+}
+
+

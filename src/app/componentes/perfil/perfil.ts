@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { StateService } from '../../servicios/state.service';
 
 interface Logro {
   icono: string;
@@ -22,30 +23,20 @@ export class Perfil {
   cambiarPasswordMode = false;
   guardadoExitoso = false;
 
-  usuario = {
-    nombre: 'Daniel Specter',
-    email: 'daniel.specter@ecovolt.com',
-    telefono: '+57 314 567 8901',
-    ciudad: 'Bogotá, Colombia',
-    plan: 'EcoVolt Pro',
-    miembro: 'Junio 2024',
-    avatar: null as string | null,
+  editUsuario = {
+    nombre: '',
+    email: '',
+    telefono: '',
+    ciudad: '',
+    plan: '',
+    miembro: '',
+    avatar: null as string | null
   };
-
-  editUsuario = { ...this.usuario };
 
   passwords = {
     actual: '',
     nueva: '',
     confirmar: '',
-  };
-
-  notificaciones = {
-    alertasCriticas: true,
-    advertencias: true,
-    informativas: false,
-    resumenSemanal: true,
-    newsletter: false,
   };
 
   logros: Logro[] = [
@@ -81,19 +72,49 @@ export class Perfil {
     },
   ];
 
-  stats = [
-    { valor: '248 kWh', label: 'Total Ahorrado', icono: 'bolt' },
-    { valor: '$127.400', label: 'Ahorro económico', icono: 'money' },
-    { valor: '12', label: 'Dispositivos', icono: 'device' },
-    { valor: '5', label: 'Rutinas activas', icono: 'clock' },
-  ];
+  constructor(
+    private router: Router,
+    public stateService: StateService
+  ) {
+    this.stateService.loadState();
+  }
+
+  get usuario() {
+    return this.stateService.usuario;
+  }
+
+  notificaciones = {
+    alertasCriticas: true,
+    advertencias: true,
+    informativas: false,
+    resumenSemanal: true,
+    newsletter: false,
+  };
+
+  get stats() {
+    const devicesCount = this.stateService.devices.length;
+    const routinesCount = this.stateService.routines.filter(r => r.activa).length;
+    const isTest = this.stateService.isTestUser();
+    
+    const totalSaved = isTest ? '0 kWh' : '248 kWh';
+    const moneySaved = isTest ? 'S/. 0.00' : 'S/. 127.40';
+    return [
+      { valor: totalSaved, label: 'Total Ahorrado', icono: 'bolt' },
+      { valor: moneySaved, label: 'Ahorro económico', icono: 'money' },
+      { valor: devicesCount.toString(), label: 'Dispositivos', icono: 'device' },
+      { valor: routinesCount.toString(), label: 'Rutinas activas', icono: 'clock' },
+    ];
+  }
 
   getInitials(): string {
+    if (!this.usuario.nombre) return 'U';
     return this.usuario.nombre
       .split(' ')
+      .filter(n => n.length > 0)
       .map((n) => n[0])
       .slice(0, 2)
-      .join('');
+      .join('')
+      .toUpperCase();
   }
 
   startEdit() {
@@ -106,7 +127,11 @@ export class Perfil {
   }
 
   saveProfile() {
-    this.usuario = { ...this.editUsuario };
+    if (!this.editUsuario.nombre.trim()) {
+      alert('El nombre es obligatorio.');
+      return;
+    }
+    this.stateService.saveProfile(this.editUsuario);
     this.editMode = false;
     this.guardadoExitoso = true;
     setTimeout(() => (this.guardadoExitoso = false), 3000);
@@ -132,8 +157,6 @@ export class Perfil {
     this.guardadoExitoso = true;
     setTimeout(() => (this.guardadoExitoso = false), 3000);
   }
-
-  constructor(private router: Router) {}
 
   logout() {
     this.router.navigate(['/login']);
