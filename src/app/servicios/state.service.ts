@@ -1,80 +1,25 @@
 import { Injectable } from '@angular/core';
-import { ApiService, UsuarioDTO, DispositivoDTO, AlertaDTO as BackendAlertaDTO, RutinaDTO, CasaDTO, HabitacionDTO } from './api.service';
+import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 import { forkJoin } from 'rxjs';
+import {
+  UsuarioDTO,
+  DispositivoDTO,
+  AlertaDTO as BackendAlertaDTO,
+  RutinaDTO,
+  CasaDTO,
+  HabitacionDTO,
+  Dispositivo,
+  Rutina,
+  AccionDispositivo,
+  Alerta,
+  Actividad,
+  NotificationItem,
+} from '../modelos';
 
-// ==================== Frontend Interfaces ====================
-// These map backend DTOs to the shapes components already use
+// Re-export frontend interfaces for backward compatibility with components
+export type { Dispositivo, Rutina, AccionDispositivo, Alerta, Actividad, NotificationItem };
 
-export interface Dispositivo {
-  id: string;
-  backendId?: number;
-  nombre: string;
-  tipo: string;
-  ubicacion: string;
-  carga: string;
-  estado: boolean;
-  consumoHoy: number;
-  modo: 'AUTO' | 'MANUAL';
-  badge?: string;
-  badgeType?: 'efficient' | 'eco' | 'constant' | 'standby' | 'off';
-  icon?: string;
-  showMenu?: boolean;
-  habitacionId?: number;
-  limiteKwh?: number;
-}
-
-export interface Rutina {
-  id: string;
-  backendId?: number;
-  homeId?: number;
-  nombre: string;
-  hora: string;
-  periodo: 'AM' | 'PM';
-  dias: string[];
-  activa: boolean;
-  estado: 'ACTIVA' | 'PAUSADA';
-  acciones: AccionDispositivo[];
-  pausadaPorAusencia?: boolean;
-}
-
-export interface AccionDispositivo {
-  id: string;
-  dispositivo: string;
-  tipo: string;
-  tipoAccion: 'ENCENDER' | 'APAGAR';
-  icon: string;
-  deviceId?: number;
-}
-
-export interface Alerta {
-  id: string;
-  backendId?: number;
-  tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO';
-  titulo: string;
-  descripcion: string;
-  dispositivo: string;
-  icono: string;
-  fecha: string;
-  hora: string;
-  leida: boolean;
-  activa: boolean;
-  deviceId?: number;
-}
-
-export interface Actividad {
-  texto: string;
-  tiempo: string;
-  subtitulo: string;
-  dotType: 'active' | 'inactive' | 'alert' | 'system';
-}
-
-export interface NotificationItem {
-  id: string;
-  texto: string;
-  leido: boolean;
-  tiempo: string;
-}
 
 // ==================== State Service ====================
 

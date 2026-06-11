@@ -1,33 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { ApiResponse, LoginResponse, RegisterResponse, JwtPayload } from '../modelos';
 
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
-export interface LoginResponse {
-  token: string;
-  token_type: string;
-  expires_in: number;
-}
-
-export interface RegisterResponse {
-  correo: string;
-  verification_token: string;
-  expires_at: string;
-  verification_link: string;
-}
-
-export interface JwtPayload {
-  sub: string;           // correo del usuario
-  authorities: string[]; // ["ROLE_PERSONAL"] o ["ROLE_EMPRESARIAL"]
-  token_type: string;    // "access"
-  iat: number;           // issued at (epoch seconds)
-  exp: number;           // expiration (epoch seconds)
-}
+// Re-export types for backward compatibility
+export type { ApiResponse, LoginResponse, RegisterResponse, JwtPayload };
 
 @Injectable({
   providedIn: 'root'

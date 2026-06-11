@@ -1,166 +1,54 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse } from './auth.service';
+import {
+  ApiResponse,
+  UsuarioDTO,
+  CasaDTO,
+  HabitacionDTO,
+  DispositivoDTO,
+  HistoricoDTO,
+  ConsumoHabitacionDTO,
+  ItemComparacionConsumoDto,
+  ComparacionConsumoRespuestaDto,
+  ConsumoDispositivoDTO,
+  AlertaDTO,
+  LimiteRespuestaDto,
+  EscenaDTO,
+  ActivacionEscenaDTO,
+  RutinaDTO,
+  ResumenPanelDto,
+  DispositivoPanelDto,
+  EscenasRutinasPanelDto,
+  ActividadPanelDto,
+  ReporteRespuestaDto,
+  AwayModeResponse,
+} from '../modelos';
 
-// ==================== DTOs ====================
+// Re-export DTOs for backward compatibility with existing imports in other files
+export type {
+  UsuarioDTO,
+  CasaDTO,
+  HabitacionDTO,
+  DispositivoDTO,
+  HistoricoDTO,
+  ConsumoHabitacionDTO,
+  ItemComparacionConsumoDto,
+  ComparacionConsumoRespuestaDto,
+  ConsumoDispositivoDTO,
+  AlertaDTO,
+  LimiteRespuestaDto,
+  EscenaDTO,
+  ActivacionEscenaDTO,
+  RutinaDTO,
+  ResumenPanelDto,
+  DispositivoPanelDto,
+  EscenasRutinasPanelDto,
+  ActividadPanelDto,
+  ReporteRespuestaDto,
+  AwayModeResponse,
+};
 
-export interface UsuarioDTO {
-  id: number;
-  nombre: string;
-  apellido: string;
-  username: string;
-  correo: string;
-  tipo_usuario: string;
-  activo: boolean;
-  consumo_excesivo: boolean;
-  uso_prolongado: boolean;
-  reporte_semanal: boolean;
-  roles: string[];
-}
-
-export interface CasaDTO {
-  id: number;
-  nombre: string;
-  usuario_id: number;
-}
-
-export interface HabitacionDTO {
-  id: number;
-  name: string;
-  casa_id: number;
-}
-
-export interface DispositivoDTO {
-  id: number;
-  nombre: string;
-  tipo: string;
-  potencia_watts: number;
-  limite_kwh: number;
-  status: string;
-  mode: string;
-  habitacion_id: number;
-  habitacion_nombre: string;
-}
-
-export interface HistoricoDTO {
-  id: number;
-  fecha_registro: string;
-  kwh_consumidos: number;
-  duracion_minutos: number;
-  dispositivo_id: number;
-  dispositivo_nombre: string;
-}
-
-export interface ConsumoHabitacionDTO {
-  room_id: number;
-  room_name: string;
-  total_kwh: number;
-  total_duration_minutes: number;
-  devices: ItemComparacionConsumoDto[];
-}
-
-export interface ItemComparacionConsumoDto {
-  device_id: number;
-  device_name: string;
-  room_id: number;
-  room_name: string;
-  total_kwh: number;
-  percentage: number;
-}
-
-export interface ComparacionConsumoRespuestaDto {
-  total_kwh: number;
-  devices: ItemComparacionConsumoDto[];
-}
-
-export interface ConsumoDispositivoDTO {
-  device_id: number;
-  device_name: string;
-  daily_kwh: number;
-  weekly_kwh: number;
-  monthly_kwh: number;
-}
-
-export interface AlertaDTO {
-  id: number;
-  tipo: string;
-  mensaje: string;
-  leido: boolean;
-  fecha_creacion: string;
-  device_id: number;
-  device_name: string;
-}
-
-export interface LimiteRespuestaDto {
-  device_id: number;
-  device_name: string;
-  limit_kwh: number;
-}
-
-export interface EscenaDTO {
-  id: number;
-  name: string;
-  devices: { device_id: number; desired_on: boolean }[];
-}
-
-export interface ActivacionEscenaDTO {
-  scene_id: number;
-  activated_at: string;
-  applied_devices: { device_id: number; desired_on: boolean }[];
-}
-
-export interface RutinaDTO {
-  id: number;
-  home_id: number;
-  name: string;
-  execution_time: string;
-  days_of_week: string[];
-  actions: { device_id: number; turn_on: boolean }[];
-  enabled: boolean;
-  paused_by_away_mode: boolean;
-}
-
-export interface ResumenPanelDto {
-  consumoDiarioKwh: number;
-  consumoMensualKwh: number;
-  costoEstimadoSoles: number;
-  variacionPorcentaje: number;
-}
-
-export interface DispositivoPanelDto {
-  id: number;
-  nombre: string;
-  tipo: string;
-  ubicacion: string;
-  estado: string;
-  activo: boolean;
-}
-
-export interface EscenasRutinasPanelDto {
-  escenas: { id: number; nombre: string; tipo: string; estado: string }[];
-  rutinas: { id: number; nombre: string; tipo: string; estado: string }[];
-}
-
-export interface ActividadPanelDto {
-  hora: string;
-  descripcion: string;
-  tipo: string;
-}
-
-export interface ReporteRespuestaDto {
-  total_kwh: number;
-  total_duration_minutes: number;
-  device_count: number;
-  alert_count: number;
-  top_consumers: ItemComparacionConsumoDto[];
-}
-
-export interface AwayModeResponse {
-  home_id: number;
-  away_mode_enabled: boolean;
-  paused_routines: number;
-}
 
 // ==================== Service ====================
 
