@@ -1,8 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService, Dispositivo } from '../../servicios/state.service';
+import { ApiService, ComparacionConsumoRespuestaDto, ConsumoHabitacionDTO } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 interface DetalleAmbiente {
   nombre: string;
@@ -31,7 +33,7 @@ interface DiaConsumo {
   templateUrl: './consumo.html',
   styleUrl: './consumo.css',
 })
-export class Consumo {
+export class Consumo implements OnInit {
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -40,11 +42,36 @@ export class Consumo {
   activeTimeframe: 'dia' | 'semana' | 'mes' = 'semana';
   searchTerm = '';
 
+  // Backend data
+  backendCompare: ComparacionConsumoRespuestaDto | null = null;
+
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    if (this.stateService.isBackendConnected) {
+      this.loadConsumptionData();
+    } else {
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) this.loadConsumptionData();
+      });
+    }
+  }
+
+  private loadConsumptionData() {
+    // Load consumption comparison
+    this.apiService.getConsumptionCompare().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.backendCompare = res.data;
+        }
+      },
+      error: () => {} // Use local calculations
+    });
   }
 
   @HostListener('document:click')
@@ -103,12 +130,42 @@ export class Consumo {
   }
 
   get totalMes(): number {
+    if (this.backendCompare) {
+      return parseFloat((this.backendCompare.total_kwh * 0.52).toFixed(2));
+    }
     const total = this.devices.reduce((acc, curr) => acc + curr.consumoHoy, 0);
-    // Multiply by 30 days and cost rate (0.52)
     return parseFloat((total * 30 * 0.52).toFixed(2));
   }
 
   get roomStats() {
+    // If we have backend comparison data, use it
+    if (this.backendCompare && this.backendCompare.devices.length > 0) {
+      const stats: any = {
+        sala: { kwh: 0, count: 0, pct: 0 },
+        cocina: { kwh: 0, count: 0, pct: 0 },
+        dormitorio: { kwh: 0, count: 0, pct: 0 },
+        lavanderia: { kwh: 0, count: 0, pct: 0 }
+      };
+      const totalKwh = this.backendCompare.total_kwh || 1;
+
+      this.backendCompare.devices.forEach(d => {
+        const room = (d.room_name || '').toLowerCase();
+        if (room.includes('sala')) { stats.sala.kwh += d.total_kwh; stats.sala.count++; }
+        else if (room.includes('cocina')) { stats.cocina.kwh += d.total_kwh; stats.cocina.count++; }
+        else if (room.includes('dormitorio') || room.includes('hab')) { stats.dormitorio.kwh += d.total_kwh; stats.dormitorio.count++; }
+        else if (room.includes('lavand')) { stats.lavanderia.kwh += d.total_kwh; stats.lavanderia.count++; }
+        else { stats.sala.kwh += d.total_kwh; stats.sala.count++; }
+      });
+
+      stats.sala.pct = totalKwh > 0 ? Math.round((stats.sala.kwh / totalKwh) * 100) : 0;
+      stats.cocina.pct = totalKwh > 0 ? Math.round((stats.cocina.kwh / totalKwh) * 100) : 0;
+      stats.dormitorio.pct = totalKwh > 0 ? Math.round((stats.dormitorio.kwh / totalKwh) * 100) : 0;
+      stats.lavanderia.pct = Math.max(0, 100 - (stats.sala.pct + stats.cocina.pct + stats.dormitorio.pct));
+
+      return stats;
+    }
+
+    // Fallback: local calculation
     let totalKwh = 0;
     const stats = {
       sala: { kwh: 0, count: 0, pct: 0 },
@@ -117,7 +174,6 @@ export class Consumo {
       lavanderia: { kwh: 0, count: 0, pct: 0 }
     };
 
-    // Filter devices based on searchTerm
     const term = this.searchTerm.toLowerCase().trim();
     const filtered = this.devices.filter(d => 
       !term || 
@@ -134,7 +190,7 @@ export class Consumo {
       else if (room.includes('cocina')) { stats.cocina.kwh += kwh; stats.cocina.count++; }
       else if (room.includes('dormitorio') || room.includes('hab')) { stats.dormitorio.kwh += kwh; stats.dormitorio.count++; }
       else if (room.includes('lavand')) { stats.lavanderia.kwh += kwh; stats.lavanderia.count++; }
-      else { stats.sala.kwh += kwh; stats.sala.count++; } // fallback
+      else { stats.sala.kwh += kwh; stats.sala.count++; }
     });
 
     if (totalKwh > 0) {
@@ -164,13 +220,11 @@ export class Consumo {
     const stats = this.roomStats;
     const hasDevices = this.devices.length > 0;
     
-    // Scale factor depending on timeframe
     let tfMultiplier = 1;
     if (this.activeTimeframe === 'dia') tfMultiplier = 0.2;
-    if (this.activeTimeframe === 'mes') tfMultiplier = 4.3; // 4.3 weeks in a month
+    if (this.activeTimeframe === 'mes') tfMultiplier = 4.3;
 
     return days.map((day, idx) => {
-      // Create variations for days of week
       let dayVar = 1.0;
       if (day === 'SAB' || day === 'DOM') dayVar = 1.25;
       else if (day === 'LUN' || day === 'MAR') dayVar = 0.9;
@@ -190,16 +244,31 @@ export class Consumo {
         dormitorio: parseFloat(dormitorio.toFixed(1)),
         lavanderia: parseFloat(lavanderia.toFixed(1)),
         total: parseFloat(total.toFixed(1)),
-        isHoy: idx === 2 // MIE is today
+        isHoy: idx === 2
       };
     });
   }
 
   exportData() {
-    alert('Exportando datos de consumo en formato CSV/Excel...');
+    if (this.stateService.isBackendConnected) {
+      this.apiService.downloadReportPdf().subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'ecovolt-consumo-report.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => alert('Error al exportar. Intente nuevamente.')
+      });
+    } else {
+      alert('Exportando datos de consumo en formato CSV/Excel...');
+    }
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

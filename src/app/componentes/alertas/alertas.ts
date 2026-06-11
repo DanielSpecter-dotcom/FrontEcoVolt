@@ -1,8 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService, Alerta } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-alertas',
@@ -11,7 +13,7 @@ import { StateService, Alerta } from '../../servicios/state.service';
   templateUrl: './alertas.html',
   styleUrl: './alertas.css',
 })
-export class Alertas {
+export class Alertas implements OnInit {
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -23,9 +25,68 @@ export class Alertas {
 
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    if (this.stateService.isBackendConnected) {
+      this.loadAlerts();
+    } else {
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) this.loadAlerts();
+      });
+    }
+  }
+
+  private loadAlerts() {
+    this.apiService.getAlertHistory().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.stateService.alertas = res.data.map(a => this.mapAlert(a));
+          this.stateService.saveStateToStorage();
+        }
+      },
+      error: () => {} // Keep existing alerts
+    });
+  }
+
+  private mapAlert(dto: any): Alerta {
+    let tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO' = 'INFO';
+    const backendTipo = (dto.tipo || '').toUpperCase();
+    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA')) tipo = 'CRITICA';
+    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING')) tipo = 'ADVERTENCIA';
+
+    let fecha = 'Hoy';
+    let hora = '';
+    if (dto.fecha_creacion) {
+      const d = new Date(dto.fecha_creacion);
+      const today = new Date();
+      if (d.toDateString() === today.toDateString()) {
+        fecha = 'Hoy';
+      } else {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        fecha = d.toDateString() === yesterday.toDateString() ? 'Ayer' : d.toLocaleDateString('es-ES');
+      }
+      hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return {
+      id: dto.id.toString(),
+      backendId: dto.id,
+      tipo,
+      titulo: dto.mensaje?.substring(0, 50) || 'Alerta',
+      descripcion: dto.mensaje || '',
+      dispositivo: dto.device_name || 'Sistema',
+      icono: 'lightning',
+      fecha,
+      hora,
+      leida: dto.leido,
+      activa: !dto.leido,
+      deviceId: dto.device_id,
+    };
   }
 
   @HostListener('document:click')
@@ -114,6 +175,13 @@ export class Alertas {
     alerta.leida = true;
     this.alertaSeleccionada = alerta;
     this.mostrarModal = true;
+
+    // Sync with backend
+    if (alerta.backendId && this.stateService.isBackendConnected) {
+      this.apiService.markAlertRead(alerta.backendId).subscribe({
+        error: (err) => console.warn('Error marking alert as read:', err)
+      });
+    }
   }
 
   cerrarModal() {
@@ -123,15 +191,37 @@ export class Alertas {
 
   marcarLeida(alerta: Alerta) {
     alerta.leida = true;
+    this.stateService.saveStateToStorage();
+
+    if (alerta.backendId && this.stateService.isBackendConnected) {
+      this.apiService.markAlertRead(alerta.backendId).subscribe({
+        error: (err) => console.warn('Error marking alert as read:', err)
+      });
+    }
   }
 
   marcarTodasLeidas() {
-    this.alertas.forEach(a => a.leida = true);
+    this.alertas.forEach(a => {
+      a.leida = true;
+      if (a.backendId && this.stateService.isBackendConnected) {
+        this.apiService.markAlertRead(a.backendId).subscribe();
+      }
+    });
+    this.stateService.saveStateToStorage();
   }
 
   eliminarAlerta(id: string) {
+    const alerta = this.alertas.find(a => a.id === id);
     this.stateService.alertas = this.alertas.filter(a => a.id !== id);
+    this.stateService.saveStateToStorage();
     if (this.alertaSeleccionada?.id === id) this.cerrarModal();
+
+    // Sync with backend
+    if (alerta?.backendId && this.stateService.isBackendConnected) {
+      this.apiService.deleteAlert(alerta.backendId).subscribe({
+        error: (err) => console.warn('Error deleting alert:', err)
+      });
+    }
   }
 
   getIconPath(icono: string): string {
@@ -148,6 +238,7 @@ export class Alertas {
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

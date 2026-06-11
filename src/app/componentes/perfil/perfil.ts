@@ -1,8 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 interface Logro {
   icono: string;
@@ -18,10 +20,11 @@ interface Logro {
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })
-export class Perfil {
+export class Perfil implements OnInit {
   editMode = false;
   cambiarPasswordMode = false;
   guardadoExitoso = false;
+  errorMessage = '';
 
   editUsuario = {
     nombre: '',
@@ -74,9 +77,38 @@ export class Perfil {
 
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    if (this.stateService.isBackendConnected) {
+      this.loadProfile();
+    } else {
+      this.stateService.loadFromBackend();
+    }
+  }
+
+  private loadProfile() {
+    this.apiService.getMe().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const dto = res.data;
+          const fullName = [dto.nombre, dto.apellido].filter(Boolean).join(' ') || 'Usuario';
+          this.stateService.usuario.nombre = fullName;
+          this.stateService.usuario.email = dto.correo;
+          this.stateService.usuario.apellido = dto.apellido || '';
+          this.stateService.usuario.username = dto.username || '';
+          this.stateService.usuario.tipoUsuario = dto.tipo_usuario || 'PERSONAL';
+          this.stateService.usuario.plan = dto.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal';
+          this.stateService.notificaciones.consumoCritico = dto.consumo_excesivo ?? true;
+          this.stateService.notificaciones.reporteMensual = dto.reporte_semanal ?? true;
+          this.stateService.saveStateToStorage();
+        }
+      },
+      error: () => {}
+    });
   }
 
   get usuario() {
@@ -120,10 +152,12 @@ export class Perfil {
   startEdit() {
     this.editUsuario = { ...this.usuario };
     this.editMode = true;
+    this.errorMessage = '';
   }
 
   cancelEdit() {
     this.editMode = false;
+    this.errorMessage = '';
   }
 
   saveProfile() {
@@ -131,34 +165,110 @@ export class Perfil {
       alert('El nombre es obligatorio.');
       return;
     }
-    this.stateService.saveProfile(this.editUsuario);
-    this.editMode = false;
-    this.guardadoExitoso = true;
-    setTimeout(() => (this.guardadoExitoso = false), 3000);
+
+    // Sync with backend
+    if (this.stateService.userId && this.stateService.isBackendConnected) {
+      this.apiService.updateUser(this.stateService.userId, {
+        nombre: this.editUsuario.nombre.trim()
+      }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const fullName = [res.data.nombre, res.data.apellido].filter(Boolean).join(' ');
+            this.editUsuario.nombre = fullName;
+          }
+          this.stateService.saveProfile(this.editUsuario);
+          this.editMode = false;
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        },
+        error: (err) => {
+          console.warn('Error updating profile on backend:', err);
+          // Save locally anyway
+          this.stateService.saveProfile(this.editUsuario);
+          this.editMode = false;
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        }
+      });
+    } else {
+      this.stateService.saveProfile(this.editUsuario);
+      this.editMode = false;
+      this.guardadoExitoso = true;
+      setTimeout(() => (this.guardadoExitoso = false), 3000);
+    }
   }
 
   togglePasswordMode() {
     this.cambiarPasswordMode = !this.cambiarPasswordMode;
     this.passwords = { actual: '', nueva: '', confirmar: '' };
+    this.errorMessage = '';
   }
 
   savePassword() {
     if (this.passwords.nueva !== this.passwords.confirmar) {
-      alert('Las contraseñas no coinciden.');
+      this.errorMessage = 'Las contraseñas no coinciden.';
       return;
     }
-    this.cambiarPasswordMode = false;
-    this.passwords = { actual: '', nueva: '', confirmar: '' };
-    this.guardadoExitoso = true;
-    setTimeout(() => (this.guardadoExitoso = false), 3000);
+
+    if (this.passwords.nueva.length < 8) {
+      this.errorMessage = 'La nueva contraseña debe tener al menos 8 caracteres.';
+      return;
+    }
+
+    // Sync with backend
+    if (this.stateService.userId && this.stateService.isBackendConnected) {
+      this.apiService.changePassword(this.stateService.userId, {
+        contrasena_actual: this.passwords.actual,
+        nueva_contrasena: this.passwords.nueva
+      }).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.cambiarPasswordMode = false;
+            this.passwords = { actual: '', nueva: '', confirmar: '' };
+            this.errorMessage = '';
+            this.guardadoExitoso = true;
+            setTimeout(() => (this.guardadoExitoso = false), 3000);
+          } else {
+            this.errorMessage = res.message || 'Error al cambiar la contraseña.';
+          }
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.message || 'Error al cambiar la contraseña. Verifique su contraseña actual.';
+        }
+      });
+    } else {
+      this.cambiarPasswordMode = false;
+      this.passwords = { actual: '', nueva: '', confirmar: '' };
+      this.guardadoExitoso = true;
+      setTimeout(() => (this.guardadoExitoso = false), 3000);
+    }
   }
 
   saveNotifications() {
-    this.guardadoExitoso = true;
-    setTimeout(() => (this.guardadoExitoso = false), 3000);
+    // Sync with backend
+    if (this.stateService.userId && this.stateService.isBackendConnected) {
+      this.apiService.updateNotificationSettings(this.stateService.userId, {
+        consumo_excesivo: this.notificaciones.alertasCriticas,
+        uso_prolongado: this.notificaciones.advertencias,
+        reporte_semanal: this.notificaciones.resumenSemanal,
+      }).subscribe({
+        next: () => {
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        },
+        error: () => {
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        }
+      });
+    } else {
+      this.guardadoExitoso = true;
+      setTimeout(() => (this.guardadoExitoso = false), 3000);
+    }
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

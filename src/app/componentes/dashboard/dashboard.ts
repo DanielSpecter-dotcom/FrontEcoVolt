@@ -1,8 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService, Dispositivo, Actividad } from '../../servicios/state.service';
+import { ApiService, ResumenPanelDto, ActividadPanelDto } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,7 +13,7 @@ import { StateService, Dispositivo, Actividad } from '../../servicios/state.serv
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard {
+export class Dashboard implements OnInit {
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -39,10 +41,91 @@ export class Dashboard {
 
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    // Load data from backend if connected
+    if (this.stateService.isBackendConnected) {
+      this.loadDashboardData();
+    } else {
+      // Try loading from backend
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) {
+          this.loadDashboardData();
+        } else {
+          this.recalculateConsumption();
+        }
+      });
+    }
     this.recalculateConsumption();
+  }
+
+  private loadDashboardData() {
+    // Load dashboard summary (KPIs)
+    this.apiService.getDashboardSummary().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.todayConsumption = res.data.consumoDiarioKwh || 0;
+          this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
+          this.monthlyConsumption = res.data.consumoMensualKwh || 0;
+          this.monthlyCost = res.data.costoEstimadoSoles || 0;
+
+          const variation = res.data.variacionPorcentaje || 0;
+          if (variation < 0) {
+            this.todayPercent = `${Math.abs(variation)}% menos que ayer`;
+            this.todayPercentClass = 'percent-down';
+          } else {
+            this.todayPercent = `${variation}% más que ayer`;
+            this.todayPercentClass = 'percent-up';
+          }
+          this.monthlyPercent = `${Math.abs(variation)}% variación mensual`;
+          this.monthlyPercentClass = variation <= 0 ? 'percent-down' : 'percent-up';
+        }
+      },
+      error: () => this.recalculateConsumption()
+    });
+
+    // Load activity feed
+    this.apiService.getDashboardActivity().subscribe({
+      next: (res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          this.stateService.activities = res.data.map((a: ActividadPanelDto) => ({
+            texto: a.descripcion,
+            tiempo: this.formatActivityTime(a.hora),
+            subtitulo: a.tipo || 'Sistema',
+            dotType: this.mapActivityType(a.tipo)
+          }));
+        }
+      },
+      error: () => {} // Keep existing activities
+    });
+  }
+
+  private formatActivityTime(hora: string): string {
+    if (!hora) return 'Hace un momento';
+    try {
+      const d = new Date(hora);
+      const now = new Date();
+      const diffMin = Math.floor((now.getTime() - d.getTime()) / 60000);
+      if (diffMin < 1) return 'Ahora mismo';
+      if (diffMin < 60) return `Hace ${diffMin} min`;
+      if (diffMin < 1440) return `Hoy, ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      return d.toLocaleDateString('es-ES');
+    } catch {
+      return hora;
+    }
+  }
+
+  private mapActivityType(tipo: string): 'active' | 'inactive' | 'alert' | 'system' {
+    if (!tipo) return 'system';
+    const t = tipo.toLowerCase();
+    if (t.includes('encend') || t.includes('activ') || t.includes('on')) return 'active';
+    if (t.includes('apag') || t.includes('off')) return 'inactive';
+    if (t.includes('alert') || t.includes('pico')) return 'alert';
+    return 'system';
   }
 
   @HostListener('document:click')
@@ -135,8 +218,11 @@ export class Dashboard {
   networkStatus = 'SISTEMA ÓPTIMO';
 
   toggleDevice(device: Dispositivo) {
-    device.estado = !device.estado;
-    if (device.estado) {
+    const newStatus = !device.estado;
+
+    // Optimistic update
+    device.estado = newStatus;
+    if (newStatus) {
       let powerVal = parseInt(device.carga.replace(/\D/g, '')) || 100;
       device.consumoHoy = parseFloat(((powerVal * 4) / 1000).toFixed(2));
       device.badge = 'ON';
@@ -150,6 +236,13 @@ export class Dashboard {
     }
     this.recalculateConsumption();
     this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (device.backendId && this.stateService.isBackendConnected) {
+      this.apiService.toggleDeviceStatus(device.backendId, newStatus ? 'ON' : 'OFF').subscribe({
+        error: (err) => console.warn('Error syncing device status:', err)
+      });
+    }
   }
 
   toggleEcoMode() {
@@ -192,6 +285,10 @@ export class Dashboard {
           d.consumoHoy = 0.00;
           d.badge = 'OFF';
           d.badgeType = 'off';
+          // Sync with backend
+          if (d.backendId && this.stateService.isBackendConnected) {
+            this.apiService.toggleDeviceStatus(d.backendId, 'OFF').subscribe();
+          }
         }
       });
       this.logActivity('Escena Modo Noche aplicada', 'Escenas Rápidas', 'active');
@@ -204,6 +301,9 @@ export class Dashboard {
             d.consumoHoy = parseFloat(((powerVal * 4) / 1000).toFixed(2));
             d.badge = 'ON';
             d.badgeType = 'efficient';
+            if (d.backendId && this.stateService.isBackendConnected) {
+              this.apiService.toggleDeviceStatus(d.backendId, 'ON').subscribe();
+            }
           }
         }
       });
@@ -215,6 +315,9 @@ export class Dashboard {
           d.consumoHoy = 0.00;
           d.badge = 'OFF';
           d.badgeType = 'off';
+          if (d.backendId && this.stateService.isBackendConnected) {
+            this.apiService.toggleDeviceStatus(d.backendId, 'OFF').subscribe();
+          }
         }
       });
       this.logActivity('Cierre total: Todo apagado', 'Escenas Rápidas', 'alert');
@@ -228,39 +331,42 @@ export class Dashboard {
     this.activeDevicesCount = this.stateService.devices.filter(d => d.estado).length;
 
     if (this.totalDevicesCount === 0) {
-      this.todayConsumption = 0;
-      this.todayCost = 0;
-      this.todayPercent = 'Sin consumo registrado';
+      this.todayConsumption = this.todayConsumption || 0;
+      this.todayCost = this.todayCost || 0;
+      this.todayPercent = this.todayPercent || 'Sin consumo registrado';
       this.todayPercentClass = 'percent-down';
-      this.monthlyConsumption = 0;
-      this.monthlyCost = 0;
-      this.monthlyPercent = 'Sin consumo registrado';
+      this.monthlyConsumption = this.monthlyConsumption || 0;
+      this.monthlyCost = this.monthlyCost || 0;
+      this.monthlyPercent = this.monthlyPercent || 'Sin consumo registrado';
       this.monthlyPercentClass = 'percent-down';
-      this.networkStatus = 'SISTEMA ÓPTIMO - SIN DISPOSITIVOS';
+      this.networkStatus = this.stateService.isBackendConnected ? 'CONECTADO AL SERVIDOR' : 'SISTEMA ÓPTIMO - SIN DISPOSITIVOS';
       return;
     }
 
-    this.networkStatus = 'SISTEMA ÓPTIMO';
+    this.networkStatus = this.stateService.isBackendConnected ? 'CONECTADO AL SERVIDOR' : 'SISTEMA ÓPTIMO';
 
-    let sum = 0;
-    this.stateService.devices.forEach(d => sum += d.consumoHoy);
-    
-    this.todayConsumption = parseFloat((4.0 + sum).toFixed(1));
-    this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
-    
-    this.monthlyConsumption = parseFloat((120.0 + (sum * 30)).toFixed(1));
-    this.monthlyCost = parseFloat((this.monthlyConsumption * 0.52).toFixed(2));
+    // Only recalculate from local data if backend hasn't provided KPIs
+    if (!this.stateService.isBackendConnected) {
+      let sum = 0;
+      this.stateService.devices.forEach(d => sum += d.consumoHoy);
+      
+      this.todayConsumption = parseFloat((4.0 + sum).toFixed(1));
+      this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
+      
+      this.monthlyConsumption = parseFloat((120.0 + (sum * 30)).toFixed(1));
+      this.monthlyCost = parseFloat((this.monthlyConsumption * 0.52).toFixed(2));
 
-    if (this.todayConsumption < 8.0) {
-      this.todayPercent = '12% menos que ayer';
-      this.todayPercentClass = 'percent-down';
-    } else {
-      this.todayPercent = '5% más que ayer';
-      this.todayPercentClass = 'percent-up';
+      if (this.todayConsumption < 8.0) {
+        this.todayPercent = '12% menos que ayer';
+        this.todayPercentClass = 'percent-down';
+      } else {
+        this.todayPercent = '5% más que ayer';
+        this.todayPercentClass = 'percent-up';
+      }
+
+      this.monthlyPercent = '8% menos que el mes ant.';
+      this.monthlyPercentClass = 'percent-down';
     }
-
-    this.monthlyPercent = '8% menos que el mes ant.';
-    this.monthlyPercentClass = 'percent-down';
   }
 
   logActivity(texto: string, subtitulo: string, dotType: 'active' | 'inactive' | 'alert' | 'system') {
@@ -385,19 +491,71 @@ export class Dashboard {
       icon: iconMap[this.newTipo] || 'other'
     };
 
-    this.stateService.devices.push(newDev);
-    this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
-    this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
-    this.recalculateConsumption();
-    this.stateService.saveStateToStorage();
-    this.closeModal();
+    // Try to create on backend first
+    if (this.stateService.isBackendConnected && this.stateService.habitaciones.length > 0) {
+      const habitacionId = this.stateService.habitaciones[0].id; // Default to first room
+      this.apiService.createDevice({
+        habitacion_id: habitacionId,
+        nombre: this.newNombre,
+        tipo: this.newTipo.toLowerCase(),
+        activo: true,
+        automatico: this.newModo === 'AUTO',
+      }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            newDev.backendId = res.data.id;
+            newDev.id = res.data.id.toString();
+            newDev.carga = `${res.data.potencia_watts}W`;
+            newDev.ubicacion = res.data.habitacion_nombre || this.newUbicacion;
+            newDev.habitacionId = res.data.habitacion_id;
+          }
+          this.stateService.devices.push(newDev);
+          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+          this.recalculateConsumption();
+          this.stateService.saveStateToStorage();
+          this.closeModal();
+        },
+        error: () => {
+          // Fallback: add locally
+          this.stateService.devices.push(newDev);
+          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+          this.recalculateConsumption();
+          this.stateService.saveStateToStorage();
+          this.closeModal();
+        }
+      });
+    } else {
+      this.stateService.devices.push(newDev);
+      this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+      this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+      this.recalculateConsumption();
+      this.stateService.saveStateToStorage();
+      this.closeModal();
+    }
   }
 
   downloadReport() {
-    alert('Preparando y descargando tu reporte de consumo energético semanal en PDF...');
+    if (this.stateService.isBackendConnected) {
+      this.apiService.downloadReportPdf().subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'ecovolt-report.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => alert('Error al descargar el reporte. Intente nuevamente.')
+      });
+    } else {
+      alert('Preparando y descargando tu reporte de consumo energético semanal en PDF...');
+    }
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

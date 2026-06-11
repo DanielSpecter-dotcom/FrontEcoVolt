@@ -1,22 +1,33 @@
 import { Injectable } from '@angular/core';
+import { ApiService, UsuarioDTO, DispositivoDTO, AlertaDTO as BackendAlertaDTO, RutinaDTO, CasaDTO, HabitacionDTO } from './api.service';
+import { AuthService } from './auth.service';
+import { forkJoin } from 'rxjs';
+
+// ==================== Frontend Interfaces ====================
+// These map backend DTOs to the shapes components already use
 
 export interface Dispositivo {
   id: string;
+  backendId?: number;
   nombre: string;
   tipo: string;
   ubicacion: string;
-  carga: string; // e.g. "60W"
-  estado: boolean; // true = ACTIVO, false = INACTIVO
-  consumoHoy: number; // in kWh
+  carga: string;
+  estado: boolean;
+  consumoHoy: number;
   modo: 'AUTO' | 'MANUAL';
   badge?: string;
   badgeType?: 'efficient' | 'eco' | 'constant' | 'standby' | 'off';
   icon?: string;
   showMenu?: boolean;
+  habitacionId?: number;
+  limiteKwh?: number;
 }
 
 export interface Rutina {
   id: string;
+  backendId?: number;
+  homeId?: number;
   nombre: string;
   hora: string;
   periodo: 'AM' | 'PM';
@@ -24,6 +35,7 @@ export interface Rutina {
   activa: boolean;
   estado: 'ACTIVA' | 'PAUSADA';
   acciones: AccionDispositivo[];
+  pausadaPorAusencia?: boolean;
 }
 
 export interface AccionDispositivo {
@@ -32,10 +44,12 @@ export interface AccionDispositivo {
   tipo: string;
   tipoAccion: 'ENCENDER' | 'APAGAR';
   icon: string;
+  deviceId?: number;
 }
 
 export interface Alerta {
   id: string;
+  backendId?: number;
   tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO';
   titulo: string;
   descripcion: string;
@@ -45,6 +59,7 @@ export interface Alerta {
   hora: string;
   leida: boolean;
   activa: boolean;
+  deviceId?: number;
 }
 
 export interface Actividad {
@@ -61,6 +76,8 @@ export interface NotificationItem {
   tiempo: string;
 }
 
+// ==================== State Service ====================
+
 @Injectable({
   providedIn: 'root'
 })
@@ -68,14 +85,23 @@ export class StateService {
   sidebarMinimized = false;
   toasts: { id: string; tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO'; titulo: string; descripcion: string }[] = [];
 
+  // Flags
+  isLoading = false;
+  isBackendConnected = false;
+  userId: number | null = null;
+  userRole: string = 'PERSONAL';
+
   usuario = {
-    nombre: 'Daniel Specter',
-    email: 'daniel.specter@ecovolt.com',
-    telefono: '+57 314 567 8901',
-    ciudad: 'Bogotá, Colombia',
-    plan: 'EcoVolt Pro',
-    miembro: 'Junio 2024',
+    nombre: 'Usuario',
+    email: '',
+    telefono: '',
+    ciudad: 'Lima, Perú',
+    plan: 'EcoVolt Personal',
+    miembro: '',
     avatar: null as string | null,
+    apellido: '',
+    username: '',
+    tipoUsuario: 'PERSONAL',
   };
 
   devices: Dispositivo[] = [];
@@ -84,10 +110,14 @@ export class StateService {
   activities: Actividad[] = [];
   notificationsList: NotificationItem[] = [];
 
+  // Casas & Habitaciones from backend
+  casas: CasaDTO[] = [];
+  habitaciones: HabitacionDTO[] = [];
+
   // Hogar Virtual
   hogar = {
-    nombrePropiedad: 'Casa San Isidro',
-    ubicacion: 'Bogotá, Colombia',
+    nombrePropiedad: 'Mi Hogar',
+    ubicacion: 'Lima, Perú',
     tipoPropiedad: 'CASA',
     metrosCuadrados: 120,
   };
@@ -141,10 +171,267 @@ export class StateService {
     umbralAhorroObjetivo: 15,
   };
 
-  constructor() {
+  constructor(
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {
     this.loadState();
-    this.startAlertSimulation();
   }
+
+  // ==================== Load from Backend ====================
+
+  /**
+   * Loads all user data from the backend.
+   * Called after login or when entering a protected route.
+   * Falls back to demo/localStorage data if backend is unavailable.
+   */
+  loadFromBackend(): Promise<boolean> {
+    this.isLoading = true;
+
+    return new Promise((resolve) => {
+      // First: get the user profile
+      this.apiService.getMe().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.isBackendConnected = true;
+            this.mapUserFromBackend(res.data);
+            this.authService.setUserId(res.data.id);
+            this.userId = res.data.id;
+            this.userRole = res.data.tipo_usuario || this.authService.getUserRole();
+
+            // Now load everything else in parallel
+            this.loadAllData().then(() => {
+              this.isLoading = false;
+              this.saveStateToStorage();
+              resolve(true);
+            });
+          } else {
+            console.warn('Backend /me returned unsuccessful, using fallback');
+            this.isLoading = false;
+            this.loadState();
+            resolve(false);
+          }
+        },
+        error: (err) => {
+          console.warn('Backend not reachable, using fallback data:', err.message);
+          this.isBackendConnected = false;
+          this.isLoading = false;
+          this.loadState();
+          resolve(false);
+        }
+      });
+    });
+  }
+
+  private loadAllData(): Promise<void> {
+    return new Promise((resolve) => {
+      forkJoin({
+        devices: this.apiService.getDevices(),
+        routines: this.apiService.getRoutines(),
+        alerts: this.apiService.getAlertHistory(),
+        homes: this.apiService.getHomes(),
+        rooms: this.apiService.getRooms(),
+      }).subscribe({
+        next: (results) => {
+          // Map devices
+          if (results.devices.success && results.devices.data) {
+            this.devices = results.devices.data.map(d => this.mapDeviceFromBackend(d));
+          }
+
+          // Map routines
+          if (results.routines.success && results.routines.data) {
+            this.routines = results.routines.data.map(r => this.mapRoutineFromBackend(r));
+          }
+
+          // Map alerts
+          if (results.alerts.success && results.alerts.data) {
+            this.alertas = results.alerts.data.map(a => this.mapAlertFromBackend(a));
+          }
+
+          // Store homes and rooms
+          if (results.homes.success && results.homes.data) {
+            this.casas = results.homes.data;
+            // Set hogar from the first home if available
+            if (this.casas.length > 0) {
+              this.hogar.nombrePropiedad = this.casas[0].nombre;
+            }
+          }
+
+          if (results.rooms.success && results.rooms.data) {
+            this.habitaciones = results.rooms.data;
+          }
+
+          this.notificationsList = [
+            { id: '1', texto: '¡Bienvenido a EcoVolt! Datos cargados desde el servidor.', leido: false, tiempo: 'Ahora' }
+          ];
+
+          resolve();
+        },
+        error: (err) => {
+          console.warn('Error loading data from backend:', err);
+          resolve(); // resolve anyway so the app doesn't hang
+        }
+      });
+    });
+  }
+
+  // ==================== Backend → Frontend Mappers ====================
+
+  private mapUserFromBackend(dto: UsuarioDTO): void {
+    const fullName = [dto.nombre, dto.apellido].filter(Boolean).join(' ') || 'Usuario';
+    this.usuario = {
+      nombre: fullName,
+      email: dto.correo,
+      telefono: '',
+      ciudad: 'Lima, Perú',
+      plan: dto.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal',
+      miembro: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
+      avatar: null,
+      apellido: dto.apellido || '',
+      username: dto.username || '',
+      tipoUsuario: dto.tipo_usuario || 'PERSONAL',
+    };
+    this.userRole = dto.tipo_usuario || 'PERSONAL';
+
+    // Map notification settings
+    this.notificaciones.consumoCritico = dto.consumo_excesivo ?? true;
+    this.notificaciones.reporteMensual = dto.reporte_semanal ?? true;
+  }
+
+  public mapDeviceFromBackend(dto: DispositivoDTO): Dispositivo {
+    const isOn = dto.status === 'ON';
+    const isAuto = dto.mode === 'AUTOMATIC';
+
+    const iconMap: { [key: string]: string } = {
+      'luz': 'lamp', 'lampara': 'lamp', 'iluminacion': 'lamp',
+      'tv': 'tv', 'television': 'tv',
+      'refrigerador': 'fridge', 'refrigeradora': 'fridge', 'nevera': 'fridge',
+      'ac': 'ac', 'aire': 'ac', 'aire acondicionado': 'ac',
+      'lavadora': 'washer',
+      'cafetera': 'coffee',
+      'microondas': 'other', 'horno': 'other',
+    };
+    const tipoLower = (dto.tipo || '').toLowerCase();
+    const icon = iconMap[tipoLower] || 'other';
+
+    let badge = isOn ? 'ACTIVO' : 'OFF';
+    let badgeType: 'efficient' | 'eco' | 'constant' | 'standby' | 'off' = isOn ? 'efficient' : 'off';
+
+    return {
+      id: dto.id.toString(),
+      backendId: dto.id,
+      nombre: dto.nombre,
+      tipo: dto.tipo,
+      ubicacion: dto.habitacion_nombre || 'Sin asignar',
+      carga: `${dto.potencia_watts || 0}W`,
+      estado: isOn,
+      consumoHoy: 0, // Will be filled by consumption endpoints
+      modo: isAuto ? 'AUTO' : 'MANUAL',
+      badge,
+      badgeType,
+      icon,
+      showMenu: false,
+      habitacionId: dto.habitacion_id,
+      limiteKwh: dto.limite_kwh,
+    };
+  }
+
+  public mapRoutineFromBackend(dto: RutinaDTO): Rutina {
+    // Map backend day names to frontend abbreviations
+    const dayMap: { [key: string]: string } = {
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
+    };
+
+    const dias = (dto.days_of_week || []).map(d => dayMap[d] || d);
+
+    // Parse execution_time "HH:mm" to hora + periodo
+    let hora = dto.execution_time || '12:00';
+    let periodo: 'AM' | 'PM' = 'AM';
+    if (hora) {
+      const [h, m] = hora.split(':').map(Number);
+      if (h >= 12) {
+        periodo = 'PM';
+        hora = `${h === 12 ? 12 : h - 12}:${m.toString().padStart(2, '0')}`;
+      } else {
+        hora = `${h === 0 ? 12 : h}:${m.toString().padStart(2, '0')}`;
+      }
+    }
+
+    const acciones: AccionDispositivo[] = (dto.actions || []).map((a, idx) => ({
+      id: `act_${dto.id}_${idx}`,
+      dispositivo: `Dispositivo ${a.device_id}`,
+      tipo: '',
+      tipoAccion: a.turn_on ? 'ENCENDER' as const : 'APAGAR' as const,
+      icon: 'other',
+      deviceId: a.device_id,
+    }));
+
+    // Enrich action names with device info
+    acciones.forEach(acc => {
+      const dev = this.devices.find(d => d.backendId === acc.deviceId);
+      if (dev) {
+        acc.dispositivo = dev.nombre;
+        acc.tipo = dev.tipo.toUpperCase();
+        acc.icon = dev.icon || 'other';
+      }
+    });
+
+    return {
+      id: dto.id.toString(),
+      backendId: dto.id,
+      homeId: dto.home_id,
+      nombre: dto.name,
+      hora,
+      periodo,
+      dias,
+      activa: dto.enabled,
+      estado: dto.enabled ? 'ACTIVA' : 'PAUSADA',
+      acciones,
+      pausadaPorAusencia: dto.paused_by_away_mode,
+    };
+  }
+
+  public mapAlertFromBackend(dto: BackendAlertaDTO): Alerta {
+    // Map tipo to frontend's expected format
+    let tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO' = 'INFO';
+    const backendTipo = (dto.tipo || '').toUpperCase();
+    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA')) tipo = 'CRITICA';
+    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING')) tipo = 'ADVERTENCIA';
+
+    // Parse fecha_creacion
+    let fecha = 'Hoy';
+    let hora = '';
+    if (dto.fecha_creacion) {
+      const d = new Date(dto.fecha_creacion);
+      const today = new Date();
+      if (d.toDateString() === today.toDateString()) {
+        fecha = 'Hoy';
+      } else {
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        fecha = d.toDateString() === yesterday.toDateString() ? 'Ayer' : d.toLocaleDateString('es-ES');
+      }
+      hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return {
+      id: dto.id.toString(),
+      backendId: dto.id,
+      tipo,
+      titulo: dto.mensaje?.substring(0, 50) || 'Alerta',
+      descripcion: dto.mensaje || '',
+      dispositivo: dto.device_name || 'Sistema',
+      icono: 'lightning',
+      fecha,
+      hora,
+      leida: dto.leido,
+      activa: !dto.leido,
+      deviceId: dto.device_id,
+    };
+  }
+
+  // ==================== Local State (fallback & backward compat) ====================
 
   isTestUser(): boolean {
     const email = localStorage.getItem('currentUserEmail');
@@ -162,21 +449,25 @@ export class StateService {
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        this.usuario = data.usuario;
-        this.devices = data.devices;
-        this.routines = data.routines;
-        this.alertas = data.alertas;
-        this.activities = data.activities;
-        this.hogar = data.hogar;
-        this.energia = data.energia;
-        this.apariencia = data.apariencia;
-        this.notificaciones = data.notificaciones;
-        this.integracion = data.integracion;
-        this.tarifa = data.tarifa;
-        this.ecoIA = data.ecoIA;
+        if (data.usuario) this.usuario = { ...this.usuario, ...data.usuario };
+        if (data.devices) this.devices = data.devices;
+        if (data.routines) this.routines = data.routines;
+        if (data.alertas) this.alertas = data.alertas;
+        if (data.activities) this.activities = data.activities;
+        if (data.hogar) this.hogar = data.hogar;
+        if (data.energia) this.energia = data.energia;
+        if (data.apariencia) this.apariencia = data.apariencia;
+        if (data.notificaciones) this.notificaciones = data.notificaciones;
+        if (data.integracion) this.integracion = data.integracion;
+        if (data.tarifa) this.tarifa = data.tarifa;
+        if (data.ecoIA) this.ecoIA = data.ecoIA;
         this.notificationsList = data.notificationsList || [
           { id: '1', texto: '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.', leido: false, tiempo: 'Ahora' }
         ];
+        if (data.userId) this.userId = data.userId;
+        if (data.userRole) this.userRole = data.userRole;
+        if (data.casas) this.casas = data.casas;
+        if (data.habitaciones) this.habitaciones = data.habitaciones;
         return;
       } catch (e) {
         console.error('Error loading saved state', e);
@@ -184,8 +475,13 @@ export class StateService {
     }
 
     // Default initialization if no state was found in storage
+    this.initializeDefaults(email);
+  }
+
+  private initializeDefaults(email: string) {
     if (this.isTestUser()) {
       this.usuario = {
+        ...this.usuario,
         nombre: 'Usuario Pruebas',
         email: 'pruebas@ecovolt.com',
         telefono: '+51 999 888 777',
@@ -204,140 +500,22 @@ export class StateService {
         { id: '1', texto: '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.', leido: false, tiempo: 'Ahora' }
       ];
     } else {
-      // Standard Populated Demo User
       this.usuario = {
-        nombre: 'Daniel Specter',
-        email: 'daniel.specter@ecovolt.com',
-        telefono: '+57 314 567 8901',
-        ciudad: 'Bogotá, Colombia',
-        plan: 'EcoVolt Pro',
-        miembro: 'Junio 2024',
+        ...this.usuario,
+        nombre: 'Usuario',
+        email: email,
+        telefono: '',
+        ciudad: 'Lima, Perú',
+        plan: 'EcoVolt Personal',
+        miembro: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
         avatar: null,
       };
-      this.hogar.nombrePropiedad = 'Casa San Isidro';
-      this.hogar.ubicacion = 'Bogotá, Colombia';
-      
-      this.devices = [
-        { id: '1', nombre: 'Lámpara sala', tipo: 'Luz', ubicacion: 'Sala', carga: '60W', estado: true, consumoHoy: 0.3, modo: 'AUTO', badge: 'EFICIENTE', badgeType: 'efficient', icon: 'lamp' },
-        { id: '2', nombre: 'Smart TV', tipo: 'TV', ubicacion: 'Sala', carga: '120W', estado: true, consumoHoy: 0.8, modo: 'MANUAL', badge: 'EFICIENTE', badgeType: 'efficient', icon: 'tv' },
-        { id: '3', nombre: 'Refrigerador', tipo: 'Refrigerador', ubicacion: 'Cocina', carga: '200W', estado: true, consumoHoy: 2.1, modo: 'AUTO', badge: 'CONSTANTE', badgeType: 'constant', icon: 'fridge' },
-        { id: '4', nombre: 'Aire Acond.', tipo: 'AC', ubicacion: 'Dormitorio', carga: '1500W', estado: false, consumoHoy: 0, modo: 'AUTO', badge: 'STANDBY', badgeType: 'standby', icon: 'ac' },
-        { id: '5', nombre: 'Lavadora', tipo: 'Lavadora', ubicacion: 'Lavandería', carga: '800W', estado: false, consumoHoy: 0, modo: 'MANUAL', badge: 'OFF', badgeType: 'off', icon: 'washer' }
-      ];
-
-      this.routines = [
-        {
-          id: '1',
-          nombre: 'Rutina Mañana',
-          hora: '06:30',
-          periodo: 'AM',
-          dias: ['L', 'M', 'X', 'J', 'V'],
-          activa: true,
-          estado: 'ACTIVA',
-          acciones: [
-            { id: 'a1', dispositivo: 'Lámpara Sala', tipo: 'ILUMINACIÓN INTELIGENTE', tipoAccion: 'ENCENDER', icon: 'lamp' },
-            { id: 'a2', dispositivo: 'Cafetera', tipo: 'ELECTRODOMÉSTICO', tipoAccion: 'ENCENDER', icon: 'coffee' },
-            { id: 'a3', dispositivo: 'TV Sala', tipo: 'ENTRETENIMIENTO', tipoAccion: 'APAGAR', icon: 'tv' }
-          ]
-        },
-        {
-          id: '2',
-          nombre: 'Modo Noche',
-          hora: '11:00',
-          periodo: 'PM',
-          dias: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
-          activa: true,
-          estado: 'ACTIVA',
-          acciones: [
-            { id: 'b1', dispositivo: 'Lámpara Sala', tipo: 'ILUMINACIÓN INTELIGENTE', tipoAccion: 'APAGAR', icon: 'lamp' },
-            { id: 'b2', dispositivo: 'TV Sala', tipo: 'ENTRETENIMIENTO', tipoAccion: 'APAGAR', icon: 'tv' }
-          ]
-        },
-        {
-          id: '3',
-          nombre: 'Fin de semana',
-          hora: '09:00',
-          periodo: 'AM',
-          dias: ['S', 'D'],
-          activa: false,
-          estado: 'PAUSADA',
-          acciones: [
-            { id: 'c1', dispositivo: 'Cafetera', tipo: 'ELECTRODOMÉSTICO', tipoAccion: 'ENCENDER', icon: 'coffee' }
-          ]
-        }
-      ];
-
-      this.alertas = [
-        {
-          id: '1',
-          tipo: 'CRITICA',
-          titulo: 'Consumo Excesivo Detectado',
-          descripcion: 'El aire acondicionado ha superado el umbral de consumo diario permitido (15 kWh). Se recomienda reducir la temperatura o apagar el dispositivo.',
-          dispositivo: 'Aire Acondicionado Sala',
-          icono: 'ac',
-          fecha: 'Hoy',
-          hora: '14:32',
-          leida: false,
-          activa: true
-        },
-        {
-          id: '2',
-          tipo: 'ADVERTENCIA',
-          titulo: 'Dispositivo sin respuesta',
-          descripcion: 'La lavadora no responde a los comandos enviados en los últimos 10 minutos. Verifique la conexión de red o el estado físico del dispositivo.',
-          dispositivo: 'Lavadora Samsung',
-          icono: 'washer',
-          fecha: 'Hoy',
-          hora: '12:15',
-          leida: false,
-          activa: true
-        },
-        {
-          id: '3',
-          tipo: 'INFO',
-          titulo: 'Rutina ejecutada exitosamente',
-          descripcion: 'La rutina "Modo Noche" se ejecutó correctamente a las 11:00 PM. Todos los dispositivos fueron apagados según la programación.',
-          dispositivo: 'Sistema de Rutinas',
-          icono: 'routine',
-          fecha: 'Hoy',
-          hora: '11:00',
-          leida: true,
-          activa: false
-        },
-        {
-          id: '4',
-          tipo: 'ADVERTENCIA',
-          titulo: 'Batería de respaldo baja',
-          descripcion: 'El sistema de batería solar tiene un nivel inferior al 20%. Si el consumo continúa, el sistema cambiará a red eléctrica en las próximas horas.',
-          dispositivo: 'Panel Solar EcoVolt',
-          icono: 'solar',
-          fecha: 'Ayer',
-          hora: '09:45',
-          leida: true,
-          activa: false
-        },
-        {
-          id: '5',
-          tipo: 'CRITICA',
-          titulo: 'Pico de voltaje detectado',
-          descripcion: 'Se detectó un pico de voltaje de 250V en el circuito principal. El dispositivo de protección se activó automáticamente para prevenir daños.',
-          dispositivo: 'Circuito Principal',
-          icono: 'lightning',
-          fecha: 'Ayer',
-          hora: '03:22',
-          leida: true,
-          activa: false
-        }
-      ];
-
-      this.activities = [
-        { texto: 'Aire Acondicionado encendido', tiempo: 'Hace 12 min', subtitulo: 'Rutina Noche', dotType: 'active' },
-        { texto: 'TV Sala apagada', tiempo: 'Hace 45 min', subtitulo: 'Control Remoto', dotType: 'inactive' },
-        { texto: 'Pico de consumo detectado', tiempo: 'Hoy, 14:30', subtitulo: 'Lavandería', dotType: 'alert' }
-      ];
-
+      this.devices = [];
+      this.routines = [];
+      this.alertas = [];
+      this.activities = [];
       this.notificationsList = [
-        { id: '1', texto: '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.', leido: false, tiempo: 'Ahora' }
+        { id: '1', texto: '¡Bienvenido a EcoVolt! Conectando con el servidor...', leido: false, tiempo: 'Ahora' }
       ];
     }
 
@@ -362,13 +540,17 @@ export class StateService {
       integracion: this.integracion,
       tarifa: this.tarifa,
       ecoIA: this.ecoIA,
-      notificationsList: this.notificationsList
+      notificationsList: this.notificationsList,
+      userId: this.userId,
+      userRole: this.userRole,
+      casas: this.casas,
+      habitaciones: this.habitaciones,
     };
     localStorage.setItem(storageKey, JSON.stringify(data));
   }
 
   saveProfile(updatedUsuario: any) {
-    this.usuario = { ...updatedUsuario };
+    this.usuario = { ...this.usuario, ...updatedUsuario };
     this.hogar.ubicacion = this.usuario.ciudad;
     this.saveStateToStorage();
   }
@@ -388,88 +570,6 @@ export class StateService {
     localStorage.setItem('ecovolt_sidebar_minimized', String(this.sidebarMinimized));
   }
 
-  startAlertSimulation() {
-    // Run alert check every 30 seconds
-    setInterval(() => {
-      const email = localStorage.getItem('currentUserEmail');
-      if (!email) return;
-
-      // 35% chance to trigger a new alert every 30s
-      if (Math.random() < 0.35) {
-        this.generateSimulatedAlert();
-      }
-    }, 30000);
-  }
-
-  generateSimulatedAlert() {
-    const alertTemplates = [
-      {
-        tipo: 'CRITICA' as const,
-        titulo: 'Pico de Consumo en Cocina',
-        descripcion: 'El horno microondas o freidora ha superado el tiempo de uso normal. Se recomienda apagarlo para reducir consumo.',
-        dispositivo: 'Cocina Inteligente',
-        icono: 'lightning'
-      },
-      {
-        tipo: 'ADVERTENCIA' as const,
-        titulo: 'Filtro de AC Obstruido',
-        descripcion: 'El flujo de aire del Aire Acondicionado es deficiente. Se sugiere realizar mantenimiento preventivo.',
-        dispositivo: 'Aire Acondicionado Dormitorio',
-        icono: 'thermostat'
-      },
-      {
-        tipo: 'INFO' as const,
-        titulo: 'Modo Ahorro Exitoso',
-        descripcion: 'La rutina de Modo Noche se ha ejecutado y redujo el consumo nocturno en un 15%.',
-        dispositivo: 'Eco-IA Optimizer',
-        icono: 'leaf'
-      },
-      {
-        tipo: 'ADVERTENCIA' as const,
-        titulo: 'Uso Inusual de Smart TV',
-        descripcion: 'La TV de la Sala lleva encendida más de 5 horas. ¿Olvidaste apagarla?',
-        dispositivo: 'Smart TV',
-        icono: 'tv'
-      },
-      {
-        tipo: 'CRITICA' as const,
-        titulo: 'Fluctuación de Voltaje',
-        descripcion: 'Se registró una variación de voltaje de 240V en la red. El supresor de picos EcoVolt protegió tus equipos.',
-        dispositivo: 'Tablero Principal',
-        icono: 'lightning'
-      }
-    ];
-
-    const template = alertTemplates[Math.floor(Math.random() * alertTemplates.length)];
-    const date = new Date();
-    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    const newAlert = {
-      id: 'alert_' + Date.now(),
-      tipo: template.tipo,
-      titulo: template.titulo,
-      descripcion: template.descripcion,
-      dispositivo: template.dispositivo,
-      icono: template.icono,
-      fecha: 'Hoy',
-      hora: timeStr,
-      leida: false,
-      activa: true
-    };
-
-    this.alertas.unshift(newAlert);
-    if (this.alertas.length > 15) {
-      this.alertas.pop();
-    }
-
-    // Also push a system notification
-    this.addNotification(`${template.tipo === 'CRITICA' ? '🚨 ALERTA CRÍTICA' : template.tipo === 'ADVERTENCIA' ? '⚠️ ADVERTENCIA' : 'ℹ️ INFO'}: ${template.titulo}`);
-    
-    this.showToast(newAlert.tipo, newAlert.titulo, newAlert.descripcion);
-    
-    this.saveStateToStorage();
-  }
-
   showToast(tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO', titulo: string, descripcion: string) {
     const id = 'toast_' + Date.now();
     this.toasts.push({ id, tipo, titulo, descripcion });
@@ -480,5 +580,25 @@ export class StateService {
 
   removeToast(id: string) {
     this.toasts = this.toasts.filter(t => t.id !== id);
+  }
+
+  // ==================== Utility: Day Mapping ====================
+
+  /** Converts frontend day abbreviation to backend enum */
+  static dayToBackend(day: string): string {
+    const map: { [key: string]: string } = {
+      'L': 'MONDAY', 'M': 'TUESDAY', 'X': 'WEDNESDAY',
+      'J': 'THURSDAY', 'V': 'FRIDAY', 'S': 'SATURDAY', 'D': 'SUNDAY'
+    };
+    return map[day] || day;
+  }
+
+  /** Converts backend day enum to frontend abbreviation */
+  static dayToFrontend(day: string): string {
+    const map: { [key: string]: string } = {
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
+    };
+    return map[day] || day;
   }
 }

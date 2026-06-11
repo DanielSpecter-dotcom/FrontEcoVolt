@@ -1,8 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService, Dispositivo } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-dispositivos',
@@ -11,7 +13,7 @@ import { StateService, Dispositivo } from '../../servicios/state.service';
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',
 })
-export class Dispositivos {
+export class Dispositivos implements OnInit {
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -32,9 +34,31 @@ export class Dispositivos {
 
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    if (this.stateService.isBackendConnected) {
+      this.refreshDevices();
+    } else {
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) this.refreshDevices();
+      });
+    }
+  }
+
+  private refreshDevices() {
+    this.apiService.getDevices().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.stateService.devices = res.data.map(d => this.stateService['mapDeviceFromBackend'](d));
+          this.stateService.saveStateToStorage();
+        }
+      },
+      error: () => {} // Keep existing data
+    });
   }
 
   @HostListener('document:click')
@@ -115,11 +139,12 @@ export class Dispositivos {
   }
 
   toggleState(device: Dispositivo, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    device.estado = !device.estado;
-    if (device.estado) {
+    if (event) event.stopPropagation();
+
+    const newState = !device.estado;
+    device.estado = newState;
+
+    if (newState) {
       const watts = parseInt(device.carga.replace(/\D/g, '')) || 100;
       device.consumoHoy = parseFloat(((watts * 4) / 1000).toFixed(2));
       device.badge = 'ON';
@@ -131,23 +156,46 @@ export class Dispositivos {
     }
     device.showMenu = false;
     this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (device.backendId && this.stateService.isBackendConnected) {
+      this.apiService.toggleDeviceStatus(device.backendId, newState ? 'ON' : 'OFF').subscribe({
+        error: (err) => console.warn('Error syncing device status:', err)
+      });
+    }
   }
 
   toggleModo(device: Dispositivo, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    device.modo = device.modo === 'AUTO' ? 'MANUAL' : 'AUTO';
+    if (event) event.stopPropagation();
+
+    const newMode = device.modo === 'AUTO' ? 'MANUAL' : 'AUTO';
+    device.modo = newMode;
     device.showMenu = false;
     this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (device.backendId && this.stateService.isBackendConnected) {
+      this.apiService.toggleDeviceMode(
+        device.backendId,
+        newMode === 'AUTO' ? 'AUTOMATIC' : 'MANUAL'
+      ).subscribe({
+        error: (err) => console.warn('Error syncing device mode:', err)
+      });
+    }
   }
 
   deleteDevice(device: Dispositivo, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
+    if (event) event.stopPropagation();
+
     this.stateService.devices = this.devices.filter(d => d.id !== device.id);
     this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (device.backendId && this.stateService.isBackendConnected) {
+      this.apiService.deleteDevice(device.backendId).subscribe({
+        error: (err) => console.warn('Error deleting device on backend:', err)
+      });
+    }
   }
 
   toggleMenu(device: Dispositivo, event: Event) {
@@ -214,7 +262,7 @@ export class Dispositivos {
     };
 
     if (this.editMode && this.selectedDevice) {
-      // Edit device
+      // Edit device locally
       this.selectedDevice.nombre = this.newNombre;
       this.selectedDevice.tipo = this.newTipo;
       this.selectedDevice.ubicacion = this.newUbicacion;
@@ -223,6 +271,17 @@ export class Dispositivos {
       this.selectedDevice.icon = iconMap[this.newTipo] || 'other';
       if (this.selectedDevice.estado) {
         this.selectedDevice.consumoHoy = estimatedKwh;
+      }
+
+      // Sync edit with backend
+      if (this.selectedDevice.backendId && this.stateService.isBackendConnected) {
+        this.apiService.updateDevice(this.selectedDevice.backendId, {
+          nombre: this.newNombre,
+          tipo: this.newTipo.toLowerCase(),
+          automatico: this.newModo === 'AUTO',
+        }).subscribe({
+          error: (err) => console.warn('Error updating device on backend:', err)
+        });
       }
     } else {
       // Add device
@@ -241,6 +300,38 @@ export class Dispositivos {
         icon: iconMap[this.newTipo] || 'other',
         showMenu: false
       };
+
+      // Try backend first
+      if (this.stateService.isBackendConnected && this.stateService.habitaciones.length > 0) {
+        const habitacionId = this.stateService.habitaciones[0].id;
+        this.apiService.createDevice({
+          habitacion_id: habitacionId,
+          nombre: this.newNombre,
+          tipo: this.newTipo.toLowerCase(),
+          activo: true,
+          automatico: this.newModo === 'AUTO',
+        }).subscribe({
+          next: (res) => {
+            if (res.success && res.data) {
+              newDev.backendId = res.data.id;
+              newDev.id = res.data.id.toString();
+              newDev.carga = `${res.data.potencia_watts}W`;
+              newDev.ubicacion = res.data.habitacion_nombre || this.newUbicacion;
+              newDev.habitacionId = res.data.habitacion_id;
+            }
+            this.stateService.devices.push(newDev);
+            this.stateService.saveStateToStorage();
+            this.closeModal();
+          },
+          error: () => {
+            this.stateService.devices.push(newDev);
+            this.stateService.saveStateToStorage();
+            this.closeModal();
+          }
+        });
+        return;
+      }
+
       this.stateService.devices.push(newDev);
     }
 
@@ -249,6 +340,7 @@ export class Dispositivos {
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

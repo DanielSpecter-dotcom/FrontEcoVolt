@@ -1,8 +1,10 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { StateService, Rutina, AccionDispositivo, Dispositivo } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
 
 @Component({
   selector: 'app-rutinas',
@@ -11,7 +13,7 @@ import { StateService, Rutina, AccionDispositivo, Dispositivo } from '../../serv
   templateUrl: './rutinas.html',
   styleUrl: './rutinas.css',
 })
-export class Rutinas {
+export class Rutinas implements OnInit {
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -30,12 +32,39 @@ export class Rutinas {
 
   constructor(
     private router: Router,
-    public stateService: StateService
-  ) {
-    this.stateService.loadState();
-    if (this.routines.length > 0) {
-      this.selectRoutine(this.routines[0]);
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
+
+  ngOnInit() {
+    if (this.stateService.isBackendConnected) {
+      this.loadRoutines();
+    } else {
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) this.loadRoutines();
+        else if (this.routines.length > 0) this.selectRoutine(this.routines[0]);
+      });
     }
+  }
+
+  private loadRoutines() {
+    this.apiService.getRoutines().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.stateService.routines = res.data.map(r => this.stateService['mapRoutineFromBackend'](r));
+          this.stateService.saveStateToStorage();
+        }
+        if (this.routines.length > 0) {
+          this.selectRoutine(this.routines[0]);
+        }
+      },
+      error: () => {
+        if (this.routines.length > 0) {
+          this.selectRoutine(this.routines[0]);
+        }
+      }
+    });
   }
 
   @HostListener('document:click')
@@ -92,7 +121,7 @@ export class Rutinas {
     this.editPeriodo = routine.periodo;
     this.editDias = [...routine.dias];
     this.editActiva = routine.activa;
-    this.editAcciones = JSON.parse(JSON.stringify(routine.acciones)); // deep copy
+    this.editAcciones = JSON.parse(JSON.stringify(routine.acciones));
   }
 
   isDaySelected(day: string): boolean {
@@ -129,7 +158,6 @@ export class Rutinas {
     const dev = this.registeredDevices.find(d => d.id === this.selectedAddDeviceId);
     if (!dev) return;
 
-    // Check if the device is already in editAcciones to prevent duplicate action
     const exists = this.editAcciones.some(a => a.dispositivo === dev.nombre);
     if (exists) {
       alert(`El dispositivo "${dev.nombre}" ya tiene una acción en esta rutina.`);
@@ -141,11 +169,12 @@ export class Rutinas {
       dispositivo: dev.nombre,
       tipo: dev.tipo.toUpperCase(),
       tipoAccion: 'ENCENDER',
-      icon: dev.icon || 'other'
+      icon: dev.icon || 'other',
+      deviceId: dev.backendId,
     };
 
     this.editAcciones.push(newAction);
-    this.selectedAddDeviceId = ''; // reset selection
+    this.selectedAddDeviceId = '';
   }
 
   toggleActionType(action: AccionDispositivo) {
@@ -164,7 +193,45 @@ export class Rutinas {
     this.selectedRoutine.acciones = JSON.parse(JSON.stringify(this.editAcciones));
 
     this.stateService.saveStateToStorage();
-    alert('Rutina guardada correctamente.');
+
+    // Sync with backend
+    if (this.selectedRoutine.backendId && this.stateService.isBackendConnected) {
+      // Convert frontend time to 24h HH:mm format
+      const time24 = this.convertTo24h(this.editHora, this.editPeriodo);
+      // Convert days to backend format
+      const backendDays = this.editDias.map(d => StateService.dayToBackend(d));
+      // Convert actions
+      const backendAcciones = this.editAcciones
+        .filter(a => a.deviceId)
+        .map(a => ({
+          device_id: a.deviceId!,
+          encendido: a.tipoAccion === 'ENCENDER'
+        }));
+
+      this.apiService.updateRoutine(this.selectedRoutine.backendId, {
+        name: this.editNombre,
+        execution_time: time24,
+        days_of_week: backendDays,
+        acciones: backendAcciones,
+        enabled: this.editActiva,
+      }).subscribe({
+        next: () => alert('Rutina guardada correctamente.'),
+        error: (err) => {
+          console.warn('Error syncing routine:', err);
+          alert('Rutina guardada localmente. Error al sincronizar con el servidor.');
+        }
+      });
+    } else {
+      alert('Rutina guardada correctamente.');
+    }
+  }
+
+  private convertTo24h(hora: string, periodo: 'AM' | 'PM'): string {
+    const [h, m] = hora.split(':').map(Number);
+    let hour24 = h;
+    if (periodo === 'PM' && h !== 12) hour24 = h + 12;
+    if (periodo === 'AM' && h === 12) hour24 = 0;
+    return `${hour24.toString().padStart(2, '0')}:${(m || 0).toString().padStart(2, '0')}`;
   }
 
   discardChanges() {
@@ -174,6 +241,32 @@ export class Rutinas {
   }
 
   createRoutine() {
+    const homeId = this.stateService.casas.length > 0 ? this.stateService.casas[0].id : 1;
+
+    if (this.stateService.isBackendConnected) {
+      this.apiService.createRoutine({
+        home_id: homeId,
+        nombre: 'Nueva Rutina',
+        execution_time: '12:00',
+        days_of_week: ['MONDAY'],
+        acciones: [],
+      }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const newRoutine = this.stateService['mapRoutineFromBackend'](res.data);
+            this.stateService.routines.push(newRoutine);
+            this.stateService.saveStateToStorage();
+            this.selectRoutine(newRoutine);
+          }
+        },
+        error: () => this.createRoutineLocally()
+      });
+    } else {
+      this.createRoutineLocally();
+    }
+  }
+
+  private createRoutineLocally() {
     const newId = (this.routines.length + 1).toString();
     const newRoutine: Rutina = {
       id: newId,
@@ -200,9 +293,17 @@ export class Rutinas {
       }
     }
     this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (routine.backendId && this.stateService.isBackendConnected) {
+      this.apiService.deleteRoutine(routine.backendId).subscribe({
+        error: (err) => console.warn('Error deleting routine:', err)
+      });
+    }
   }
 
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

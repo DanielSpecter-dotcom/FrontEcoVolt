@@ -9,6 +9,7 @@ import { Alertas } from './componentes/alertas/alertas';
 import { Perfil } from './componentes/perfil/perfil';
 import { Configuracion } from './componentes/configuracion/configuracion';
 import { VerificarCodigo } from './componentes/verificar-codigo/verificar-codigo';
+import { authGuard } from './servicios/auth.guard';
 
 export const routes: Routes = [
     {
@@ -30,30 +31,37 @@ export const routes: Routes = [
     },
     {
         path: 'dashboard',
-        component: Dashboard
+        component: Dashboard,
+        canActivate: [authGuard]
     },
     {
         path: 'dispositivos',
-        component: Dispositivos
+        component: Dispositivos,
+        canActivate: [authGuard]
     },
     {
         path: 'consumo',
-        component: Consumo
+        component: Consumo,
+        canActivate: [authGuard]
     },
     {
         path: 'rutinas',
-        component: Rutinas
+        component: Rutinas,
+        canActivate: [authGuard]
     },
     {
         path: 'alertas',
-        component: Alertas
+        component: Alertas,
+        canActivate: [authGuard]
     },
     {
         path: 'perfil',
-        component: Perfil
+        component: Perfil,
+        canActivate: [authGuard]
     },
     {
         path: 'configuracion',
-        component: Configuracion
+        component: Configuracion,
+        canActivate: [authGuard]
     }
 ];
