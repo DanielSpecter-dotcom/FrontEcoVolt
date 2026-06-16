@@ -19,7 +19,7 @@ export class Rutinas implements OnInit {
   showNotifications = false;
 
   selectedRoutine: Rutina | null = null;
-  
+
   // Working copy for editing
   editNombre = '';
   editHora = '';
@@ -28,7 +28,7 @@ export class Rutinas implements OnInit {
   editActiva = true;
   editAcciones: AccionDispositivo[] = [];
 
-  diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  diasSemana = ['L', 'M', 'MI', 'J', 'V', 'S', 'D'];
 
   constructor(
     private router: Router,
@@ -199,7 +199,7 @@ export class Rutinas implements OnInit {
       alert('Agrega al menos una acción con dispositivo.');
       return;
     }
-    
+
     this.selectedRoutine.nombre = this.editNombre;
     this.selectedRoutine.hora = this.editHora;
     this.selectedRoutine.periodo = this.editPeriodo;

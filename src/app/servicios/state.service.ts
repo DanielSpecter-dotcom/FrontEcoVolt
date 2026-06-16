@@ -288,7 +288,7 @@ export class StateService {
   public mapRoutineFromBackend(dto: RutinaDTO): Rutina {
     // Map backend day names to frontend abbreviations
     const dayMap: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
       'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
     };
 
@@ -631,7 +631,7 @@ export class StateService {
   /** Converts backend day enum to frontend abbreviation */
   static dayToFrontend(day: string): string {
     const map: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
       'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
     };
     return map[day] || day;
