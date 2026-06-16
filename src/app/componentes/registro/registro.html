@@ -76,16 +76,33 @@
         <p class="subtitle">Comienza tu viaje hacia un consumo sustentable y eficiente.</p>
       </div>
 
+      <!-- Alert Boxes -->
+      <div class="error-box" *ngIf="errorMessage">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="success-box" *ngIf="successMessage">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="error-icon"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>{{ successMessage }}</span>
+      </div>
+
       <form (ngSubmit)="onSubmit()">
 
-        <!-- Name Input -->
+        <!-- DNI Input -->
         <div class="form-group">
-          <label for="fullName">Nombre Completo</label>
+          <label for="dni">DNI</label>
           <div class="input-wrapper">
-            <input type="text" id="fullName" placeholder="Ej. Carlos Mendoza" required>
+            <input type="text" id="dni" placeholder="Ej. 74839201" [(ngModel)]="dni" name="dni" required maxlength="8">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+              <rect x="3" y="4" width="18" height="16" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="4"/>
+              <line x1="8" y1="2" x2="8" y2="4"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
           </div>
         </div>
@@ -94,7 +111,7 @@
         <div class="form-group">
           <label for="email">Correo Electrónico</label>
           <div class="input-wrapper">
-            <input type="email" id="email" placeholder="carlos@example.com" required>
+            <input type="email" id="email" placeholder="carlos@example.com" [(ngModel)]="email" name="email" required>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
               <polyline points="22,6 12,13 2,6"/>
@@ -106,7 +123,7 @@
         <div class="form-group">
           <label for="password">Contraseña</label>
           <div class="input-wrapper">
-            <input [type]="isPasswordVisible ? 'text' : 'password'" id="password" placeholder="Mínimo 8 caracteres" required>
+            <input [type]="isPasswordVisible ? 'text' : 'password'" id="password" placeholder="Mínimo 8 caracteres" [(ngModel)]="password" name="password" required>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -153,8 +170,36 @@
           </div>
         </div>
 
+        <!-- Enterprise Fields (conditional) -->
+        <div *ngIf="selectedAccountType === 'enterprise'" style="margin-top: 24px; animation: slideDown 0.3s ease;">
+          <!-- Nombre Empresa Input -->
+          <div class="form-group">
+            <label for="nombreEmpresa">Nombre de la Empresa</label>
+            <div class="input-wrapper">
+              <input type="text" id="nombreEmpresa" placeholder="Ej. EcoEnergía SAC" [(ngModel)]="nombreEmpresa" name="nombreEmpresa" required>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- RUC Input -->
+          <div class="form-group">
+            <label for="ruc">RUC (11 dígitos)</label>
+            <div class="input-wrapper">
+              <input type="text" id="ruc" placeholder="Ej. 20123456789" [(ngModel)]="ruc" name="ruc" required maxlength="11">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <!-- Terms and Conditions -->
-        <div class="terms-group">
+        <div class="terms-group" style="margin-top: 24px;">
           <label class="checkbox-container">
             <input type="checkbox" required>
             <span class="checkmark"></span>
@@ -166,12 +211,16 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="submit-btn">
-          Crear mi cuenta
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+            Creando cuenta...
+          } @else {
+            Crear mi cuenta
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          }
         </button>
 
       </form>
