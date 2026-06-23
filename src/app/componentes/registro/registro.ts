@@ -13,15 +13,14 @@ import { AuthService } from '../../servicios/auth.service';
 export class Registro {
   selectedAccountType: 'personal' | 'enterprise' = 'personal';
   isPasswordVisible = false;
+  isLoading = false;
 
-  // Form Fields
   email = '';
   password = '';
   dni = '';
   nombreEmpresa = '';
   ruc = '';
 
-  // Status Alerts
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
@@ -41,71 +40,78 @@ export class Registro {
   }
 
   onSubmit() {
+    if (this.isLoading) {
+      return;
+    }
+
     if (!this.email.trim() || !this.password.trim() || !this.dni.trim()) {
       this.errorMessage = 'Por favor complete los campos obligatorios.';
       return;
     }
 
     if (this.dni.trim().length !== 8) {
-      this.errorMessage = 'El DNI debe tener exactamente 8 dígitos.';
+      this.errorMessage = 'El DNI debe tener exactamente 8 digitos.';
       return;
     }
 
-    this.errorMessage = null;
-    this.successMessage = null;
-
-    if (this.selectedAccountType === 'personal') {
-      this.authService.registerPersonal(this.dni, this.email, this.password).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.successMessage = 'Registro exitoso. Redirigiendo a verificación de código...';
-            setTimeout(() => this.router.navigate(['/verificar-codigo'], { queryParams: { email: this.email } }), 2000);
-          } else {
-            this.errorMessage = response.message || 'Error al registrar la cuenta.';
-          }
-        },
-        error: (err) => {
-          console.error('Error al registrar usuario personal:', err);
-          if (err.status === 0) {
-            console.log('Backend desconectado. Simulando registro personal exitoso (Local)...');
-            this.successMessage = 'Registro exitoso (Simulado - Modo Desarrollo). Redirigiendo a verificación...';
-            setTimeout(() => this.router.navigate(['/verificar-codigo'], { queryParams: { email: this.email } }), 2000);
-          } else {
-            this.errorMessage = err.error?.message || 'Error de conexión con el servidor. Verifica que el backend esté ejecutándose.';
-          }
-        }
-      });
-    } else {
+    if (this.selectedAccountType === 'enterprise') {
       if (!this.nombreEmpresa.trim() || !this.ruc.trim()) {
         this.errorMessage = 'Por favor complete el nombre de la empresa y el RUC.';
         return;
       }
+
       if (this.ruc.trim().length !== 11) {
-        this.errorMessage = 'El RUC debe tener exactamente 11 dígitos.';
+        this.errorMessage = 'El RUC debe tener exactamente 11 digitos.';
         return;
       }
-
-      this.authService.registerEnterprise(this.dni, this.email, this.password, this.nombreEmpresa, this.ruc).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.successMessage = 'Registro empresarial exitoso. Redirigiendo a verificación de código...';
-            setTimeout(() => this.router.navigate(['/verificar-codigo'], { queryParams: { email: this.email } }), 2000);
-          } else {
-            this.errorMessage = response.message || 'Error al registrar la cuenta empresarial.';
-          }
-        },
-        error: (err) => {
-          console.error('Error al registrar usuario empresarial:', err);
-          if (err.status === 0) {
-            console.log('Backend desconectado. Simulando registro empresarial exitoso (Local)...');
-            this.successMessage = 'Registro empresarial exitoso (Simulado - Modo Desarrollo). Redirigiendo a verificación...';
-            setTimeout(() => this.router.navigate(['/verificar-codigo'], { queryParams: { email: this.email } }), 2000);
-          } else {
-            this.errorMessage = err.error?.message || 'Error de conexión con el servidor. Verifica que el backend esté ejecutándose.';
-          }
-        }
-      });
     }
+
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.isLoading = true;
+
+    const request$ = this.selectedAccountType === 'personal'
+      ? this.authService.registerPersonal(this.dni.trim(), this.email.trim(), this.password)
+      : this.authService.registerEnterprise(
+          this.dni.trim(),
+          this.email.trim(),
+          this.password,
+          this.nombreEmpresa.trim(),
+          this.ruc.trim()
+        );
+
+    request$.subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        if (response.success) {
+          this.successMessage = this.selectedAccountType === 'personal'
+            ? 'Registro exitoso. Redirigiendo a verificacion de codigo...'
+            : 'Registro empresarial exitoso. Redirigiendo a verificacion de codigo...';
+          this.goToVerification();
+          return;
+        }
+
+        this.errorMessage = response.message || 'Error al registrar la cuenta.';
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Error al registrar usuario:', err);
+
+        if (err.status === 0) {
+          this.successMessage = 'Registro exitoso (simulado - modo desarrollo). Redirigiendo a verificacion...';
+          this.goToVerification();
+          return;
+        }
+
+        this.errorMessage = err.error?.message || 'Error de conexion con el servidor. Verifica que el backend este ejecutandose.';
+      }
+    });
+  }
+
+  private goToVerification() {
+    const email = this.email.trim();
+    localStorage.setItem('pendingVerificationEmail', email);
+    setTimeout(() => this.router.navigate(['/verificar-codigo'], { queryParams: { email } }), 2000);
   }
 }
-

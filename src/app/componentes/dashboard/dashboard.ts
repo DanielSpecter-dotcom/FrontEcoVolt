@@ -2,9 +2,10 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { StateService, Dispositivo, Actividad } from '../../servicios/state.service';
-import { ApiService, ResumenPanelDto, ActividadPanelDto } from '../../servicios/api.service';
+import { StateService } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
+import { Dispositivo, Actividad, ActividadPanelDto, ResumenPanelDto } from '../../modelos';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,6 +37,7 @@ export class Dashboard implements OnInit {
   newCarga = '';
   newModo: 'AUTO' | 'MANUAL' = 'AUTO';
   tiposDisponibles = ['Luz', 'TV', 'Refrigerador', 'AC', 'Lavadora', 'Cafetera', 'Otro'];
+  isSubmitting = false;
 
   isEcoModeActive = true;
 
@@ -192,10 +194,10 @@ export class Dashboard implements OnInit {
 
   get devices(): Dispositivo[] {
     if (!this.dashSearchTerm.trim()) {
-      return this.stateService.devices;
+      return this.stateService.dispositivosDeCasaSeleccionada;
     }
     const term = this.dashSearchTerm.toLowerCase();
-    return this.stateService.devices.filter(d => d.nombre.toLowerCase().includes(term));
+    return this.stateService.dispositivosDeCasaSeleccionada.filter(d => d.nombre.toLowerCase().includes(term));
   }
 
   get activities(): Actividad[] {
@@ -440,7 +442,13 @@ export class Dashboard implements OnInit {
 
   // Device addition modal operations
   openAddModal() {
+    if (!this.stateService.selectedHabitacionId) {
+      alert('Primero crea o selecciona una casa y una habitación en Dispositivos.');
+      this.router.navigate(['/dispositivos']);
+      return;
+    }
     this.showAddModal = true;
+    this.isSubmitting = false;
     this.newNombre = '';
     this.newTipo = 'Luz';
     this.newUbicacion = '';
@@ -450,20 +458,25 @@ export class Dashboard implements OnInit {
 
   closeModal() {
     this.showAddModal = false;
+    this.isSubmitting = false;
   }
 
   addDevice() {
-    if (!this.newNombre.trim() || !this.newUbicacion.trim() || !this.newCarga.trim()) {
+    // Prevent double-click submissions
+    if (this.isSubmitting) return;
+
+    if (!this.newNombre.trim() || !this.newCarga.trim()) {
       alert('Por favor complete todos los campos obligatorios.');
       return;
     }
+
+    this.isSubmitting = true;
 
     let powerStr = this.newCarga.trim().toUpperCase();
     if (!powerStr.endsWith('W') && !powerStr.endsWith('KW')) {
       powerStr += 'W';
     }
 
-    const newId = 'dev_' + Date.now();
     const watts = parseInt(powerStr.replace(/\D/g, '')) || 100;
     const estimatedKwh = parseFloat(((watts * 4) / 1000).toFixed(2));
 
@@ -477,23 +490,9 @@ export class Dashboard implements OnInit {
       'Otro': 'other'
     };
 
-    const newDev: Dispositivo = {
-      id: newId,
-      nombre: this.newNombre,
-      tipo: this.newTipo,
-      ubicacion: this.newUbicacion,
-      carga: powerStr,
-      estado: true,
-      consumoHoy: estimatedKwh,
-      modo: this.newModo,
-      badge: 'EFICIENTE',
-      badgeType: 'efficient',
-      icon: iconMap[this.newTipo] || 'other'
-    };
-
     // Try to create on backend first
-    if (this.stateService.isBackendConnected && this.stateService.habitaciones.length > 0) {
-      const habitacionId = this.stateService.habitaciones[0].id; // Default to first room
+    if (this.stateService.isBackendConnected && this.stateService.selectedHabitacionId) {
+      const habitacionId = this.stateService.selectedHabitacionId;
       this.apiService.createDevice({
         habitacion_id: habitacionId,
         nombre: this.newNombre,
@@ -502,37 +501,98 @@ export class Dashboard implements OnInit {
         automatico: this.newModo === 'AUTO',
       }).subscribe({
         next: (res) => {
-          if (res.success && res.data) {
-            newDev.backendId = res.data.id;
-            newDev.id = res.data.id.toString();
-            newDev.carga = `${res.data.potencia_watts}W`;
-            newDev.ubicacion = res.data.habitacion_nombre || this.newUbicacion;
-            newDev.habitacionId = res.data.habitacion_id;
+          try {
+            if (res.success && res.data) {
+              // Use the centralized mapper for single source of truth
+              const mappedDevice = this.stateService.mapDeviceFromBackend(res.data);
+              // Avoid duplicates
+              const alreadyExists = this.stateService.devices.some(
+                d => d.backendId === mappedDevice.backendId ||
+                (((d.nombre || '').trim().toLowerCase() === (mappedDevice.nombre || '').trim().toLowerCase()) &&
+                 (d.ubicacion || '') === (mappedDevice.ubicacion || ''))
+              );
+              if (!alreadyExists) {
+                this.stateService.devices.push(mappedDevice);
+                this.stateService.addNotification(`Nuevo dispositivo registrado: ${mappedDevice.nombre}`);
+                this.logActivity(`Nuevo dispositivo registrado: ${mappedDevice.nombre}`, 'Dispositivos', 'system');
+              }
+            }
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          } catch (e) {
+            console.error('Error handling success response:', e);
+          } finally {
+            this.closeModal();
           }
-          this.stateService.devices.push(newDev);
-          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
-          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
-          this.recalculateConsumption();
-          this.stateService.saveStateToStorage();
-          this.closeModal();
         },
-        error: () => {
-          // Fallback: add locally
-          this.stateService.devices.push(newDev);
-          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
-          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
-          this.recalculateConsumption();
-          this.stateService.saveStateToStorage();
-          this.closeModal();
+        error: (err) => {
+          console.error('Error creating device on backend:', err);
+          try {
+            // Fallback: add locally with temporary data
+            const newDev: Dispositivo = {
+              id: 'dev_' + Date.now(),
+              nombre: this.newNombre,
+              tipo: this.newTipo,
+              ubicacion: this.newUbicacion,
+              carga: powerStr,
+              estado: true,
+              consumoHoy: estimatedKwh,
+              modo: this.newModo,
+              badge: 'EFICIENTE',
+              badgeType: 'efficient',
+              icon: iconMap[this.newTipo] || 'other'
+            };
+            // Avoid duplicates
+            const alreadyExists = this.stateService.devices.some(
+              d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+              (d.ubicacion || '') === (newDev.ubicacion || '')
+            );
+            if (!alreadyExists) {
+              this.stateService.devices.push(newDev);
+              this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+              this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+            }
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          } catch (e) {
+            console.error('Error in fallback creation:', e);
+          } finally {
+            this.closeModal();
+          }
         }
       });
     } else {
-      this.stateService.devices.push(newDev);
-      this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
-      this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
-      this.recalculateConsumption();
-      this.stateService.saveStateToStorage();
-      this.closeModal();
+      try {
+        const newDev: Dispositivo = {
+          id: 'dev_' + Date.now(),
+          nombre: this.newNombre,
+          tipo: this.newTipo,
+          ubicacion: this.newUbicacion,
+          carga: powerStr,
+          estado: true,
+          consumoHoy: estimatedKwh,
+          modo: this.newModo,
+          badge: 'EFICIENTE',
+          badgeType: 'efficient',
+          icon: iconMap[this.newTipo] || 'other'
+        };
+        // Avoid duplicates
+        const alreadyExists = this.stateService.devices.some(
+          d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+          (d.ubicacion || '') === (newDev.ubicacion || '')
+        );
+        if (!alreadyExists) {
+          this.stateService.devices.push(newDev);
+          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+        }
+        this.recalculateConsumption();
+        this.stateService.saveStateToStorage();
+      } catch (e) {
+        console.error('Error in local creation:', e);
+      } finally {
+        this.closeModal();
+      }
     }
   }
 

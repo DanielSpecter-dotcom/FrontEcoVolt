@@ -37,6 +37,25 @@
     </div>
 
     <form (ngSubmit)="onSubmit()">
+      <!-- Email Input -->
+      <div class="form-group" *ngIf="!email">
+        <label for="email">Correo electronico</label>
+        <div class="input-wrapper">
+          <input
+            type="email"
+            id="email"
+            placeholder="correo@example.com"
+            [(ngModel)]="email"
+            name="email"
+            required
+            autocomplete="email">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="input-icon">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+      </div>
+
       <!-- OTP Code Input -->
       <div class="form-group">
         <label for="verificationCode">Código de Verificación</label>

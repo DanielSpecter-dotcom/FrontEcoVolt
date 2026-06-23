@@ -62,6 +62,18 @@
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+
         <li>
           <a [routerLink]="['/dispositivos']">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
@@ -254,6 +266,27 @@
         </div>
       </div>
     </div>
+
+    <section class="device-alert-panel" (click)="$event.stopPropagation()">
+      <div class="alert-field">
+        <label>Dispositivo</label>
+        <select [(ngModel)]="selectedDeviceId" name="selectedDeviceId">
+          <option [ngValue]="null">Todos los dispositivos de la casa activa</option>
+          <option *ngFor="let device of dispositivos" [ngValue]="device.backendId">
+            {{ device.nombre }} - {{ device.ubicacion }}
+          </option>
+        </select>
+      </div>
+      <div class="alert-field">
+        <label>Límite de consumo</label>
+        <div class="limit-control">
+          <input type="number" min="0.1" step="0.1" [(ngModel)]="limitKwh" name="limitKwh" placeholder="kWh">
+          <button type="button" (click)="guardarLimite()" [disabled]="isSavingLimit || !selectedDeviceId">
+            {{ isSavingLimit ? 'Guardando...' : 'Guardar límite' }}
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- Filter tabs -->
     <div class="filter-tabs">

@@ -2,9 +2,10 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { StateService, Dispositivo } from '../../servicios/state.service';
+import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
+import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
 
 @Component({
   selector: 'app-dispositivos',
@@ -23,9 +24,17 @@ export class Dispositivos implements OnInit {
   editMode = false;
   selectedDevice: Dispositivo | null = null;
 
+  /** Guard flag to prevent double-click submissions */
+  isSubmitting = false;
+  isCreatingHome = false;
+  isCreatingRoom = false;
+
   // Form fields
+  newCasaNombre = '';
+  newHabitacionNombre = '';
   newNombre = '';
   newTipo = 'Luz';
+  newHabitacionId: number | null = null;
   newUbicacion = '';
   newCarga = '';
   newModo: 'AUTO' | 'MANUAL' = 'AUTO';
@@ -49,11 +58,12 @@ export class Dispositivos implements OnInit {
     }
   }
 
+  /** Reloads the full device list from backend, replacing local state */
   private refreshDevices() {
     this.apiService.getDevices().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.stateService.devices = res.data.map(d => this.stateService['mapDeviceFromBackend'](d));
+          this.stateService.devices = res.data.map(d => this.stateService.mapDeviceFromBackend(d));
           this.stateService.saveStateToStorage();
         }
       },
@@ -102,7 +112,33 @@ export class Dispositivos implements OnInit {
 
   // Getters connected to StateService
   get devices(): Dispositivo[] {
-    return this.stateService.devices;
+    return this.stateService.dispositivosDeHabitacionSeleccionada;
+  }
+
+  get casas(): CasaDTO[] {
+    return this.stateService.casas;
+  }
+
+  get habitaciones(): HabitacionDTO[] {
+    return this.stateService.habitacionesDeCasaSeleccionada;
+  }
+
+  get selectedCasaId(): number | null {
+    return this.stateService.selectedCasaId;
+  }
+
+  get selectedHabitacionId(): number | null {
+    return this.stateService.selectedHabitacionId;
+  }
+
+  onCasaChange(casaId: number | null) {
+    this.stateService.setActiveHome(casaId);
+    this.newHabitacionId = this.stateService.selectedHabitacionId;
+  }
+
+  onHabitacionChange(habitacionId: number | null) {
+    this.stateService.setActiveRoom(habitacionId);
+    this.newHabitacionId = habitacionId;
   }
 
   get userAvatar(): string | null {
@@ -114,7 +150,7 @@ export class Dispositivos implements OnInit {
       return this.devices;
     }
     const term = this.searchTerm.toLowerCase();
-    return this.devices.filter(d => 
+    return this.devices.filter(d =>
       d.nombre.toLowerCase().includes(term) ||
       d.tipo.toLowerCase().includes(term) ||
       d.ubicacion.toLowerCase().includes(term)
@@ -124,6 +160,89 @@ export class Dispositivos implements OnInit {
   get totalConsumption(): number {
     const total = this.devices.reduce((acc, curr) => acc + curr.consumoHoy, 0);
     return parseFloat(total.toFixed(1));
+  }
+
+  createHome() {
+    const nombre = this.newCasaNombre.trim();
+    if (!nombre) {
+      alert('Ingresa un nombre para la casa.');
+      return;
+    }
+
+    const userId = this.stateService.userId || this.authService.getUserId();
+    if (!userId && this.stateService.isBackendConnected) {
+      alert('No se pudo identificar el usuario actual.');
+      return;
+    }
+
+    this.isCreatingHome = true;
+    if (this.stateService.isBackendConnected && userId) {
+      this.apiService.createHome({ nombre, usuario_id: userId }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.casas.push(res.data);
+            this.stateService.setActiveHome(res.data.id);
+            this.stateService.hogar.nombrePropiedad = res.data.nombre;
+            this.newCasaNombre = '';
+          }
+          this.isCreatingHome = false;
+        },
+        error: (err) => {
+          this.isCreatingHome = false;
+          alert(err.error?.message || 'No se pudo crear la casa.');
+        }
+      });
+      return;
+    }
+
+    const localCasa: CasaDTO = { id: Date.now(), nombre, usuario_id: userId || 0 };
+    this.stateService.casas.push(localCasa);
+    this.stateService.setActiveHome(localCasa.id);
+    this.newCasaNombre = '';
+    this.isCreatingHome = false;
+  }
+
+  createRoom() {
+    const nombre = this.newHabitacionNombre.trim();
+    if (!nombre) {
+      alert('Ingresa un nombre para la habitación.');
+      return;
+    }
+    if (!this.stateService.selectedCasaId) {
+      alert('Primero selecciona o crea una casa.');
+      return;
+    }
+
+    this.isCreatingRoom = true;
+    if (this.stateService.isBackendConnected) {
+      this.apiService.createRoom({ casa_id: this.stateService.selectedCasaId, nombre }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.habitaciones.push(res.data);
+            this.stateService.setActiveRoom(res.data.id);
+            this.newHabitacionNombre = '';
+            this.newHabitacionId = res.data.id;
+          }
+          this.isCreatingRoom = false;
+        },
+        error: (err) => {
+          this.isCreatingRoom = false;
+          alert(err.error?.message || 'No se pudo crear la habitación.');
+        }
+      });
+      return;
+    }
+
+    const localRoom: HabitacionDTO = {
+      id: Date.now(),
+      name: nombre,
+      casa_id: this.stateService.selectedCasaId,
+    };
+    this.stateService.habitaciones.push(localRoom);
+    this.stateService.setActiveRoom(localRoom.id);
+    this.newHabitacionNombre = '';
+    this.newHabitacionId = localRoom.id;
+    this.isCreatingRoom = false;
   }
 
   get peakLoad(): number {
@@ -212,8 +331,10 @@ export class Dispositivos implements OnInit {
   openModal() {
     this.editMode = false;
     this.selectedDevice = null;
+    this.isSubmitting = false;
     this.newNombre = '';
     this.newTipo = 'Luz';
+    this.newHabitacionId = this.stateService.selectedHabitacionId;
     this.newUbicacion = '';
     this.newCarga = '';
     this.newModo = 'AUTO';
@@ -224,8 +345,10 @@ export class Dispositivos implements OnInit {
     event.stopPropagation();
     this.editMode = true;
     this.selectedDevice = device;
+    this.isSubmitting = false;
     this.newNombre = device.nombre;
     this.newTipo = device.tipo;
+    this.newHabitacionId = device.habitacionId || null;
     this.newUbicacion = device.ubicacion;
     this.newCarga = device.carga;
     this.newModo = device.modo;
@@ -235,13 +358,29 @@ export class Dispositivos implements OnInit {
 
   closeModal() {
     this.showAddModal = false;
+    this.isSubmitting = false;
+  }
+
+  /** Returns the ubicacion name for the selected habitacion */
+  getHabitacionNombre(id: number | null): string {
+    if (!id) return this.newUbicacion || 'Sin asignar';
+    const hab = this.habitaciones.find(h => h.id === id);
+    return hab ? hab.name : this.newUbicacion || 'Sin asignar';
   }
 
   addDevice() {
-    if (!this.newNombre.trim() || !this.newUbicacion.trim() || !this.newCarga.trim()) {
+    // Prevent double-click: if already submitting, exit immediately
+    if (this.isSubmitting) return;
+
+    // Validate required fields
+    const hasHabitacion = this.newHabitacionId !== null;
+    if (!this.newNombre.trim() || !hasHabitacion || !this.newCarga.trim()) {
       alert('Por favor complete todos los campos obligatorios.');
       return;
     }
+
+    // Lock the form to prevent double submission
+    this.isSubmitting = true;
 
     let powerStr = this.newCarga.trim().toUpperCase();
     if (!powerStr.endsWith('W') && !powerStr.endsWith('KW')) {
@@ -265,10 +404,13 @@ export class Dispositivos implements OnInit {
       // Edit device locally
       this.selectedDevice.nombre = this.newNombre;
       this.selectedDevice.tipo = this.newTipo;
-      this.selectedDevice.ubicacion = this.newUbicacion;
+      this.selectedDevice.ubicacion = this.getHabitacionNombre(this.newHabitacionId);
       this.selectedDevice.carga = powerStr;
       this.selectedDevice.modo = this.newModo;
       this.selectedDevice.icon = iconMap[this.newTipo] || 'other';
+      if (this.newHabitacionId) {
+        this.selectedDevice.habitacionId = this.newHabitacionId;
+      }
       if (this.selectedDevice.estado) {
         this.selectedDevice.consumoHoy = estimatedKwh;
       }
@@ -279,31 +421,44 @@ export class Dispositivos implements OnInit {
           nombre: this.newNombre,
           tipo: this.newTipo.toLowerCase(),
           automatico: this.newModo === 'AUTO',
+          room_id: this.newHabitacionId || undefined,
         }).subscribe({
-          error: (err) => console.warn('Error updating device on backend:', err)
+          next: () => {
+            try {
+              this.stateService.saveStateToStorage();
+            } catch (e) {
+              console.error('Error saving edited device state:', e);
+            } finally {
+              this.closeModal();
+            }
+          },
+          error: (err) => {
+            console.warn('Error updating device on backend:', err);
+            try {
+              this.stateService.saveStateToStorage();
+            } catch (e) {
+              console.error('Error saving edited device state in error handler:', e);
+            } finally {
+              this.closeModal();
+            }
+          }
         });
+      } else {
+        try {
+          this.stateService.saveStateToStorage();
+        } catch (e) {
+          console.error('Error saving edited device state:', e);
+        } finally {
+          this.closeModal();
+        }
       }
     } else {
-      // Add device
-      const newId = 'dev_' + Date.now();
-      const newDev: Dispositivo = {
-        id: newId,
-        nombre: this.newNombre,
-        tipo: this.newTipo,
-        ubicacion: this.newUbicacion,
-        carga: powerStr,
-        estado: true,
-        consumoHoy: estimatedKwh,
-        modo: this.newModo,
-        badge: 'EFICIENTE',
-        badgeType: 'efficient',
-        icon: iconMap[this.newTipo] || 'other',
-        showMenu: false
-      };
+      // ============ ADD NEW DEVICE ============
+      // Determine habitacion_id: use selected dropdown or first available
+      const habitacionId = this.newHabitacionId || this.stateService.selectedHabitacionId;
 
-      // Try backend first
-      if (this.stateService.isBackendConnected && this.stateService.habitaciones.length > 0) {
-        const habitacionId = this.stateService.habitaciones[0].id;
+      if (this.stateService.isBackendConnected && habitacionId) {
+        // Create on backend FIRST, then add to local state on success
         this.apiService.createDevice({
           habitacion_id: habitacionId,
           nombre: this.newNombre,
@@ -312,31 +467,96 @@ export class Dispositivos implements OnInit {
           automatico: this.newModo === 'AUTO',
         }).subscribe({
           next: (res) => {
-            if (res.success && res.data) {
-              newDev.backendId = res.data.id;
-              newDev.id = res.data.id.toString();
-              newDev.carga = `${res.data.potencia_watts}W`;
-              newDev.ubicacion = res.data.habitacion_nombre || this.newUbicacion;
-              newDev.habitacionId = res.data.habitacion_id;
+            try {
+              if (res.success && res.data) {
+                // Map the backend response into the frontend model (single source of truth)
+                const mappedDevice = this.stateService.mapDeviceFromBackend(res.data);
+                // Avoid duplicates
+                const alreadyExists = this.stateService.devices.some(
+                  d => d.backendId === mappedDevice.backendId ||
+                  (((d.nombre || '').trim().toLowerCase() === (mappedDevice.nombre || '').trim().toLowerCase()) &&
+                   (d.ubicacion || '') === (mappedDevice.ubicacion || ''))
+                );
+                if (!alreadyExists) {
+                  this.stateService.devices.push(mappedDevice);
+                  this.stateService.saveStateToStorage();
+                }
+              }
+            } catch (e) {
+              console.error('Error handling success response:', e);
+            } finally {
+              this.closeModal();
             }
-            this.stateService.devices.push(newDev);
-            this.stateService.saveStateToStorage();
-            this.closeModal();
           },
-          error: () => {
-            this.stateService.devices.push(newDev);
-            this.stateService.saveStateToStorage();
-            this.closeModal();
+          error: (err) => {
+            console.error('Error creating device on backend:', err);
+            try {
+              // Fallback: add locally with temporary data
+              const newDev: Dispositivo = {
+                id: 'dev_' + Date.now(),
+                nombre: this.newNombre,
+                tipo: this.newTipo,
+                ubicacion: this.getHabitacionNombre(habitacionId),
+                carga: powerStr,
+                estado: true,
+                consumoHoy: estimatedKwh,
+                modo: this.newModo,
+                badge: 'EFICIENTE',
+                badgeType: 'efficient',
+                icon: iconMap[this.newTipo] || 'other',
+                showMenu: false,
+                habitacionId: habitacionId,
+              };
+              // Avoid duplicates
+              const alreadyExists = this.stateService.devices.some(
+                d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+                (d.ubicacion || '') === (newDev.ubicacion || '')
+              );
+              if (!alreadyExists) {
+                this.stateService.devices.push(newDev);
+                this.stateService.saveStateToStorage();
+              }
+            } catch (e) {
+              console.error('Error in fallback creation:', e);
+            } finally {
+              this.closeModal();
+            }
           }
         });
-        return;
+      } else {
+        // No backend connection: add locally only
+        try {
+          const newDev: Dispositivo = {
+            id: 'dev_' + Date.now(),
+            nombre: this.newNombre,
+            tipo: this.newTipo,
+            ubicacion: this.getHabitacionNombre(this.newHabitacionId),
+            carga: powerStr,
+            estado: true,
+            consumoHoy: estimatedKwh,
+            modo: this.newModo,
+            badge: 'EFICIENTE',
+            badgeType: 'efficient',
+            icon: iconMap[this.newTipo] || 'other',
+            showMenu: false,
+            habitacionId: this.newHabitacionId || undefined,
+          };
+          // Avoid duplicates
+          const alreadyExists = this.stateService.devices.some(
+            d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+            (d.ubicacion || '') === (newDev.ubicacion || '')
+          );
+          if (!alreadyExists) {
+            this.stateService.devices.push(newDev);
+            this.stateService.saveStateToStorage();
+          }
+        } catch (e) {
+          console.error('Error in local creation:', e);
+        } finally {
+          this.closeModal();
+        }
       }
-
-      this.stateService.devices.push(newDev);
     }
-
-    this.stateService.saveStateToStorage();
-    this.closeModal();
   }
 
   logout() {

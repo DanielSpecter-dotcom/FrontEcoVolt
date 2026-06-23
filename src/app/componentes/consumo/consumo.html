@@ -61,6 +61,18 @@
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+
         <li>
           <a [routerLink]="['/dispositivos']">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
@@ -238,28 +250,28 @@
           <div class="donut-wrapper">
             <svg class="donut-svg" viewBox="0 0 42 42">
               <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" stroke-width="4"></circle>
-              
+
               <!-- Lavandería: pct -->
-              <circle class="donut-segment segment-lavanderia" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2dd4bf" stroke-width="4.5" 
-                      [attr.stroke-dasharray]="roomStats.lavanderia.pct + ' ' + (100 - roomStats.lavanderia.pct)" 
+              <circle class="donut-segment segment-lavanderia" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2dd4bf" stroke-width="4.5"
+                      [attr.stroke-dasharray]="roomStats.lavanderia.pct + ' ' + (100 - roomStats.lavanderia.pct)"
                       [attr.stroke-dashoffset]="100"></circle>
-              
+
               <!-- Dormitorio: pct -->
-              <circle class="donut-segment segment-dormitorio" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4ade80" stroke-width="4.5" 
-                      [attr.stroke-dasharray]="roomStats.dormitorio.pct + ' ' + (100 - roomStats.dormitorio.pct)" 
+              <circle class="donut-segment segment-dormitorio" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4ade80" stroke-width="4.5"
+                      [attr.stroke-dasharray]="roomStats.dormitorio.pct + ' ' + (100 - roomStats.dormitorio.pct)"
                       [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct"></circle>
-              
+
               <!-- Cocina: pct -->
-              <circle class="donut-segment segment-cocina" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" stroke-width="4.5" 
-                      [attr.stroke-dasharray]="roomStats.cocina.pct + ' ' + (100 - roomStats.cocina.pct)" 
+              <circle class="donut-segment segment-cocina" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" stroke-width="4.5"
+                      [attr.stroke-dasharray]="roomStats.cocina.pct + ' ' + (100 - roomStats.cocina.pct)"
                       [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct - roomStats.dormitorio.pct"></circle>
-              
+
               <!-- Sala: pct -->
-              <circle class="donut-segment segment-sala" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0d9488" stroke-width="4.5" 
-                      [attr.stroke-dasharray]="roomStats.sala.pct + ' ' + (100 - roomStats.sala.pct)" 
+              <circle class="donut-segment segment-sala" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0d9488" stroke-width="4.5"
+                      [attr.stroke-dasharray]="roomStats.sala.pct + ' ' + (100 - roomStats.sala.pct)"
                       [attr.stroke-dashoffset]="roomStats.sala.pct"></circle>
             </svg>
-            
+
             <div class="donut-center-label">
               <span class="donut-value">S/.{{ totalMes }}</span>
               <span class="donut-lbl">TOTAL MES</span>

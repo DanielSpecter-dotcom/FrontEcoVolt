@@ -61,6 +61,18 @@
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+
         <li class="active">
           <a [routerLink]="['/dispositivos']">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
@@ -153,10 +165,10 @@
           <circle cx="11" cy="11" r="8"/>
           <line x1="21" y1="21" x2="16.65" y2="16.65"/>
         </svg>
-        <input 
-          type="text" 
-          placeholder="Buscar dispositivos..." 
-          [(ngModel)]="searchTerm" 
+        <input
+          type="text"
+          placeholder="Buscar dispositivos..."
+          [(ngModel)]="searchTerm"
           class="search-input"
           (click)="$event.stopPropagation()"
         >
@@ -214,18 +226,73 @@
       </div>
     </header>
 
+    <section class="home-flow-panel" (click)="$event.stopPropagation()">
+      <div class="flow-step">
+        <span class="step-index">1</span>
+        <div class="flow-field">
+          <label>Casa actual</label>
+          @if (casas.length > 0) {
+            <select [ngModel]="selectedCasaId" (ngModelChange)="onCasaChange($event)" name="selectedCasa">
+              @for (casa of casas; track casa.id) {
+                <option [ngValue]="casa.id">{{ casa.nombre }}</option>
+              }
+            </select>
+          } @else {
+            <p class="empty-flow-text">Todavía no tienes casas registradas.</p>
+          }
+          <div class="inline-create">
+            <input type="text" [(ngModel)]="newCasaNombre" name="newCasaNombre" placeholder="Nueva casa">
+            <button type="button" (click)="createHome()" [disabled]="isCreatingHome">
+              {{ isCreatingHome ? 'Creando...' : 'Crear casa' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <span class="step-index">2</span>
+        <div class="flow-field">
+          <label>Habitación actual</label>
+          @if (habitaciones.length > 0) {
+            <select [ngModel]="selectedHabitacionId" (ngModelChange)="onHabitacionChange($event)" name="selectedHabitacion">
+              @for (hab of habitaciones; track hab.id) {
+                <option [ngValue]="hab.id">{{ hab.name }}</option>
+              }
+            </select>
+          } @else {
+            <p class="empty-flow-text">Crea una habitación para poder agregar dispositivos.</p>
+          }
+          <div class="inline-create">
+            <input type="text" [(ngModel)]="newHabitacionNombre" name="newHabitacionNombre" placeholder="Nueva habitación" [disabled]="!selectedCasaId">
+            <button type="button" (click)="createRoom()" [disabled]="!selectedCasaId || isCreatingRoom">
+              {{ isCreatingRoom ? 'Creando...' : 'Crear habitación' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-step flow-summary">
+        <span class="step-index">3</span>
+        <div>
+          <label>Dispositivos</label>
+          <strong>{{ devices.length }}</strong>
+          <p>Se muestran solo los equipos de la habitación seleccionada.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Page Title & Add Button -->
     <section class="page-title-section">
       <div class="title-text">
         <h1>Mis Dispositivos</h1>
-        <p>Administra y monitorea el consumo de tu red inteligente.</p>
+        <p>Administra los equipos de la habitación seleccionada.</p>
       </div>
-      <button class="add-device-btn" (click)="openModal(); $event.stopPropagation()">
+      <button class="add-device-btn" (click)="openModal(); $event.stopPropagation()" [disabled]="!selectedHabitacionId">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="add-btn-icon">
           <line x1="12" y1="5" x2="12" y2="19"/>
           <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        AGREGAR DISPOSITIVO
+        {{ selectedHabitacionId ? 'AGREGAR DISPOSITIVO' : 'CREA UNA HABITACIÓN PRIMERO' }}
       </button>
     </section>
 
@@ -373,11 +440,11 @@
 
   <!-- 3. ADD DEVICE MODAL -->
   @if (showAddModal) {
-    <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal-backdrop" (click)="!isSubmitting && closeModal()">
       <div class="modal-content" (click)="$event.stopPropagation()">
         <header class="modal-header">
           <h2>{{ editMode ? 'Editar Dispositivo' : 'Agregar Nuevo Dispositivo' }}</h2>
-          <button class="modal-close-btn" (click)="closeModal()">
+          <button class="modal-close-btn" (click)="closeModal()" [disabled]="isSubmitting">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -385,47 +452,63 @@
           </button>
         </header>
 
-        <form class="modal-form" (submit)="addDevice(); $event.preventDefault()">
-          <div class="form-group">
-            <label for="devName">Nombre del Dispositivo *</label>
-            <input type="text" id="devName" [(ngModel)]="newNombre" name="nombre" placeholder="Ej: Aire Acondicionado" required>
-          </div>
-
-          <div class="form-row">
+        <form class="modal-form" (ngSubmit)="addDevice()">
+          <fieldset [disabled]="isSubmitting" style="border: none; padding: 0; margin: 0; display: block; width: 100%;">
             <div class="form-group">
-              <label for="devType">Tipo *</label>
-              <select id="devType" [(ngModel)]="newTipo" name="tipo">
-                @for (type of tiposDisponibles; track type) {
-                  <option [value]="type">{{ type }}</option>
+              <label for="devName">Nombre del Dispositivo *</label>
+              <input type="text" id="devName" [(ngModel)]="newNombre" name="nombre" placeholder="Ej: Aire Acondicionado" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="devType">Tipo *</label>
+                <select id="devType" [(ngModel)]="newTipo" name="tipo">
+                  @for (type of tiposDisponibles; track type) {
+                    <option [value]="type">{{ type }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="devLoc">Habitación *</label>
+                @if (habitaciones.length > 0) {
+                  <select id="devLoc" [(ngModel)]="newHabitacionId" name="habitacionId">
+                    @for (hab of habitaciones; track hab.id) {
+                      <option [ngValue]="hab.id">{{ hab.name }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input type="text" id="devLoc" [(ngModel)]="newUbicacion" name="ubicacion" placeholder="Ej: Sala, Cocina" required>
                 }
-              </select>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="devLoc">Ubicación *</label>
-              <input type="text" id="devLoc" [(ngModel)]="newUbicacion" name="ubicacion" placeholder="Ej: Sala, Cocina" required>
-            </div>
-          </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="devPower">Carga (Watts) *</label>
+                <input type="text" id="devPower" [(ngModel)]="newCarga" name="carga" placeholder="Ej: 1500W o 1500" required>
+              </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="devPower">Carga (Watts) *</label>
-              <input type="text" id="devPower" [(ngModel)]="newCarga" name="carga" placeholder="Ej: 1500W o 1500" required>
+              <div class="form-group">
+                <label for="devMode">Modo inicial</label>
+                <select id="devMode" [(ngModel)]="newModo" name="modo">
+                  <option value="AUTO">Automático (AUTO)</option>
+                  <option value="MANUAL">Manual (MANUAL)</option>
+                </select>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="devMode">Modo inicial</label>
-              <select id="devMode" [(ngModel)]="newModo" name="modo">
-                <option value="AUTO">Automático (AUTO)</option>
-                <option value="MANUAL">Manual (MANUAL)</option>
-              </select>
-            </div>
-          </div>
-
-          <footer class="modal-footer">
-            <button type="button" class="btn-cancel" (click)="closeModal()">Cancelar</button>
-            <button type="submit" class="btn-submit">{{ editMode ? 'Guardar Cambios' : 'Registrar Dispositivo' }}</button>
-          </footer>
+            <footer class="modal-footer">
+              <button type="button" class="btn-cancel" (click)="closeModal()" [disabled]="isSubmitting">Cancelar</button>
+              <button type="submit" class="btn-submit" [disabled]="isSubmitting">
+                @if (isSubmitting) {
+                  Registrando...
+                } @else {
+                  {{ editMode ? 'Guardar Cambios' : 'Registrar Dispositivo' }}
+                }
+              </button>
+            </footer>
+          </fieldset>
         </form>
       </div>
     </div>
