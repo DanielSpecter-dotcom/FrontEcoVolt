@@ -622,7 +622,7 @@ export class StateService {
   /** Converts frontend day abbreviation to backend enum */
   static dayToBackend(day: string): string {
     const map: { [key: string]: string } = {
-      'L': 'MONDAY', 'M': 'TUESDAY', 'X': 'WEDNESDAY',
+      'L': 'MONDAY', 'M': 'TUESDAY', 'MI': 'WEDNESDAY',
       'J': 'THURSDAY', 'V': 'FRIDAY', 'S': 'SATURDAY', 'D': 'SUNDAY'
     };
     return map[day] || day;
