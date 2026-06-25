@@ -2,6 +2,14 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -10,7 +18,19 @@ import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
 @Component({
   selector: 'app-dispositivos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatSlideToggleModule,
+    MatChipsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',
 })
@@ -26,12 +46,8 @@ export class Dispositivos implements OnInit {
 
   /** Guard flag to prevent double-click submissions */
   isSubmitting = false;
-  isCreatingHome = false;
-  isCreatingRoom = false;
 
   // Form fields
-  newCasaNombre = '';
-  newHabitacionNombre = '';
   newNombre = '';
   newTipo = 'Luz';
   newHabitacionId: number | null = null;
@@ -162,93 +178,6 @@ export class Dispositivos implements OnInit {
     return parseFloat(total.toFixed(1));
   }
 
-  createHome() {
-    if (!this.stateService.puedeCrearCasa) {
-      alert('Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.');
-      return;
-    }
-
-    const nombre = this.newCasaNombre.trim();
-    if (!nombre) {
-      alert('Ingresa un nombre para la casa.');
-      return;
-    }
-
-    const userId = this.stateService.userId || this.authService.getUserId();
-    if (!userId && this.stateService.isBackendConnected) {
-      alert('No se pudo identificar el usuario actual.');
-      return;
-    }
-
-    this.isCreatingHome = true;
-    if (this.stateService.isBackendConnected && userId) {
-      this.apiService.createHome({ nombre, usuario_id: userId }).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.stateService.casas.push(res.data);
-            this.stateService.setActiveHome(res.data.id);
-            this.stateService.hogar.nombrePropiedad = res.data.nombre;
-            this.newCasaNombre = '';
-          }
-          this.isCreatingHome = false;
-        },
-        error: (err) => {
-          this.isCreatingHome = false;
-          alert(err.error?.message || 'No se pudo crear la casa.');
-        }
-      });
-      return;
-    }
-
-    const localCasa: CasaDTO = { id: Date.now(), nombre, usuario_id: userId || 0 };
-    this.stateService.casas.push(localCasa);
-    this.stateService.setActiveHome(localCasa.id);
-    this.newCasaNombre = '';
-    this.isCreatingHome = false;
-  }
-
-  createRoom() {
-    const nombre = this.newHabitacionNombre.trim();
-    if (!nombre) {
-      alert('Ingresa un nombre para la habitación.');
-      return;
-    }
-    if (!this.stateService.selectedCasaId) {
-      alert('Primero selecciona o crea una casa.');
-      return;
-    }
-
-    this.isCreatingRoom = true;
-    if (this.stateService.isBackendConnected) {
-      this.apiService.createRoom({ casa_id: this.stateService.selectedCasaId, nombre }).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.stateService.habitaciones.push(res.data);
-            this.stateService.setActiveRoom(res.data.id);
-            this.newHabitacionNombre = '';
-            this.newHabitacionId = res.data.id;
-          }
-          this.isCreatingRoom = false;
-        },
-        error: (err) => {
-          this.isCreatingRoom = false;
-          alert(err.error?.message || 'No se pudo crear la habitación.');
-        }
-      });
-      return;
-    }
-
-    const localRoom: HabitacionDTO = {
-      id: Date.now(),
-      name: nombre,
-      casa_id: this.stateService.selectedCasaId,
-    };
-    this.stateService.habitaciones.push(localRoom);
-    this.stateService.setActiveRoom(localRoom.id);
-    this.newHabitacionNombre = '';
-    this.newHabitacionId = localRoom.id;
-    this.isCreatingRoom = false;
-  }
 
   get peakLoad(): number {
     let wattsSum = 0;
@@ -262,9 +191,8 @@ export class Dispositivos implements OnInit {
     return Math.max(1.5, parseFloat((wattsSum / 1000).toFixed(1)));
   }
 
-  toggleState(device: Dispositivo, event?: Event) {
-    if (event) event.stopPropagation();
 
+  toggleState(device: Dispositivo) {
     const newState = !device.estado;
     device.estado = newState;
 
@@ -278,7 +206,6 @@ export class Dispositivos implements OnInit {
       device.badge = 'OFF';
       device.badgeType = 'off';
     }
-    device.showMenu = false;
     this.stateService.saveStateToStorage();
 
     // Sync with backend
@@ -289,12 +216,9 @@ export class Dispositivos implements OnInit {
     }
   }
 
-  toggleModo(device: Dispositivo, event?: Event) {
-    if (event) event.stopPropagation();
-
+  toggleModo(device: Dispositivo) {
     const newMode = device.modo === 'AUTO' ? 'MANUAL' : 'AUTO';
     device.modo = newMode;
-    device.showMenu = false;
     this.stateService.saveStateToStorage();
 
     // Sync with backend
@@ -320,17 +244,6 @@ export class Dispositivos implements OnInit {
         error: (err) => console.warn('Error deleting device on backend:', err)
       });
     }
-  }
-
-  toggleMenu(device: Dispositivo, event: Event) {
-    event.stopPropagation();
-    const currentState = device.showMenu;
-    this.devices.forEach(d => d.showMenu = false);
-    device.showMenu = !currentState;
-  }
-
-  closeAllMenus() {
-    this.devices.forEach(d => d.showMenu = false);
   }
 
   openModal() {
