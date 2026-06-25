@@ -288,6 +288,20 @@
       </div>
     </section>
 
+    @if (stateService.esEmpresarial && stateService.casas.length > 1) {
+      <section class="device-alert-panel" (click)="$event.stopPropagation()">
+        <div class="alert-field">
+          <label>Casa</label>
+          <select [(ngModel)]="filtroCasaId" name="filtroCasaId">
+            <option [ngValue]="null">Todas las casas</option>
+            @for (casa of stateService.casas; track casa.id) {
+              <option [ngValue]="casa.id">{{ casa.nombre }}</option>
+            }
+          </select>
+        </div>
+      </section>
+    }
+
     <!-- Filter tabs -->
     <div class="filter-tabs">
       <button class="tab" [class.active]="filtroActivo === 'TODAS'" (click)="setFiltro('TODAS')">Todas</button>
@@ -326,6 +340,7 @@
             </span>
             <span class="alert-unread-dot" *ngIf="!alerta.leida"></span>
             <span class="alert-time">{{ alerta.fecha }} · {{ alerta.hora }}</span>
+            <span class="alert-badge alert-badge-casa" *ngIf="stateService.esEmpresarial && casaDeAlerta(alerta)">{{ casaDeAlerta(alerta) }}</span>
           </div>
           <h3 class="alert-title">{{ alerta.titulo }}</h3>
           <p class="alert-device">{{ alerta.dispositivo }}</p>

@@ -501,6 +501,11 @@
 .alert-badge.advertencia { background: var(--warning-bg); color: var(--warning); }
 .alert-badge.info       { background: var(--info-bg);     color: var(--info);    }
 
+.alert-badge-casa {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
 .alert-unread-dot {
   width: 8px;
   height: 8px;

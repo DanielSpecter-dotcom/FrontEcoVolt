@@ -25,6 +25,7 @@ export class Alertas implements OnInit {
   selectedDeviceId: number | null = null;
   limitKwh: number | null = null;
   isSavingLimit = false;
+  filtroCasaId: number | null = null;
 
   constructor(
     private router: Router,
@@ -156,8 +157,16 @@ export class Alertas implements OnInit {
 
       const matchDevice = !this.selectedDeviceId || a.deviceId === this.selectedDeviceId;
 
-      return matchFiltro && matchBusqueda && matchDevice;
+      const matchCasa = !this.filtroCasaId ||
+        (!!a.deviceId && this.stateService.casaDeDispositivo(a.deviceId)?.id === this.filtroCasaId);
+
+      return matchFiltro && matchBusqueda && matchDevice && matchCasa;
     });
+  }
+
+  casaDeAlerta(alerta: Alerta): string {
+    if (!alerta.deviceId) return '';
+    return this.stateService.casaDeDispositivo(alerta.deviceId)?.nombre || '';
   }
 
   guardarLimite() {

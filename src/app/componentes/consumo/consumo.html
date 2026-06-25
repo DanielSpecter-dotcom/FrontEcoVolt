@@ -243,9 +243,47 @@
         <button [class.active]="activeTab === 'dispositivo'" (click)="selectTab('dispositivo')">Por Dispositivo</button>
         <button [class.active]="activeTab === 'ambiente'" (click)="selectTab('ambiente')">Por Ambiente</button>
         <button [class.active]="activeTab === 'reporte'" (click)="selectTab('reporte')">Reportes</button>
-        <button [class.active]="activeTab === 'comparativa'" (click)="selectTab('comparativa')">Comparativa</button>
+        @if (stateService.esEmpresarial) {
+          <button [class.active]="activeTab === 'comparativa'" (click)="selectTab('comparativa')">Comparativa</button>
+        }
       </div>
     </section>
+
+    @if (activeTab === 'comparativa') {
+      <!-- Comparativa entre casas (solo EMPRESARIAL) -->
+      <section class="detail-section">
+        <header class="detail-header">
+          <h2>Comparativa entre Casas</h2>
+        </header>
+
+        @if (comparativaCasas.length === 0) {
+          <p class="empty-flow-text">Todavía no tienes casas registradas.</p>
+        } @else {
+          <div class="ambientes-list">
+            @for (fila of comparativaCasas; track fila.casa.id) {
+              <div class="ambiente-row-card">
+                <div class="room-info">
+                  <h4 class="room-title">{{ fila.casa.nombre }}</h4>
+                </div>
+                <div class="room-cost">
+                  <span class="cost-value">S/. {{ fila.costo | number:'1.2-2' }}</span>
+                  <span class="cost-unit">/ {{ activeTimeframe === 'dia' ? 'DÍA' : activeTimeframe === 'mes' ? 'MES' : 'SEMANA' }}</span>
+                </div>
+                <div class="room-progress-container">
+                  <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" [style.width.%]="fila.pct" style="background-color:#0d9488"></div>
+                  </div>
+                  <span class="progress-percent" style="color:#0d9488">{{ fila.pct }}%</span>
+                </div>
+                <div class="room-kwh-avg">
+                  <span class="kwh-value">{{ fila.kwh }} kWh</span>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else {
 
     <!-- Main Charts Section -->
     <section class="charts-layout-grid">
@@ -430,6 +468,7 @@
         }
       </div>
     </section>
+    }
   </main>
 
   <!-- MOBILE BOTTOM NAVIGATION -->

@@ -387,6 +387,34 @@ export class StateService {
     return this.casas.find(casa => casa.id === this.selectedCasaId) || null;
   }
 
+  /** EMPRESARIAL desbloquea las vistas multi-casa; PERSONAL queda limitado a 1 sola. */
+  get esEmpresarial(): boolean {
+    return this.userRole === 'EMPRESARIAL';
+  }
+
+  get puedeCrearCasa(): boolean {
+    return this.esEmpresarial || this.casas.length < 1;
+  }
+
+  /** Suma el consumo de hoy (kWh) de los dispositivos de una casa puntual. */
+  consumoKwhDeCasa(casaId: number): number {
+    const roomIds = new Set(
+      this.habitaciones.filter(habitacion => habitacion.casa_id === casaId).map(habitacion => habitacion.id)
+    );
+    return this.devices
+      .filter(device => !!device.habitacionId && roomIds.has(device.habitacionId))
+      .reduce((acc, device) => acc + (device.consumoHoy || 0), 0);
+  }
+
+  /** Resuelve a qué casa pertenece un dispositivo (vía su habitación). */
+  casaDeDispositivo(deviceId: number): CasaDTO | null {
+    const device = this.devices.find(d => d.backendId === deviceId);
+    if (!device || !device.habitacionId) return null;
+    const habitacion = this.habitaciones.find(h => h.id === device.habitacionId);
+    if (!habitacion) return null;
+    return this.casas.find(casa => casa.id === habitacion.casa_id) || null;
+  }
+
   get selectedHabitacion(): HabitacionDTO | null {
     if (!this.selectedHabitacionId) return null;
     return this.habitaciones.find(habitacion => habitacion.id === this.selectedHabitacionId) || null;

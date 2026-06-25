@@ -419,6 +419,13 @@
   text-align: right;
 }
 
+.resumen-por-casa {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+
 .badge {
   font-size: 9px;
   font-weight: 800;

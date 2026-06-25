@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 import { StateService, Dispositivo } from '../../servicios/state.service';
 import { ApiService, ComparacionConsumoRespuestaDto, ConsumoHabitacionDTO } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
+import { CasaDTO } from '../../modelos';
 
 interface DetalleAmbiente {
   nombre: string;
@@ -53,6 +54,9 @@ export class Consumo implements OnInit {
   ) {}
 
   ngOnInit() {
+    if (!this.stateService.esEmpresarial && this.activeTab === 'comparativa') {
+      this.activeTab = 'ambiente';
+    }
     if (this.stateService.isBackendConnected) {
       this.loadConsumptionData();
     } else {
@@ -114,7 +118,19 @@ export class Consumo implements OnInit {
   }
 
   get devices(): Dispositivo[] {
-    return this.stateService.devices;
+    return this.stateService.dispositivosDeCasaSeleccionada;
+  }
+
+  get comparativaCasas(): { casa: CasaDTO; kwh: number; costo: number; pct: number }[] {
+    const tfMultiplier = this.activeTimeframe === 'dia' ? 0.2 : this.activeTimeframe === 'mes' ? 4.3 : 1;
+    const rate = 0.52;
+    const filas = this.stateService.casas.map(casa => {
+      const kwh = this.stateService.consumoKwhDeCasa(casa.id) * tfMultiplier;
+      return { casa, kwh: parseFloat(kwh.toFixed(1)), costo: parseFloat((kwh * rate).toFixed(2)), pct: 0 };
+    });
+    const max = Math.max(1, ...filas.map(f => f.kwh));
+    filas.forEach(f => f.pct = Math.round((f.kwh / max) * 100));
+    return filas.sort((a, b) => b.kwh - a.kwh);
   }
 
   get userAvatar(): string | null {

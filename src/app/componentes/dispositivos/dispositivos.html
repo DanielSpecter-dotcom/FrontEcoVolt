@@ -251,12 +251,16 @@
           } @else {
             <p class="empty-flow-text">Todavía no tienes casas registradas.</p>
           }
-          <div class="inline-create">
-            <input type="text" [(ngModel)]="newCasaNombre" name="newCasaNombre" placeholder="Nueva casa">
-            <button type="button" (click)="createHome()" [disabled]="isCreatingHome">
-              {{ isCreatingHome ? 'Creando...' : 'Crear casa' }}
-            </button>
-          </div>
+          @if (stateService.puedeCrearCasa) {
+            <div class="inline-create">
+              <input type="text" [(ngModel)]="newCasaNombre" name="newCasaNombre" placeholder="Nueva casa">
+              <button type="button" (click)="createHome()" [disabled]="isCreatingHome">
+                {{ isCreatingHome ? 'Creando...' : 'Crear casa' }}
+              </button>
+            </div>
+          } @else {
+            <p class="empty-flow-text">Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.</p>
+          }
         </div>
       </div>
 

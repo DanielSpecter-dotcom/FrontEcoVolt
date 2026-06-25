@@ -163,6 +163,11 @@ export class Dispositivos implements OnInit {
   }
 
   createHome() {
+    if (!this.stateService.puedeCrearCasa) {
+      alert('Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.');
+      return;
+    }
+
     const nombre = this.newCasaNombre.trim();
     if (!nombre) {
       alert('Ingresa un nombre para la casa.');

@@ -107,11 +107,8 @@ export class Casa implements OnInit {
 
   /** Consumo de hoy (kWh) de la casa seleccionada */
   get consumoHoyCasaSeleccionada(): number {
-    const total = this.dispositivosCasaSeleccionada.reduce(
-      (acc, d) => acc + (d.consumoHoy || 0),
-      0,
-    );
-    return parseFloat(total.toFixed(1));
+    if (!this.selectedCasaId) return 0;
+    return parseFloat(this.stateService.consumoKwhDeCasa(this.selectedCasaId).toFixed(1));
   }
 
   /**
@@ -131,6 +128,11 @@ export class Casa implements OnInit {
   }
 
   createHome() {
+    if (!this.stateService.puedeCrearCasa) {
+      alert('Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.');
+      return;
+    }
+
     const nombre = this.newCasaNombre.trim();
     if (!nombre) {
       alert('Ingresa un nombre para la casa.');

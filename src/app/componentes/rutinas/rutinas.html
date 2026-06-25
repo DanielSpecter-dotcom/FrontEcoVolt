@@ -232,6 +232,14 @@
       </div>
     </header>
 
+    @if (stateService.esEmpresarial && stateService.casas.length > 1) {
+      <div class="resumen-por-casa">
+        @for (item of resumenPorCasa; track item.casa.id) {
+          <span class="badge badge-activa">{{ item.casa.nombre }}: {{ item.activas }} activas</span>
+        }
+      </div>
+    }
+
     <!-- Content Columns Layout -->
     <div class="rutinas-columns-grid">
       <!-- COLUMN 1: ROUTINES LIST -->

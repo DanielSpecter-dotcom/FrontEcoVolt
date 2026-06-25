@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 import { StateService, Rutina, AccionDispositivo, Dispositivo } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
+import { CasaDTO } from '../../modelos';
 
 @Component({
   selector: 'app-rutinas',
@@ -112,6 +113,13 @@ export class Rutinas implements OnInit {
 
   get selectedCasaNombre(): string {
     return this.stateService.selectedCasa?.nombre || 'Sin casa seleccionada';
+  }
+
+  get resumenPorCasa(): { casa: CasaDTO; activas: number }[] {
+    return this.stateService.casas.map(casa => ({
+      casa,
+      activas: this.stateService.routines.filter(r => r.homeId === casa.id && r.activa).length,
+    }));
   }
 
   get userAvatar(): string | null {
