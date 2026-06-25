@@ -267,7 +267,7 @@
                 </div>
                 <div class="room-cost">
                   <span class="cost-value">S/. {{ fila.costo | number:'1.2-2' }}</span>
-                  <span class="cost-unit">/ {{ activeTimeframe === 'dia' ? 'DÍA' : activeTimeframe === 'mes' ? 'MES' : 'SEMANA' }}</span>
+                  <span class="cost-unit">{{ esConsumoAcumulado ? '/ ACUM.' : '/ MES (EST.)' }}</span>
                 </div>
                 <div class="room-progress-container">
                   <div class="progress-bar-wrapper">
@@ -283,6 +283,77 @@
           </div>
         }
       </section>
+    } @else if (activeTab === 'dispositivo') {
+      <!-- Por Dispositivo: ranking real usando /consumption/compare -->
+      <section class="detail-section">
+        <header class="detail-header">
+          <h2>Consumo por Dispositivo</h2>
+          <button mat-stroked-button (click)="exportData()">EXPORTAR DATOS</button>
+        </header>
+
+        @if (dispositivosRanking.length === 0) {
+          <p class="empty-flow-text">Todavía no tienes dispositivos registrados en esta casa.</p>
+        } @else {
+          <table mat-table [dataSource]="dispositivosRanking" class="device-ranking-table">
+            <ng-container matColumnDef="nombre">
+              <th mat-header-cell *matHeaderCellDef>DISPOSITIVO</th>
+              <td mat-cell *matCellDef="let d">{{ d.nombre }}</td>
+            </ng-container>
+            <ng-container matColumnDef="habitacion">
+              <th mat-header-cell *matHeaderCellDef>HABITACIÓN</th>
+              <td mat-cell *matCellDef="let d">{{ d.habitacion }}</td>
+            </ng-container>
+            <ng-container matColumnDef="kwh">
+              <th mat-header-cell *matHeaderCellDef>{{ esConsumoAcumulado ? 'KWH ACUMULADO' : 'KWH (30 DÍAS)' }}</th>
+              <td mat-cell *matCellDef="let d">{{ d.kwh }} kWh</td>
+            </ng-container>
+            <ng-container matColumnDef="costo">
+              <th mat-header-cell *matHeaderCellDef>COSTO</th>
+              <td mat-cell *matCellDef="let d">S/. {{ d.costo | number:'1.2-2' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="porcentaje">
+              <th mat-header-cell *matHeaderCellDef>% DEL TOTAL</th>
+              <td mat-cell *matCellDef="let d">
+                <mat-progress-bar mode="determinate" [value]="d.porcentaje" class="device-pct-bar"></mat-progress-bar>
+                <span class="device-pct-label">{{ d.porcentaje }}%</span>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="dispositivoRankingColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: dispositivoRankingColumns;"></tr>
+          </table>
+        }
+      </section>
+    } @else if (activeTab === 'reporte') {
+      <!-- Reportes: resumen del periodo + exportación -->
+      <section class="detail-section">
+        <mat-card class="report-summary-card">
+          <h2>Resumen de Consumo</h2>
+          <p class="empty-flow-text" style="text-align: left; padding: 0 0 16px;">
+            {{ esConsumoAcumulado ? 'Acumulado histórico registrado por el backend para esta casa.' : 'Estimado local proyectado a 30 días (sin conexión al backend).' }}
+          </p>
+          <div class="report-summary-grid">
+            <div class="report-summary-item">
+              <span class="report-summary-label">CONSUMO TOTAL</span>
+              <span class="report-summary-value">{{ reporteResumen.totalKwh }} kWh</span>
+            </div>
+            <div class="report-summary-item">
+              <span class="report-summary-label">COSTO ESTIMADO</span>
+              <span class="report-summary-value">S/. {{ reporteResumen.totalCosto | number:'1.2-2' }}</span>
+            </div>
+            <div class="report-summary-item">
+              <span class="report-summary-label">MAYOR CONSUMIDOR</span>
+              <span class="report-summary-value report-summary-value-sm">{{ reporteResumen.mayorConsumidor }}</span>
+            </div>
+            <div class="report-summary-item">
+              <span class="report-summary-label">REGISTROS HISTÓRICOS</span>
+              <span class="report-summary-value">{{ reporteResumen.registros }}</span>
+            </div>
+          </div>
+          <button mat-flat-button color="primary" class="report-export-btn" (click)="exportData()">
+            Descargar reporte en PDF
+          </button>
+        </mat-card>
+      </section>
     } @else {
 
     <!-- Main Charts Section -->
@@ -295,58 +366,34 @@
         </div>
 
         <div class="donut-chart-container">
-          <!-- Premium CSS/SVG Donut Chart representation -->
-          <div class="donut-wrapper">
-            <svg class="donut-svg" viewBox="0 0 42 42">
-              <circle class="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" stroke-width="4"></circle>
-
-              <!-- Lavandería: pct -->
-              <circle class="donut-segment segment-lavanderia" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2dd4bf" stroke-width="4.5"
-                      [attr.stroke-dasharray]="roomStats.lavanderia.pct + ' ' + (100 - roomStats.lavanderia.pct)"
-                      [attr.stroke-dashoffset]="100"></circle>
-
-              <!-- Dormitorio: pct -->
-              <circle class="donut-segment segment-dormitorio" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#4ade80" stroke-width="4.5"
-                      [attr.stroke-dasharray]="roomStats.dormitorio.pct + ' ' + (100 - roomStats.dormitorio.pct)"
-                      [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct"></circle>
-
-              <!-- Cocina: pct -->
-              <circle class="donut-segment segment-cocina" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" stroke-width="4.5"
-                      [attr.stroke-dasharray]="roomStats.cocina.pct + ' ' + (100 - roomStats.cocina.pct)"
-                      [attr.stroke-dashoffset]="100 - roomStats.lavanderia.pct - roomStats.dormitorio.pct"></circle>
-
-              <!-- Sala: pct -->
-              <circle class="donut-segment segment-sala" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0d9488" stroke-width="4.5"
-                      [attr.stroke-dasharray]="roomStats.sala.pct + ' ' + (100 - roomStats.sala.pct)"
-                      [attr.stroke-dashoffset]="roomStats.sala.pct"></circle>
-            </svg>
-
-            <div class="donut-center-label">
-              <span class="donut-value">S/.{{ totalMes }}</span>
-              <span class="donut-lbl">TOTAL MES</span>
+          @if (ambientes.length === 0) {
+            <p class="empty-flow-text">Crea una habitación en esta casa para ver su distribución de consumo.</p>
+          } @else {
+            <div class="donut-wrapper">
+              <canvas baseChart class="donut-canvas"
+                [type]="'doughnut'"
+                [data]="doughnutChartData"
+                [options]="doughnutChartOptions">
+              </canvas>
+              <div class="donut-center-label">
+                <span class="donut-value">S/.{{ totalMes }}</span>
+                <span class="donut-lbl">{{ esConsumoAcumulado ? 'TOTAL ACUMULADO' : 'TOTAL MES (EST.)' }}</span>
+              </div>
             </div>
-          </div>
+          }
         </div>
 
         <!-- Donut Legends -->
-        <div class="donut-legends-grid">
-          <div class="legend-item">
-            <span class="legend-dot" style="background-color: #0d9488;"></span>
-            <span class="legend-txt">SALA {{ roomStats.sala.pct }}%</span>
+        @if (ambientes.length > 0) {
+          <div class="donut-legends-grid">
+            @for (amb of ambientes; track amb.habitacionId) {
+              <div class="legend-item">
+                <span class="legend-dot" [style.background-color]="amb.color"></span>
+                <span class="legend-txt">{{ amb.nombre.toUpperCase() }} {{ amb.porcentaje }}%</span>
+              </div>
+            }
           </div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background-color: #16a34a;"></span>
-            <span class="legend-txt">COCINA {{ roomStats.cocina.pct }}%</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background-color: #4ade80;"></span>
-            <span class="legend-txt">DORMITORIO {{ roomStats.dormitorio.pct }}%</span>
-          </div>
-          <div class="legend-item">
-            <span class="legend-dot" style="background-color: #2dd4bf;"></span>
-            <span class="legend-txt">LAVANDERÍA {{ roomStats.lavanderia.pct }}%</span>
-          </div>
-        </div>
+        }
       </div>
 
       <!-- 2. WEEKLY BAR CHART CARD -->
@@ -365,35 +412,13 @@
           </div>
         </header>
 
-        <!-- Stacked Bar Chart -->
+        <!-- Real Weekly Bar Chart (últimos 7 días, datos reales de /consumption/history) -->
         <div class="stacked-bar-chart-container">
-          <div class="chart-bars-axis">
-            @for (day of historialSemanal; track day.dia) {
-              <div class="bar-column" [class.bar-hoy]="day.isHoy">
-                @if (day.isHoy) {
-                  <span class="hoy-tag">HOY</span>
-                }
-                <!-- Stack container representing segments -->
-                <div class="bar-stack">
-                  <!-- Segment 4: Lavandería (teal) -->
-                  <div class="bar-segment seg-lav" [style.height.%]="(day.lavanderia / day.total) * 100"></div>
-                  <!-- Segment 3: Dormitorio (light green) -->
-                  <div class="bar-segment seg-dorm" [style.height.%]="(day.dormitorio / day.total) * 100"></div>
-                  <!-- Segment 2: Cocina (forest green) -->
-                  <div class="bar-segment seg-coc" [style.height.%]="(day.cocina / day.total) * 100"></div>
-                  <!-- Segment 1: Sala (dark teal) -->
-                  <div class="bar-segment seg-sala" [style.height.%]="(day.sala / day.total) * 100"></div>
-                </div>
-
-                <div class="bar-label-container">
-                  <span class="bar-label-txt">{{ day.dia }}</span>
-                  @if (day.isHoy) {
-                    <span class="hoy-underline"></span>
-                  }
-                </div>
-              </div>
-            }
-          </div>
+          <canvas baseChart class="weekly-canvas"
+            [type]="'bar'"
+            [data]="barChartData"
+            [options]="barChartOptions">
+          </canvas>
         </div>
       </div>
     </section>
@@ -413,8 +438,11 @@
       </header>
 
       <!-- Room detail cards list matching mockup structure -->
+      @if (ambientes.length === 0) {
+        <p class="empty-flow-text">Todavía no tienes habitaciones registradas en esta casa.</p>
+      }
       <div class="ambientes-list">
-        @for (amb of ambientes; track amb.nombre) {
+        @for (amb of ambientes; track amb.habitacionId) {
           <div class="ambiente-row-card">
             <!-- Icon Column -->
             <div class="room-icon-wrapper">
@@ -436,6 +464,12 @@
                   <circle cx="12" cy="13" r="5"/>
                   <path d="M12 10a3 3 0 0 0-3 3"/>
                 </svg>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="room-icon">
+                  <path d="M3 9.5L12 4l9 5.5"/>
+                  <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+                  <path d="M9 22V12"/>
+                </svg>
               }
             </div>
 
@@ -448,7 +482,7 @@
             <!-- Cost Mes -->
             <div class="room-cost">
               <span class="cost-value">S/. {{ amb.costoMes | number:'1.2-2' }}</span>
-              <span class="cost-unit">/ MES</span>
+              <span class="cost-unit">{{ esConsumoAcumulado ? '/ ACUM.' : '/ MES (EST.)' }}</span>
             </div>
 
             <!-- Progress bar -->
@@ -462,7 +496,7 @@
             <!-- Average Consumption -->
             <div class="room-kwh-avg">
               <span class="kwh-value">{{ amb.promedioKwh }} kWh</span>
-              <span class="kwh-lbl">/día promedio</span>
+              <span class="kwh-lbl">{{ esConsumoAcumulado ? 'acumulado' : '/día estimado' }}</span>
             </div>
           </div>
         }

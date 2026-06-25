@@ -1,7 +1,9 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -34,7 +36,11 @@ import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',
 })
-export class Dispositivos implements OnInit {
+export class Dispositivos implements OnInit, OnDestroy {
+  /** Refresca el estado de los dispositivos cada 30s para reflejar cambios hechos por rutinas automáticas. */
+  private pollSub?: Subscription;
+  private readonly POLL_INTERVAL_MS = 30000;
+
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -72,6 +78,34 @@ export class Dispositivos implements OnInit {
         if (success) this.refreshDevices();
       });
     }
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.pollSub?.unsubscribe();
+  }
+
+  /** Vuelve a pedir los dispositivos periódicamente para reflejar cambios de estado hechos por rutinas automáticas en el backend. */
+  private startPolling() {
+    this.pollSub = interval(this.POLL_INTERVAL_MS)
+      .pipe(
+        filter(() => this.stateService.isBackendConnected),
+        switchMap(() => this.apiService.getDevices())
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const openMenuId = this.stateService.devices.find(d => d.showMenu)?.id;
+            this.stateService.devices = res.data.map(d => this.stateService.mapDeviceFromBackend(d));
+            if (openMenuId) {
+              const reopened = this.stateService.devices.find(d => d.id === openMenuId);
+              if (reopened) reopened.showMenu = true;
+            }
+            this.stateService.saveStateToStorage();
+          }
+        },
+        error: () => {} // Mantener los datos actuales y reintentar en el próximo ciclo
+      });
   }
 
   /** Reloads the full device list from backend, replacing local state */

@@ -1,7 +1,9 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -14,7 +16,11 @@ import { Dispositivo, Actividad, ActividadPanelDto, ResumenPanelDto } from '../.
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, OnDestroy {
+  /** Refresca el estado de los dispositivos cada 30s para reflejar cambios hechos por rutinas automáticas. */
+  private pollSub?: Subscription;
+  private readonly POLL_INTERVAL_MS = 30000;
+
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -63,6 +69,30 @@ export class Dashboard implements OnInit {
       });
     }
     this.recalculateConsumption();
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.pollSub?.unsubscribe();
+  }
+
+  /** Vuelve a pedir los dispositivos periódicamente para reflejar cambios de estado hechos por rutinas automáticas en el backend. */
+  private startPolling() {
+    this.pollSub = interval(this.POLL_INTERVAL_MS)
+      .pipe(
+        filter(() => this.stateService.isBackendConnected),
+        switchMap(() => this.apiService.getDevices())
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.devices = res.data.map(d => this.stateService.mapDeviceFromBackend(d));
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          }
+        },
+        error: () => {} // Mantener los datos actuales y reintentar en el próximo ciclo
+      });
   }
 
   private loadDashboardData() {
