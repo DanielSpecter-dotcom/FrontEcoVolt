@@ -25,7 +25,7 @@
   font-family: var(--font-body);
 }
 
-.casa-container {
+.habitacion-container {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -33,7 +33,7 @@
 }
 
 /* ==========================================================================
-   1. SIDEBAR (idéntico al resto de páginas)
+   1. SIDEBAR
    ========================================================================== */
 
 .sidebar {
@@ -173,7 +173,7 @@
 }
 
 /* ==========================================================================
-   2. MAIN CONTENT
+   2. MAIN CONTENT - TOP BAR
    ========================================================================== */
 
 .main-content {
@@ -181,7 +181,6 @@
   overflow-y: auto;
 }
 
-/* Top bar */
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -302,7 +301,6 @@
   object-fit: cover;
 }
 
-/* Dropdown de Notificaciones */
 .notifications-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -386,7 +384,6 @@
   font-size: 13px;
 }
 
-/* Dropdown de Perfil */
 .profile-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -457,7 +454,7 @@
 }
 
 /* ==========================================================================
-   3. PAGE TITLE + CREAR CASA
+   3. PAGE TITLE
    ========================================================================== */
 
 .page-title-section {
@@ -485,68 +482,114 @@
   max-width: 480px;
 }
 
-.crear-casa-box {
-  display: flex;
-  gap: 10px;
-  flex-shrink: 0;
-}
-
-.crear-casa-box input {
-  height: 44px;
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0 14px;
-  font-size: 13.5px;
-  outline: none;
-  width: 220px;
-  background: white;
-}
-
-.crear-casa-box input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
-}
-
-.add-casa-btn {
-  background: var(--primary);
+.add-habitacion-btn {
+  background: var(--emerald-deep);
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   transition: var(--transition);
+  box-shadow: 0 4px 12px rgba(6, 78, 59, 0.25);
   white-space: nowrap;
 }
 
-.add-casa-btn:hover {
+.add-habitacion-btn:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
 }
 
-.add-casa-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .add-btn-icon {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 
 /* ==========================================================================
-   4. STATS ROW
+   4. CASA SELECTOR PANEL
+   ========================================================================== */
+
+.casa-selector-panel {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 16px;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-bottom: 24px;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.casa-selector-field label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--text-light);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.casa-selector-field select {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 12px;
+  outline: none;
+}
+
+.casa-selector-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.empty-flow-text {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.casa-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 16px;
+}
+
+.casa-resumen strong {
+  font-family: var(--font-title);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.casa-resumen span {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   5. STATS ROW
    ========================================================================== */
 
 .stats-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .stat-card {
@@ -571,173 +614,153 @@
   margin-top: 6px;
 }
 
+.stat-num-text {
+  font-size: 18px;
+}
+
 /* ==========================================================================
-   5. CASAS GRID
+   6. CREAR HABITACIÓN INLINE
    ========================================================================== */
 
-.empty-casas {
+.inline-create-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  margin-bottom: 28px;
+  max-width: 480px;
+}
+
+.inline-create-section input {
+  height: 44px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 13.5px;
+  outline: none;
+  background: white;
+}
+
+.inline-create-section input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.inline-create-section button {
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: var(--dark-bg);
+  color: white;
+  padding: 0 18px;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inline-create-section button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   7. HABITACIONES GRID
+   ========================================================================== */
+
+.empty-habitaciones {
   text-align: center;
   padding: 60px 20px;
   color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
   background: white;
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  margin-bottom: 28px;
 }
 
-.casas-grid {
+.habitaciones-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  margin-bottom: 28px;
 }
 
-.casa-card {
+.habitacion-card {
   background: white;
   border: 1px solid var(--border-color);
-  border-radius: 18px;
+  border-radius: 16px;
   overflow: hidden;
-  cursor: pointer;
   transition: var(--transition);
-  filter: grayscale(0.85);
-  opacity: 0.65;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
-.casa-card:hover {
+.habitacion-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.07);
-  opacity: 0.85;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.07);
 }
 
-.casa-card-activa {
-  filter: none;
-  opacity: 1;
-  border-color: var(--primary);
-  border-width: 1.5px;
-}
-
-.casa-card-activa:hover {
-  opacity: 1;
-}
-
-.casa-image {
-  height: 120px;
-  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+.habitacion-image {
+  height: 90px;
   position: relative;
-  overflow: hidden;
-}
-
-.casa-card:not(.casa-card-activa) .casa-image {
-  background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
-}
-
-.casa-roof {
-  position: absolute;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 95px solid transparent;
-  border-right: 95px solid transparent;
-  border-bottom: 55px solid #0c5a47;
-  opacity: 0.85;
-}
-
-.casa-card:not(.casa-card-activa) .casa-roof {
-  border-bottom-color: #94a3b8;
-}
-
-.casa-base {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.55);
   display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 10px;
+  align-items: flex-end;
 }
 
-.casa-window {
-  width: 26px;
-  height: 16px;
-  background: #0c5a47;
-  border-radius: 2px;
-  opacity: 0.85;
-}
-
-.casa-card:not(.casa-card-activa) .casa-window {
-  background: #94a3b8;
-}
-
-.casa-door {
-  width: 60px;
-  height: 18px;
-  background: rgba(16, 185, 129, 0.25);
-  border-radius: 2px;
-}
-
-.casa-card:not(.casa-card-activa) .casa-door {
-  background: rgba(148, 163, 184, 0.25);
-}
-
-.casa-location-tag {
+.hab-sun {
   position: absolute;
-  top: 14px;
-  left: 16px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #065f46;
-  background: rgba(255, 255, 255, 0.85);
-  padding: 3px 10px;
-  border-radius: 8px;
-  z-index: 3;
-}
-
-.casa-card:not(.casa-card-activa) .casa-location-tag {
-  color: #64748b;
-}
-
-.casa-location-tag svg {
-  width: 12px;
-  height: 12px;
-}
-
-.casa-sun {
-  position: absolute;
-  top: 14px;
+  top: 12px;
   right: 16px;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #fbbf24;
-  z-index: 2;
 }
 
-.casa-card:not(.casa-card-activa) .casa-sun {
-  background: #cbd5e1;
+.hab-base {
+  width: 70%;
+  height: 36px;
+  margin: 0 0 14px 14px;
+  border-radius: 4px;
 }
 
-.casa-body {
+/* Colores por tipo de habitación */
+.color-azul { background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%); }
+.color-azul .hab-sun { background: #3b82f6; }
+.color-azul .hab-base { background: #1e3a8a; }
+
+.color-amarillo { background: linear-gradient(180deg, #fef9c3 0%, #fef08a 100%); }
+.color-amarillo .hab-sun { background: #ca8a04; }
+.color-amarillo .hab-base { background: #f59e0b; }
+
+.color-morado { background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 100%); }
+.color-morado .hab-sun { background: #f97316; }
+.color-morado .hab-base { background: #4c1d95; }
+
+.color-celeste { background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 100%); }
+.color-celeste .hab-sun { background: #0284c7; }
+.color-celeste .hab-base { background: #075985; }
+
+.color-gris { background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%); }
+.color-gris .hab-sun { background: #64748b; }
+.color-gris .hab-base { background: #334155; }
+
+.color-verde { background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%); }
+.color-verde .hab-sun { background: #ca8a04; }
+.color-verde .hab-base { background: #065f46; }
+
+.color-naranja { background: linear-gradient(180deg, #ffedd5 0%, #fed7aa 100%); }
+.color-naranja .hab-sun { background: #ea580c; }
+.color-naranja .hab-base { background: #9a3412; }
+
+.habitacion-body {
   padding: 16px 18px 18px;
 }
 
-.casa-header-row {
+.habitacion-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
-.casa-name {
+.habitacion-name {
   font-size: 16px;
   font-weight: 700;
   color: var(--text-main);
@@ -745,187 +768,93 @@
 }
 
 .badge-status {
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: 99px;
   white-space: nowrap;
 }
 
-.badge-seleccionada {
-  background: #ecfdf5;
-  color: #059669;
-}
+.badge-verde { background: #ecfdf5; color: #059669; }
+.badge-verde-claro { background: #f0fdf4; color: #16a34a; }
+.badge-naranja { background: #fff7ed; color: #ea580c; }
+.badge-gris { background: #f1f5f9; color: #64748b; }
 
-.casa-no-seleccionada-text {
+.habitacion-meta {
   font-size: 12.5px;
-  color: var(--text-light);
-  font-style: italic;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: 2px;
 }
 
-.casa-mini-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.consumo-relativo-row {
+  margin-top: 12px;
+  margin-bottom: 14px;
+}
+
+.consumo-relativo-label {
+  font-size: 11px;
+  color: var(--text-light);
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.consumo-relativo-bar {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.consumo-relativo-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.consumo-relativo-fill.color-azul { background: #3b82f6; }
+.consumo-relativo-fill.color-amarillo { background: #f59e0b; }
+.consumo-relativo-fill.color-morado { background: #7c3aed; }
+.consumo-relativo-fill.color-celeste { background: #0284c7; }
+.consumo-relativo-fill.color-gris { background: #64748b; }
+.consumo-relativo-fill.color-verde { background: #10b981; }
+.consumo-relativo-fill.color-naranja { background: #ea580c; }
+
+.habitacion-actions {
+  display: flex;
   gap: 8px;
 }
 
-.mini-stat {
-  background: #f8fafc;
-  border-radius: 10px;
-  padding: 8px 6px;
-  text-align: center;
-}
-
-.mini-stat-num {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text-main);
-  font-family: var(--font-title);
-}
-
-.mini-stat-label {
-  font-size: 9.5px;
-  color: var(--text-light);
-  font-weight: 600;
-  margin-top: 1px;
-}
-
-/* ==========================================================================
-   6. HABITACIONES DE LA CASA SELECCIONADA
-   ========================================================================== */
-
-.habitaciones-section {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 22px 24px;
-  margin-bottom: 28px;
-}
-
-.habitaciones-header h2 {
-  font-family: var(--font-title);
-  font-size: 17px;
+.habitacion-actions button {
+  flex: 1;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-editar {
+  background: white;
   color: var(--text-main);
-  margin-bottom: 16px;
-}
-
-.inline-create {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  margin-bottom: 16px;
-  max-width: 460px;
-}
-
-.inline-create input {
-  height: 42px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0 14px;
-  font-size: 13.5px;
-  outline: none;
 }
 
-.inline-create input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+.btn-editar:hover {
+  background: #f1f5f9;
 }
 
-.inline-create button {
-  height: 42px;
-  border: none;
-  border-radius: 8px;
+.btn-ver {
   background: var(--dark-bg);
   color: white;
-  padding: 0 16px;
-  font-size: 12px;
-  font-weight: 800;
-  cursor: pointer;
+  border: none;
 }
 
-.inline-create button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.empty-flow-text {
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-.habitaciones-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.habitacion-chip {
-  background: var(--primary-glow);
-  color: var(--primary-hover);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 8px 16px;
-  border-radius: 99px;
-}
-
-/* ==========================================================================
-   7. TIP CARD
-   ========================================================================== */
-
-.tip-card {
-  background: linear-gradient(135deg, #0c5a47 0%, #16a34a 100%);
-  border-radius: 18px;
-  padding: 24px 28px;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 20px -4px rgba(6, 78, 59, 0.2);
-}
-
-.tip-icon {
-  width: 44px;
-  height: 44px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.tip-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.tip-label {
-  font-size: 9px;
-  font-weight: 800;
-  color: #a7f3d0;
-  letter-spacing: 1.2px;
-  display: block;
-  margin-bottom: 5px;
-}
-
-.tip-text {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-  max-width: 640px;
-}
-
-.tip-pattern {
-  position: absolute;
-  right: -10px;
-  bottom: -25px;
-  width: 110px;
-  height: 110px;
-  color: rgba(255, 255, 255, 0.08);
-  pointer-events: none;
+.btn-ver:hover {
+  background: #1e293b;
 }
 
 /* ==========================================================================
@@ -933,22 +862,29 @@
    ========================================================================== */
 
 @media (max-width: 1100px) {
-  .casas-grid {
+  .habitaciones-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
+  .casa-selector-panel {
+    grid-template-columns: 1fr;
+  }
+  .casa-resumen {
+    border-left: none;
+    padding-left: 0;
+  }
 }
 
 @media (max-width: 900px) {
-  .casa-container {
+  .habitacion-container {
     grid-template-columns: 1fr;
   }
   .sidebar {
     display: none;
   }
-  .casas-grid {
+  .habitaciones-grid {
     grid-template-columns: 1fr;
   }
 }

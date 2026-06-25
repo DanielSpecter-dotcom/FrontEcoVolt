@@ -11,6 +11,7 @@ import { Configuracion } from './componentes/configuracion/configuracion';
 import { VerificarCodigo } from './componentes/verificar-codigo/verificar-codigo';
 import { authGuard } from './servicios/auth.guard';
 import { Casa } from './componentes/casa/casa';
+import { Habitacion } from './componentes/habitacion/habitacion';
 
 export const routes: Routes = [
   {
@@ -62,6 +63,13 @@ export const routes: Routes = [
     component: Alertas,
     canActivate: [authGuard],
   },
+
+  {
+    path: 'habitacion',
+    component: Habitacion,
+    canActivate: [authGuard],
+  },
+
   {
     path: 'perfil',
     component: Perfil,
