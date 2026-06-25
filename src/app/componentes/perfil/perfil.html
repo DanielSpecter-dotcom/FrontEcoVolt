@@ -1,0 +1,498 @@
+<div class="perfil-container" [class.sidebar-minimized]="stateService.sidebarMinimized">
+  <!-- MOBILE HEADER (visible on mobile only) -->
+  <header class="mobile-top-bar">
+    <a [routerLink]="['/dashboard']" class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span>EcoVolt</span>
+    </a>
+    <div class="mobile-actions">
+      <a [routerLink]="['/configuracion']" class="mobile-icon-link" title="Configuración">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mobile-svg-icon">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </a>
+      <a [routerLink]="['/perfil']" class="mobile-profile-link" title="Perfil">
+        <div class="mobile-avatar-circle">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mobile-svg-icon">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+      </a>
+      <button class="logout-link-mobile" (click)="logout()" title="Cerrar Sesión">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- 1. LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span class="logo-text">EcoVolt</span>
+      </div>
+      <button type="button" class="sidebar-toggle-btn" (click)="stateService.toggleSidebar()" [title]="stateService.sidebarMinimized ? 'Expandir' : 'Minimizar'">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toggle-icon">
+          @if (stateService.sidebarMinimized) {
+            <polyline points="9 18 15 12 9 6"/>
+          } @else {
+            <polyline points="15 18 9 12 15 6"/>
+          }
+        </svg>
+      </button>
+      <div class="brand-subtitle">INTELIGENCIA ENERGÉTICA</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li>
+          <a [routerLink]="['/dashboard']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/habitacion']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M9 21V9"/>
+            </svg>
+            <span class="nav-text">Habitaciones</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/dispositivos']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            <span class="nav-text">Dispositivos</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/consumo']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span class="nav-text">Consumo</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/rutinas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <span class="nav-text">Rutinas</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/alertas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="nav-text">Alertas</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active">
+            <a [routerLink]="['/perfil']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span class="nav-text">Perfil</span>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/configuracion']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              <span class="nav-text">Configuración</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" (click)="logout()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span class="nav-text">Salir</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <button class="optimize-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-leaf-icon">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 9.8A7 7 0 0 1 11 20z"/>
+          <path d="M9 22v-6"/>
+        </svg>
+        OPTIMIZAR ENERGÍA
+      </button>
+    </div>
+  </aside>
+
+
+  <!-- 2. MAIN CONTENT -->
+  <main class="main-content">
+    <!-- Success Toast -->
+    <div class="toast-success" *ngIf="guardadoExitoso">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+      Cambios guardados correctamente
+    </div>
+
+    <!-- Header -->
+    <div class="topbar">
+      <div>
+        <h1 class="page-title">Mi Perfil</h1>
+        <p class="page-subtitle">Gestiona tu cuenta y preferencias de EcoVolt</p>
+      </div>
+    </div>
+
+    <!-- Profile Hero Card -->
+    <div class="profile-hero">
+      <div class="hero-gradient"></div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">{{ getInitials() }}</div>
+        <div class="avatar-plan-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          PRO
+        </div>
+      </div>
+      <div class="profile-hero-info">
+        <h2>{{ usuario.nombre }}</h2>
+        <p>{{ usuario.email }}</p>
+        <div class="hero-badges">
+          <span class="plan-badge">{{ usuario.plan }}</span>
+          <span class="member-badge">Miembro desde {{ usuario.miembro }}</span>
+        </div>
+      </div>
+      <button class="btn-edit-hero" (click)="startEdit()" *ngIf="!editMode">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar perfil
+      </button>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let s of stats">
+        <span class="stat-value">{{ s.valor }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="two-col">
+
+      <!-- LEFT: Datos Personales -->
+      <section class="card">
+        <div class="card-header">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Datos Personales
+          </h3>
+        </div>
+
+        <!-- View Mode -->
+        <div class="info-grid" *ngIf="!editMode">
+          <div class="info-item">
+            <span class="info-label">Nombre completo</span>
+            <span class="info-value">{{ usuario.nombre }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Correo electrónico</span>
+            <span class="info-value">{{ usuario.email }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Teléfono</span>
+            <span class="info-value">{{ usuario.telefono }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Ciudad</span>
+            <span class="info-value">{{ usuario.ciudad }}</span>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="edit-form" *ngIf="editMode">
+          <div class="form-group">
+            <label for="edit-nombre">Nombre completo</label>
+            <input id="edit-nombre" type="text" [(ngModel)]="editUsuario.nombre">
+          </div>
+          <div class="form-group">
+            <label for="edit-email">Correo electrónico</label>
+            <input id="edit-email" type="email" [(ngModel)]="editUsuario.email">
+          </div>
+          <div class="form-group">
+            <label for="edit-telefono">Teléfono</label>
+            <input id="edit-telefono" type="text" [(ngModel)]="editUsuario.telefono">
+          </div>
+          <div class="form-group">
+            <label for="edit-ciudad">Ciudad</label>
+            <input id="edit-ciudad" type="text" [(ngModel)]="editUsuario.ciudad">
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="cancelEdit()">Cancelar</button>
+            <button class="btn-save" (click)="saveProfile()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+              Guardar cambios
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Seguridad -->
+      <section class="card">
+        <div class="card-header">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Seguridad
+          </h3>
+        </div>
+
+        <div *ngIf="!cambiarPasswordMode">
+          <div class="security-item">
+            <div class="security-info">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <div>
+                <span class="security-label">Contraseña</span>
+                <span class="security-desc">Última actualización hace 2 meses</span>
+              </div>
+            </div>
+            <button class="btn-outline" (click)="togglePasswordMode()">Cambiar</button>
+          </div>
+          <div class="security-item">
+            <div class="security-info">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.86 10.7a19.79 19.79 0 01-3.07-8.67A2 2 0 012.81 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.08 6.08l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+              <div>
+                <span class="security-label">Verificación en 2 pasos</span>
+                <span class="security-desc">No configurada</span>
+              </div>
+            </div>
+            <span class="badge-disabled">Próximamente</span>
+          </div>
+          <div class="security-item">
+            <div class="security-info">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              <div>
+                <span class="security-label">Sesiones activas</span>
+                <span class="security-desc">1 dispositivo conectado</span>
+              </div>
+            </div>
+            <span class="badge-active">Activo</span>
+          </div>
+        </div>
+
+        <!-- Password Form -->
+        <div class="edit-form" *ngIf="cambiarPasswordMode">
+          <div class="form-group">
+            <label for="pwd-actual">Contraseña actual</label>
+            <input id="pwd-actual" type="password" [(ngModel)]="passwords.actual" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label for="pwd-nueva">Nueva contraseña</label>
+            <input id="pwd-nueva" type="password" [(ngModel)]="passwords.nueva" placeholder="••••••••">
+          </div>
+          <div class="form-group">
+            <label for="pwd-confirmar">Confirmar contraseña</label>
+            <input id="pwd-confirmar" type="password" [(ngModel)]="passwords.confirmar" placeholder="••••••••">
+          </div>
+          <div class="form-actions">
+            <button class="btn-cancel" (click)="togglePasswordMode()">Cancelar</button>
+            <button class="btn-save" (click)="savePassword()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg>
+              Actualizar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notificaciones -->
+      <section class="card">
+        <div class="card-header">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            Notificaciones
+          </h3>
+        </div>
+        <div class="notif-list">
+          <div class="notif-item">
+            <div class="notif-info">
+              <span class="notif-label">Alertas críticas</span>
+              <span class="notif-desc">Notificaciones de consumo excesivo y fallos</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="notificaciones.alertasCriticas">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="notif-item">
+            <div class="notif-info">
+              <span class="notif-label">Advertencias</span>
+              <span class="notif-desc">Alertas de dispositivos y conectividad</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="notificaciones.advertencias">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="notif-item">
+            <div class="notif-info">
+              <span class="notif-label">Informativas</span>
+              <span class="notif-desc">Tips de ahorro y rutinas ejecutadas</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="notificaciones.informativas">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="notif-item">
+            <div class="notif-info">
+              <span class="notif-label">Resumen semanal</span>
+              <span class="notif-desc">Reporte de consumo cada lunes</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" [(ngModel)]="notificaciones.resumenSemanal">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <button class="btn-save-notif" (click)="saveNotifications()">Guardar preferencias</button>
+      </section>
+
+      <!-- Logros -->
+      <section class="card">
+        <div class="card-header">
+          <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            Logros
+          </h3>
+          <span class="badge-logros">{{ logros | slice:0:3 | slice:0 }} {{ logros.slice(0,3).length }}/{{ logros.length }}</span>
+        </div>
+        <div class="logros-grid">
+          <div class="logro-card" *ngFor="let logro of logros" [class.obtenido]="logro.obtenido" [class.bloqueado]="!logro.obtenido">
+            <div class="logro-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22">
+                <path *ngIf="logro.icono === 'leaf'" d="M17 8C8 10 5.9 16.17 3.82 19c0 0 6-4 11.5-3.5C15.71 15.55 18 13 18 10a6 6 0 00-1-2z"/>
+                <path *ngIf="logro.icono === 'lightning'" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                <path *ngIf="logro.icono === 'star'" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                <path *ngIf="logro.icono === 'shield'" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path *ngIf="logro.icono === 'sun'" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 17a5 5 0 100-10 5 5 0 000 10z"/>
+              </svg>
+              <svg *ngIf="!logro.obtenido" class="lock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <span class="logro-title">{{ logro.titulo }}</span>
+            <span class="logro-desc">{{ logro.descripcion }}</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- MOBILE BOTTOM NAVIGATION -->
+  <nav class="mobile-bottom-nav">
+    <a [routerLink]="['/dashboard']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        <polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span>Dashboard</span>
+    </a>
+    <a [routerLink]="['/dispositivos']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+      </svg>
+      <span>Dispositivos</span>
+    </a>
+    <a [routerLink]="['/consumo']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      <span>Consumo</span>
+    </a>
+    <a [routerLink]="['/rutinas']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span>Rutinas</span>
+    </a>
+    <a [routerLink]="['/alertas']" routerLinkActive="active-tab">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bottom-nav-icon">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        <line x1="12" y1="9" x2="12" y2="13"/>
+        <line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>Alertas</span>
+    </a>
+  </nav>
+
+  <!-- GLOBAL TOAST NOTIFICATIONS -->
+  <div class="global-toasts-container">
+    @for (toast of stateService.toasts; track toast.id) {
+      <div class="toast-item" [class]="toast.tipo.toLowerCase()" (click)="stateService.removeToast(toast.id)">
+        <div class="toast-icon-wrap">
+          @if (toast.tipo === 'CRITICA') {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          } @else if (toast.tipo === 'ADVERTENCIA') {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toast-icon">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          }
+        </div>
+        <div class="toast-content">
+          <h5>{{ toast.titulo }}</h5>
+          <p>{{ toast.descripcion }}</p>
+        </div>
+        <button class="toast-close-btn">&times;</button>
+      </div>
+    }
+  </div>
+</div>

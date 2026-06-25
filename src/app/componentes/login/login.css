@@ -79,6 +79,7 @@
   font-weight: 800;
   letter-spacing: -0.5px;
   background: linear-gradient(135deg, #ffffff 60%, #a7f3d0 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -102,6 +103,7 @@
 .hero-text .highlight {
   color: var(--primary);
   background: linear-gradient(135deg, #a7f3d0 0%, #10b981 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

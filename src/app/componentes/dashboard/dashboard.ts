@@ -1,110 +1,264 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-
-interface Dispositivo {
-  id: string;
-  nombre: string;
-  ubicacion: string;
-  estado: boolean;
-  consumo: number;
-  badge: string;
-  badgeType: 'efficient' | 'eco' | 'constant' | 'standby' | 'off';
-  icon: string;
-}
-
-interface Actividad {
-  texto: string;
-  tiempo: string;
-  subtitulo: string;
-  dotType: 'active' | 'inactive' | 'alert' | 'system';
-}
+import { StateService } from '../../servicios/state.service';
+import { ApiService } from '../../servicios/api.service';
+import { AuthService } from '../../servicios/auth.service';
+import { Dispositivo, Actividad, ActividadPanelDto, ResumenPanelDto } from '../../modelos';
 
 @Component({
   selector: 'app-dashboard',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard {
-  userName = 'Carlos M.';
-  userProfile = 'PREMIUM MEMBER';
-  currentCity = 'LIMA, PERÚ';
-  currentTemp = '24°C';
+export class Dashboard implements OnInit {
+  // Dropdown states
+  showProfileMenu = false;
+  showNotifications = false;
 
-  // Símbolos generales de estado
-  todayConsumption = 12.4;
-  todayCost = 6.20;
-  todayPercent = '8% más que ayer';
-  todayPercentClass = 'percent-up'; // rojo
+  // Search state
+  dashSearchTerm = '';
 
-  monthlyConsumption = 284;
-  monthlyCost = 142;
-  monthlyPercent = '5% menos que abr.';
-  monthlyPercentClass = 'percent-down'; // verde
+  // Chatbot state
+  isChatOpen = false;
+  chatInput = '';
+  chatMessages: { sender: 'bot' | 'user'; text: string; time: string }[] = [
+    { sender: 'bot', text: '¡Hola! Soy tu coach de eficiencia Eco-IA. ¿En qué te puedo asesorar hoy para optimizar tu consumo?', time: 'Ahora' }
+  ];
 
-  activeDevicesCount = 3;
-  totalDevicesCount = 12;
-  networkStatus = 'SISTEMA ÓPTIMO';
+  // Device Form state
+  showAddModal = false;
+  newNombre = '';
+  newTipo = 'Luz';
+  newUbicacion = '';
+  newCarga = '';
+  newModo: 'AUTO' | 'MANUAL' = 'AUTO';
+  tiposDisponibles = ['Luz', 'TV', 'Refrigerador', 'AC', 'Lavadora', 'Cafetera', 'Otro'];
+  isSubmitting = false;
 
   isEcoModeActive = true;
 
-  devices: Dispositivo[] = [
-    { id: 'tv', nombre: 'TV Sala', ubicacion: 'SALA PRINCIPAL • ON', estado: true, consumo: 0.45, badge: 'EFICIENTE', badgeType: 'efficient', icon: 'tv' },
-    { id: 'ac', nombre: 'Aire Acond.', ubicacion: 'DORMITORIO • ON', estado: true, consumo: 1.20, badge: 'MODO ECO', badgeType: 'eco', icon: 'ac' },
-    { id: 'fridge', nombre: 'Refrigerador', ubicacion: 'COCINA • ON', estado: true, consumo: 2.80, badge: 'CONSTANTE', badgeType: 'constant', icon: 'fridge' },
-    { id: 'washer', nombre: 'Lavadora', ubicacion: 'LAVANDERÍA • OFF', estado: false, consumo: 0.00, badge: 'STANDBY', badgeType: 'standby', icon: 'washer' },
-    { id: 'lamp', nombre: 'Lámpara 1', ubicacion: 'ESTUDIO • OFF', estado: false, consumo: 0.00, badge: 'OFF', badgeType: 'off', icon: 'lamp' }
-  ];
+  constructor(
+    private router: Router,
+    public stateService: StateService,
+    private apiService: ApiService,
+    private authService: AuthService
+  ) {}
 
-  activities: Actividad[] = [
-    { texto: 'Aire Acondicionado encendido', tiempo: 'Hace 12 min', subtitulo: 'Rutina Noche', dotType: 'active' },
-    { texto: 'TV Sala apagada', tiempo: 'Hace 45 min', subtitulo: 'Control Remoto', dotType: 'inactive' },
-    { texto: 'Pico de consumo detectado', tiempo: 'Hoy, 14:30', subtitulo: 'Lavandería', dotType: 'alert' },
-    { texto: 'Lámpara Estudio apagada', tiempo: 'Hoy, 13:15', subtitulo: 'Automático', dotType: 'inactive' },
-    { texto: 'Sistema actualizado v2.4', tiempo: 'Hoy, 09:00', subtitulo: 'Sistema', dotType: 'system' }
-  ];
-
-  constructor(private router: Router) {
-    this.recalculateActiveCount();
+  ngOnInit() {
+    // Load data from backend if connected
+    if (this.stateService.isBackendConnected) {
+      this.loadDashboardData();
+    } else {
+      // Try loading from backend
+      this.stateService.loadFromBackend().then((success) => {
+        if (success) {
+          this.loadDashboardData();
+        } else {
+          this.recalculateConsumption();
+        }
+      });
+    }
+    this.recalculateConsumption();
   }
 
+  private loadDashboardData() {
+    // Load dashboard summary (KPIs)
+    this.apiService.getDashboardSummary().subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.todayConsumption = res.data.consumoDiarioKwh || 0;
+          this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
+          this.monthlyConsumption = res.data.consumoMensualKwh || 0;
+          this.monthlyCost = res.data.costoEstimadoSoles || 0;
+
+          const variation = res.data.variacionPorcentaje || 0;
+          if (variation < 0) {
+            this.todayPercent = `${Math.abs(variation)}% menos que ayer`;
+            this.todayPercentClass = 'percent-down';
+          } else {
+            this.todayPercent = `${variation}% más que ayer`;
+            this.todayPercentClass = 'percent-up';
+          }
+          this.monthlyPercent = `${Math.abs(variation)}% variación mensual`;
+          this.monthlyPercentClass = variation <= 0 ? 'percent-down' : 'percent-up';
+        }
+      },
+      error: () => this.recalculateConsumption()
+    });
+
+    // Load activity feed
+    this.apiService.getDashboardActivity().subscribe({
+      next: (res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          this.stateService.activities = res.data.map((a: ActividadPanelDto) => ({
+            texto: a.descripcion,
+            tiempo: this.formatActivityTime(a.hora),
+            subtitulo: a.tipo || 'Sistema',
+            dotType: this.mapActivityType(a.tipo)
+          }));
+        }
+      },
+      error: () => {} // Keep existing activities
+    });
+  }
+
+  private formatActivityTime(hora: string): string {
+    if (!hora) return 'Hace un momento';
+    try {
+      const d = new Date(hora);
+      const now = new Date();
+      const diffMin = Math.floor((now.getTime() - d.getTime()) / 60000);
+      if (diffMin < 1) return 'Ahora mismo';
+      if (diffMin < 60) return `Hace ${diffMin} min`;
+      if (diffMin < 1440) return `Hoy, ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+      return d.toLocaleDateString('es-ES');
+    } catch {
+      return hora;
+    }
+  }
+
+  private mapActivityType(tipo: string): 'active' | 'inactive' | 'alert' | 'system' {
+    if (!tipo) return 'system';
+    const t = tipo.toLowerCase();
+    if (t.includes('encend') || t.includes('activ') || t.includes('on')) return 'active';
+    if (t.includes('apag') || t.includes('off')) return 'inactive';
+    if (t.includes('alert') || t.includes('pico')) return 'alert';
+    return 'system';
+  }
+
+  @HostListener('document:click')
+  closeMenus() {
+    this.showProfileMenu = false;
+    this.showNotifications = false;
+  }
+
+  toggleProfileMenu(event: Event) {
+    event.stopPropagation();
+    this.showProfileMenu = !this.showProfileMenu;
+    this.showNotifications = false;
+  }
+
+  toggleNotifications(event: Event) {
+    event.stopPropagation();
+    this.showNotifications = !this.showNotifications;
+    this.showProfileMenu = false;
+  }
+
+  get userEmail(): string {
+    return this.stateService.usuario.email;
+  }
+
+  get notificationsList() {
+    return this.stateService.notificationsList;
+  }
+
+  get unreadNotificationsCount(): number {
+    return this.stateService.notificationsList.filter(n => !n.leido).length;
+  }
+
+  markAllNotificationsAsRead() {
+    this.stateService.notificationsList.forEach(n => n.leido = true);
+    this.stateService.saveStateToStorage();
+  }
+
+  // Getters connected to StateService
+  get userName(): string {
+    return this.stateService.usuario.nombre;
+  }
+
+  get userProfile(): string {
+    return this.stateService.usuario.plan;
+  }
+
+  get userAvatar(): string | null {
+    return this.stateService.usuario.avatar;
+  }
+
+  get currentCity(): string {
+    return this.stateService.usuario.ciudad.toUpperCase();
+  }
+
+  get currentTemp(): string {
+    const city = this.stateService.usuario.ciudad.toLowerCase();
+    if (city.includes('lima')) return '19°C';
+    if (city.includes('bogotá') || city.includes('bogota')) return '14°C';
+    if (city.includes('santiago')) return '12°C';
+    if (city.includes('buenos aires') || city.includes('buenosaires')) return '15°C';
+    if (city.includes('méxico') || city.includes('mexico')) return '21°C';
+    return '20°C';
+  }
+
+  get devices(): Dispositivo[] {
+    if (!this.dashSearchTerm.trim()) {
+      return this.stateService.dispositivosDeCasaSeleccionada;
+    }
+    const term = this.dashSearchTerm.toLowerCase();
+    return this.stateService.dispositivosDeCasaSeleccionada.filter(d => d.nombre.toLowerCase().includes(term));
+  }
+
+  get activities(): Actividad[] {
+    return this.stateService.activities;
+  }
+
+  // Símbolos generales de estado
+  todayConsumption = 0;
+  todayCost = 0;
+  todayPercent = '0% de variación';
+  todayPercentClass = 'percent-down';
+
+  monthlyConsumption = 0;
+  monthlyCost = 0;
+  monthlyPercent = '0% de variación';
+  monthlyPercentClass = 'percent-down';
+
+  activeDevicesCount = 0;
+  totalDevicesCount = 0;
+  networkStatus = 'SISTEMA ÓPTIMO';
+
   toggleDevice(device: Dispositivo) {
-    device.estado = !device.estado;
-    if (device.estado) {
-      device.ubicacion = device.ubicacion.replace('• OFF', '• ON');
-      // consumo por defecto
-      if (device.id === 'tv') { device.consumo = 0.45; device.badge = 'EFICIENTE'; device.badgeType = 'efficient'; }
-      else if (device.id === 'ac') { device.consumo = this.isEcoModeActive ? 0.95 : 1.20; device.badge = this.isEcoModeActive ? 'MODO ECO' : 'EFICIENTE'; device.badgeType = this.isEcoModeActive ? 'eco' : 'efficient'; }
-      else if (device.id === 'fridge') { device.consumo = 2.80; device.badge = 'CONSTANTE'; device.badgeType = 'constant'; }
-      else if (device.id === 'washer') { device.consumo = 1.80; device.badge = 'EFICIENTE'; device.badgeType = 'efficient'; }
-      else if (device.id === 'lamp') { device.consumo = 0.05; device.badge = 'EFICIENTE'; device.badgeType = 'efficient'; }
-      
+    const newStatus = !device.estado;
+
+    // Optimistic update
+    device.estado = newStatus;
+    if (newStatus) {
+      let powerVal = parseInt(device.carga.replace(/\D/g, '')) || 100;
+      device.consumoHoy = parseFloat(((powerVal * 4) / 1000).toFixed(2));
+      device.badge = 'ON';
+      device.badgeType = 'efficient';
       this.logActivity(`${device.nombre} encendido`, 'Control Manual', 'active');
     } else {
-      device.ubicacion = device.ubicacion.replace('• ON', '• OFF');
-      device.consumo = 0.00;
-      device.badge = device.id === 'washer' ? 'STANDBY' : 'OFF';
-      device.badgeType = device.id === 'washer' ? 'standby' : 'off';
+      device.consumoHoy = 0.00;
+      device.badge = 'OFF';
+      device.badgeType = 'off';
       this.logActivity(`${device.nombre} apagado`, 'Control Manual', 'inactive');
     }
-    this.recalculateActiveCount();
     this.recalculateConsumption();
+    this.stateService.saveStateToStorage();
+
+    // Sync with backend
+    if (device.backendId && this.stateService.isBackendConnected) {
+      this.apiService.toggleDeviceStatus(device.backendId, newStatus ? 'ON' : 'OFF').subscribe({
+        error: (err) => console.warn('Error syncing device status:', err)
+      });
+    }
   }
 
   toggleEcoMode() {
     this.isEcoModeActive = !this.isEcoModeActive;
     
-    // Si el modo eco se activa, reduce consumo de dispositivos de alta potencia
     this.devices.forEach(device => {
-      if (device.estado && device.id === 'ac') {
+      if (device.estado) {
         if (this.isEcoModeActive) {
-          device.consumo = 0.95;
+          device.consumoHoy = parseFloat((device.consumoHoy * 0.8).toFixed(2));
           device.badge = 'MODO ECO';
           device.badgeType = 'eco';
         } else {
-          device.consumo = 1.20;
+          let powerVal = parseInt(device.carga.replace(/\D/g, '')) || 100;
+          device.consumoHoy = parseFloat(((powerVal * 4) / 1000).toFixed(2));
           device.badge = 'EFICIENTE';
           device.badgeType = 'efficient';
         }
@@ -117,89 +271,351 @@ export class Dashboard {
       this.isEcoModeActive ? 'active' : 'system'
     );
     this.recalculateConsumption();
+    this.stateService.saveStateToStorage();
   }
 
   applyScene(scene: string) {
+    if (this.devices.length === 0) {
+      alert('No hay dispositivos registrados para aplicar escenas.');
+      return;
+    }
+
     if (scene === 'night') {
-      // Modo Noche: apaga todo excepto refrigerador
       this.devices.forEach(d => {
-        if (d.id !== 'fridge' && d.estado) {
+        if (!d.nombre.toLowerCase().includes('refrig') && d.estado) {
           d.estado = false;
-          d.ubicacion = d.ubicacion.replace('• ON', '• OFF');
-          d.consumo = 0.00;
-          d.badge = d.id === 'washer' ? 'STANDBY' : 'OFF';
-          d.badgeType = d.id === 'washer' ? 'standby' : 'off';
+          d.consumoHoy = 0.00;
+          d.badge = 'OFF';
+          d.badgeType = 'off';
+          // Sync with backend
+          if (d.backendId && this.stateService.isBackendConnected) {
+            this.apiService.toggleDeviceStatus(d.backendId, 'OFF').subscribe();
+          }
         }
       });
       this.logActivity('Escena Modo Noche aplicada', 'Escenas Rápidas', 'active');
     } else if (scene === 'work') {
-      // Modo Trabajo: enciende lámpara
       this.devices.forEach(d => {
-        if (d.id === 'lamp' && !d.estado) {
-          d.estado = true;
-          d.ubicacion = d.ubicacion.replace('• OFF', '• ON');
-          d.consumo = 0.05;
-          d.badge = 'EFICIENTE';
-          d.badgeType = 'efficient';
+        if (d.tipo.toLowerCase().includes('luz') || d.nombre.toLowerCase().includes('lámpara') || d.nombre.toLowerCase().includes('lampara')) {
+          if (!d.estado) {
+            d.estado = true;
+            let powerVal = parseInt(d.carga.replace(/\D/g, '')) || 60;
+            d.consumoHoy = parseFloat(((powerVal * 4) / 1000).toFixed(2));
+            d.badge = 'ON';
+            d.badgeType = 'efficient';
+            if (d.backendId && this.stateService.isBackendConnected) {
+              this.apiService.toggleDeviceStatus(d.backendId, 'ON').subscribe();
+            }
+          }
         }
       });
       this.logActivity('Escena Modo Trabajo aplicada', 'Escenas Rápidas', 'active');
     } else if (scene === 'off') {
-      // Todo Apagado: apaga absolutamente todo
       this.devices.forEach(d => {
         if (d.estado) {
           d.estado = false;
-          d.ubicacion = d.ubicacion.replace('• ON', '• OFF');
-          d.consumo = 0.00;
-          d.badge = d.id === 'washer' ? 'STANDBY' : 'OFF';
-          d.badgeType = d.id === 'washer' ? 'standby' : 'off';
+          d.consumoHoy = 0.00;
+          d.badge = 'OFF';
+          d.badgeType = 'off';
+          if (d.backendId && this.stateService.isBackendConnected) {
+            this.apiService.toggleDeviceStatus(d.backendId, 'OFF').subscribe();
+          }
         }
       });
       this.logActivity('Cierre total: Todo apagado', 'Escenas Rápidas', 'alert');
     }
-    this.recalculateActiveCount();
     this.recalculateConsumption();
+    this.stateService.saveStateToStorage();
   }
 
-  private recalculateActiveCount() {
-    const active = this.devices.filter(d => d.estado).length;
-    this.activeDevicesCount = active;
-  }
+  recalculateConsumption() {
+    this.totalDevicesCount = this.stateService.devices.length;
+    this.activeDevicesCount = this.stateService.devices.filter(d => d.estado).length;
 
-  private recalculateConsumption() {
-    // Calcular suma del consumo de los dispositivos encendidos
-    let sum = 0;
-    this.devices.forEach(d => sum += d.consumo);
-    
-    // Simular que el consumo base + los activos sumen hoy
-    // Suma base de 8 kWh + el de los activos
-    this.todayConsumption = parseFloat((8.0 + sum).toFixed(1));
-    this.todayCost = parseFloat((this.todayConsumption * 0.5).toFixed(2));
-    
-    // Si baja el consumo, cambia el indicador de consumo diario
-    if (this.todayConsumption < 11.5) {
-      this.todayPercent = '4% menos que ayer';
-      this.todayPercentClass = 'percent-down'; // verde
-    } else {
-      this.todayPercent = '8% más que ayer';
-      this.todayPercentClass = 'percent-up'; // rojo
+    if (this.totalDevicesCount === 0) {
+      this.todayConsumption = this.todayConsumption || 0;
+      this.todayCost = this.todayCost || 0;
+      this.todayPercent = this.todayPercent || 'Sin consumo registrado';
+      this.todayPercentClass = 'percent-down';
+      this.monthlyConsumption = this.monthlyConsumption || 0;
+      this.monthlyCost = this.monthlyCost || 0;
+      this.monthlyPercent = this.monthlyPercent || 'Sin consumo registrado';
+      this.monthlyPercentClass = 'percent-down';
+      this.networkStatus = this.stateService.isBackendConnected ? 'CONECTADO AL SERVIDOR' : 'SISTEMA ÓPTIMO - SIN DISPOSITIVOS';
+      return;
+    }
+
+    this.networkStatus = this.stateService.isBackendConnected ? 'CONECTADO AL SERVIDOR' : 'SISTEMA ÓPTIMO';
+
+    // Only recalculate from local data if backend hasn't provided KPIs
+    if (!this.stateService.isBackendConnected) {
+      let sum = 0;
+      this.stateService.devices.forEach(d => sum += d.consumoHoy);
+      
+      this.todayConsumption = parseFloat((4.0 + sum).toFixed(1));
+      this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
+      
+      this.monthlyConsumption = parseFloat((120.0 + (sum * 30)).toFixed(1));
+      this.monthlyCost = parseFloat((this.monthlyConsumption * 0.52).toFixed(2));
+
+      if (this.todayConsumption < 8.0) {
+        this.todayPercent = '12% menos que ayer';
+        this.todayPercentClass = 'percent-down';
+      } else {
+        this.todayPercent = '5% más que ayer';
+        this.todayPercentClass = 'percent-up';
+      }
+
+      this.monthlyPercent = '8% menos que el mes ant.';
+      this.monthlyPercentClass = 'percent-down';
     }
   }
 
-  private logActivity(texto: string, subtitulo: string, dotType: 'active' | 'inactive' | 'alert' | 'system') {
+  logActivity(texto: string, subtitulo: string, dotType: 'active' | 'inactive' | 'alert' | 'system') {
     this.activities.unshift({
       texto,
       tiempo: 'Ahora mismo',
       subtitulo,
       dotType
     });
-    // Limitar feed a 8 elementos
     if (this.activities.length > 8) {
       this.activities.pop();
     }
   }
 
+  // Chatbot operations
+  toggleChat() {
+    this.isChatOpen = !this.isChatOpen;
+  }
+
+  sendChatMessage() {
+    if (!this.chatInput.trim()) return;
+
+    const userText = this.chatInput.trim();
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    
+    this.chatMessages.push({
+      sender: 'user',
+      text: userText,
+      time: timeStr
+    });
+
+    this.chatInput = '';
+
+    setTimeout(() => {
+      let replyText = 'Entiendo. Estoy analizando tu perfil energético... ';
+      const query = userText.toLowerCase();
+
+      if (query.includes('ahorr') || query.includes('reduc') || query.includes('consejo') || query.includes('tip')) {
+        replyText = 'Para reducir tu planilla eléctrica, te sugiero apagar las luces en zonas vacías y configurar el Aire Acondicionado en 24°C, lo cual optimiza un 15% de su gasto energético.';
+      } else if (query.includes('dispositivo') || query.includes('conectar') || query.includes('equipo')) {
+        if (this.devices.length === 0) {
+          replyText = 'Actualmente no tienes dispositivos en tu red virtual de EcoVolt. Prueba agregando uno con el botón "AGREGAR" arriba del control de dispositivos.';
+        } else {
+          replyText = `Tienes ${this.devices.length} dispositivos en tu red. El de mayor consumo estimado es ${this.getHeavyDeviceName()}.`;
+        }
+      } else if (query.includes('hola') || query.includes('buenos') || query.includes('tardes')) {
+        replyText = `¡Hola ${this.userName}! Soy tu asistente inteligente Eco-IA. Estoy listo para ayudarte a monitorear y reducir tus consumos de energía. ¿Qué deseas consultar hoy?`;
+      } else {
+        replyText = 'Excelente consulta. Te comento que programar rutinas de apagado automático a las 11:00 PM (Modo Noche) es la forma más rápida de evitar el consumo fantasma de energía.';
+      }
+
+      this.chatMessages.push({
+        sender: 'bot',
+        text: replyText,
+        time: timeStr
+      });
+    }, 600);
+  }
+
+  private getHeavyDeviceName(): string {
+    if (this.devices.length === 0) return 'ninguno';
+    let max = this.devices[0];
+    this.devices.forEach(d => {
+      const w1 = parseInt(d.carga.replace(/\D/g, '')) || 0;
+      const wMax = parseInt(max.carga.replace(/\D/g, '')) || 0;
+      if (w1 > wMax) max = d;
+    });
+    return `${max.nombre} (${max.carga})`;
+  }
+
+  // Device addition modal operations
+  openAddModal() {
+    if (!this.stateService.selectedHabitacionId) {
+      alert('Primero crea o selecciona una casa y una habitación en Dispositivos.');
+      this.router.navigate(['/dispositivos']);
+      return;
+    }
+    this.showAddModal = true;
+    this.isSubmitting = false;
+    this.newNombre = '';
+    this.newTipo = 'Luz';
+    this.newUbicacion = '';
+    this.newCarga = '';
+    this.newModo = 'AUTO';
+  }
+
+  closeModal() {
+    this.showAddModal = false;
+    this.isSubmitting = false;
+  }
+
+  addDevice() {
+    // Prevent double-click submissions
+    if (this.isSubmitting) return;
+
+    if (!this.newNombre.trim() || !this.newCarga.trim()) {
+      alert('Por favor complete todos los campos obligatorios.');
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    let powerStr = this.newCarga.trim().toUpperCase();
+    if (!powerStr.endsWith('W') && !powerStr.endsWith('KW')) {
+      powerStr += 'W';
+    }
+
+    const watts = parseInt(powerStr.replace(/\D/g, '')) || 100;
+    const estimatedKwh = parseFloat(((watts * 4) / 1000).toFixed(2));
+
+    const iconMap: { [key: string]: string } = {
+      'Luz': 'lamp',
+      'TV': 'tv',
+      'Refrigerador': 'fridge',
+      'AC': 'ac',
+      'Lavadora': 'washer',
+      'Cafetera': 'coffee',
+      'Otro': 'other'
+    };
+
+    // Try to create on backend first
+    if (this.stateService.isBackendConnected && this.stateService.selectedHabitacionId) {
+      const habitacionId = this.stateService.selectedHabitacionId;
+      this.apiService.createDevice({
+        habitacion_id: habitacionId,
+        nombre: this.newNombre,
+        tipo: this.newTipo.toLowerCase(),
+        activo: true,
+        automatico: this.newModo === 'AUTO',
+      }).subscribe({
+        next: (res) => {
+          try {
+            if (res.success && res.data) {
+              // Use the centralized mapper for single source of truth
+              const mappedDevice = this.stateService.mapDeviceFromBackend(res.data);
+              // Avoid duplicates
+              const alreadyExists = this.stateService.devices.some(
+                d => d.backendId === mappedDevice.backendId ||
+                (((d.nombre || '').trim().toLowerCase() === (mappedDevice.nombre || '').trim().toLowerCase()) &&
+                 (d.ubicacion || '') === (mappedDevice.ubicacion || ''))
+              );
+              if (!alreadyExists) {
+                this.stateService.devices.push(mappedDevice);
+                this.stateService.addNotification(`Nuevo dispositivo registrado: ${mappedDevice.nombre}`);
+                this.logActivity(`Nuevo dispositivo registrado: ${mappedDevice.nombre}`, 'Dispositivos', 'system');
+              }
+            }
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          } catch (e) {
+            console.error('Error handling success response:', e);
+          } finally {
+            this.closeModal();
+          }
+        },
+        error: (err) => {
+          console.error('Error creating device on backend:', err);
+          try {
+            // Fallback: add locally with temporary data
+            const newDev: Dispositivo = {
+              id: 'dev_' + Date.now(),
+              nombre: this.newNombre,
+              tipo: this.newTipo,
+              ubicacion: this.newUbicacion,
+              carga: powerStr,
+              estado: true,
+              consumoHoy: estimatedKwh,
+              modo: this.newModo,
+              badge: 'EFICIENTE',
+              badgeType: 'efficient',
+              icon: iconMap[this.newTipo] || 'other'
+            };
+            // Avoid duplicates
+            const alreadyExists = this.stateService.devices.some(
+              d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+              (d.ubicacion || '') === (newDev.ubicacion || '')
+            );
+            if (!alreadyExists) {
+              this.stateService.devices.push(newDev);
+              this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+              this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+            }
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          } catch (e) {
+            console.error('Error in fallback creation:', e);
+          } finally {
+            this.closeModal();
+          }
+        }
+      });
+    } else {
+      try {
+        const newDev: Dispositivo = {
+          id: 'dev_' + Date.now(),
+          nombre: this.newNombre,
+          tipo: this.newTipo,
+          ubicacion: this.newUbicacion,
+          carga: powerStr,
+          estado: true,
+          consumoHoy: estimatedKwh,
+          modo: this.newModo,
+          badge: 'EFICIENTE',
+          badgeType: 'efficient',
+          icon: iconMap[this.newTipo] || 'other'
+        };
+        // Avoid duplicates
+        const alreadyExists = this.stateService.devices.some(
+          d => ((d.nombre || '').trim().toLowerCase() === (newDev.nombre || '').trim().toLowerCase()) &&
+          (d.ubicacion || '') === (newDev.ubicacion || '')
+        );
+        if (!alreadyExists) {
+          this.stateService.devices.push(newDev);
+          this.stateService.addNotification(`Nuevo dispositivo registrado: ${newDev.nombre}`);
+          this.logActivity(`Nuevo dispositivo registrado: ${newDev.nombre}`, 'Dispositivos', 'system');
+        }
+        this.recalculateConsumption();
+        this.stateService.saveStateToStorage();
+      } catch (e) {
+        console.error('Error in local creation:', e);
+      } finally {
+        this.closeModal();
+      }
+    }
+  }
+
+  downloadReport() {
+    if (this.stateService.isBackendConnected) {
+      this.apiService.downloadReportPdf().subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'ecovolt-report.pdf';
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: () => alert('Error al descargar el reporte. Intente nuevamente.')
+      });
+    } else {
+      alert('Preparando y descargando tu reporte de consumo energético semanal en PDF...');
+    }
+  }
+
   logout() {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }
