@@ -798,4 +798,11 @@
     align-items: flex-start;
     gap: 16px;
   }
+
+  /* Notifications Dropdown */
+.notification-btn-container {
+  position: relative;
+}
+
+
 }
