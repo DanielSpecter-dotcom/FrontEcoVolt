@@ -10,58 +10,74 @@ import { Perfil } from './componentes/perfil/perfil';
 import { Configuracion } from './componentes/configuracion/configuracion';
 import { VerificarCodigo } from './componentes/verificar-codigo/verificar-codigo';
 import { authGuard } from './servicios/auth.guard';
+import { Casa } from './componentes/casa/casa';
+import { Habitacion } from './componentes/habitacion/habitacion';
 
 export const routes: Routes = [
-    {
-        path: '',
-        redirectTo: 'login',
-        pathMatch: 'full'
-    },
-    {
-        path: 'verificar-codigo',
-        component: VerificarCodigo
-    },
-    {
-        path: 'registro',
-        component: Registro
-    },
-    {
-        path: 'login',
-        component: Login
-    },
-    {
-        path: 'dashboard',
-        component: Dashboard,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'dispositivos',
-        component: Dispositivos,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'consumo',
-        component: Consumo,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'rutinas',
-        component: Rutinas,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'alertas',
-        component: Alertas,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'perfil',
-        component: Perfil,
-        canActivate: [authGuard]
-    },
-    {
-        path: 'configuracion',
-        component: Configuracion,
-        canActivate: [authGuard]
-    }
+  {
+    path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+  {
+    path: 'verificar-codigo',
+    component: VerificarCodigo,
+  },
+  {
+    path: 'registro',
+    component: Registro,
+  },
+  {
+    path: 'login',
+    component: Login,
+  },
+  {
+    path: 'dashboard',
+    component: Dashboard,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'casa',
+    component: Casa,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'dispositivos',
+    component: Dispositivos,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'consumo',
+    component: Consumo,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'rutinas',
+    component: Rutinas,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'alertas',
+    component: Alertas,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'habitacion',
+    component: Habitacion,
+    canActivate: [authGuard],
+  },
+
+  {
+    path: 'perfil',
+    component: Perfil,
+    canActivate: [authGuard],
+  },
+  {
+    path: 'configuracion',
+    component: Configuracion,
+    canActivate: [authGuard],
+  },
 ];

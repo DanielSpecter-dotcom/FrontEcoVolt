@@ -58,6 +58,9 @@ export class StateService {
   // Casas & Habitaciones from backend
   casas: CasaDTO[] = [];
   habitaciones: HabitacionDTO[] = [];
+  selectedCasaId: number | null = null;
+  selectedHabitacionId: number | null = null;
+  selectedDeviceId: number | null = null;
 
   // Hogar Virtual
   hogar = {
@@ -196,14 +199,15 @@ export class StateService {
           // Store homes and rooms
           if (results.homes.success && results.homes.data) {
             this.casas = results.homes.data;
-            // Set hogar from the first home if available
-            if (this.casas.length > 0) {
-              this.hogar.nombrePropiedad = this.casas[0].nombre;
-            }
           }
 
           if (results.rooms.success && results.rooms.data) {
             this.habitaciones = results.rooms.data;
+          }
+
+          this.ensureValidSelections();
+          if (this.selectedCasa) {
+            this.hogar.nombrePropiedad = this.selectedCasa.nombre;
           }
 
           this.notificationsList = [
@@ -284,7 +288,7 @@ export class StateService {
   public mapRoutineFromBackend(dto: RutinaDTO): Rutina {
     // Map backend day names to frontend abbreviations
     const dayMap: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
       'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
     };
 
@@ -376,6 +380,113 @@ export class StateService {
     };
   }
 
+  // ==================== Active hierarchy selection ====================
+
+  get selectedCasa(): CasaDTO | null {
+    if (!this.selectedCasaId) return null;
+    return this.casas.find(casa => casa.id === this.selectedCasaId) || null;
+  }
+
+  /** EMPRESARIAL desbloquea las vistas multi-casa; PERSONAL queda limitado a 1 sola. */
+  get esEmpresarial(): boolean {
+    return this.userRole === 'EMPRESARIAL';
+  }
+
+  get puedeCrearCasa(): boolean {
+    return this.esEmpresarial || this.casas.length < 1;
+  }
+
+  /** Suma el consumo de hoy (kWh) de los dispositivos de una casa puntual. */
+  consumoKwhDeCasa(casaId: number): number {
+    const roomIds = new Set(
+      this.habitaciones.filter(habitacion => habitacion.casa_id === casaId).map(habitacion => habitacion.id)
+    );
+    return this.devices
+      .filter(device => !!device.habitacionId && roomIds.has(device.habitacionId))
+      .reduce((acc, device) => acc + (device.consumoHoy || 0), 0);
+  }
+
+  /** Resuelve a qué casa pertenece un dispositivo (vía su habitación). */
+  casaDeDispositivo(deviceId: number): CasaDTO | null {
+    const device = this.devices.find(d => d.backendId === deviceId);
+    if (!device || !device.habitacionId) return null;
+    const habitacion = this.habitaciones.find(h => h.id === device.habitacionId);
+    if (!habitacion) return null;
+    return this.casas.find(casa => casa.id === habitacion.casa_id) || null;
+  }
+
+  get selectedHabitacion(): HabitacionDTO | null {
+    if (!this.selectedHabitacionId) return null;
+    return this.habitaciones.find(habitacion => habitacion.id === this.selectedHabitacionId) || null;
+  }
+
+  get habitacionesDeCasaSeleccionada(): HabitacionDTO[] {
+    if (!this.selectedCasaId) return [];
+    return this.habitaciones.filter(habitacion => habitacion.casa_id === this.selectedCasaId);
+  }
+
+  get dispositivosDeHabitacionSeleccionada(): Dispositivo[] {
+    if (!this.selectedHabitacionId) return [];
+    return this.devices.filter(device => device.habitacionId === this.selectedHabitacionId);
+  }
+
+  get dispositivosDeCasaSeleccionada(): Dispositivo[] {
+    if (!this.selectedCasaId) return this.devices;
+    const roomIds = new Set(this.habitacionesDeCasaSeleccionada.map(habitacion => habitacion.id));
+    return this.devices.filter(device => !!device.habitacionId && roomIds.has(device.habitacionId));
+  }
+
+  get rutinasDeCasaSeleccionada(): Rutina[] {
+    if (!this.selectedCasaId) return this.routines;
+    return this.routines.filter(routine => routine.homeId === this.selectedCasaId);
+  }
+
+  setActiveHome(casaId: number | null): void {
+    this.selectedCasaId = casaId;
+    const firstRoom = casaId
+      ? this.habitaciones.find(habitacion => habitacion.casa_id === casaId)
+      : null;
+    this.selectedHabitacionId = firstRoom?.id || null;
+    this.selectedDeviceId = null;
+    this.saveStateToStorage();
+  }
+
+  setActiveRoom(habitacionId: number | null): void {
+    this.selectedHabitacionId = habitacionId;
+    const habitacion = habitacionId
+      ? this.habitaciones.find(item => item.id === habitacionId)
+      : null;
+    if (habitacion) {
+      this.selectedCasaId = habitacion.casa_id;
+    }
+    this.selectedDeviceId = null;
+    this.saveStateToStorage();
+  }
+
+  setActiveDevice(deviceId: number | null): void {
+    this.selectedDeviceId = deviceId;
+    this.saveStateToStorage();
+  }
+
+  ensureValidSelections(): void {
+    if (this.selectedCasaId && !this.casas.some(casa => casa.id === this.selectedCasaId)) {
+      this.selectedCasaId = null;
+    }
+
+    if (!this.selectedCasaId && this.casas.length > 0) {
+      this.selectedCasaId = this.casas[0].id;
+    }
+
+    const validRooms = this.habitacionesDeCasaSeleccionada;
+    if (this.selectedHabitacionId && !validRooms.some(habitacion => habitacion.id === this.selectedHabitacionId)) {
+      this.selectedHabitacionId = null;
+    }
+
+    if (!this.selectedHabitacionId && validRooms.length > 0) {
+      this.selectedHabitacionId = validRooms[0].id;
+    }
+  }
+
   // ==================== Local State (fallback & backward compat) ====================
 
   isTestUser(): boolean {
@@ -413,6 +524,10 @@ export class StateService {
         if (data.userRole) this.userRole = data.userRole;
         if (data.casas) this.casas = data.casas;
         if (data.habitaciones) this.habitaciones = data.habitaciones;
+        if (data.selectedCasaId) this.selectedCasaId = data.selectedCasaId;
+        if (data.selectedHabitacionId) this.selectedHabitacionId = data.selectedHabitacionId;
+        if (data.selectedDeviceId) this.selectedDeviceId = data.selectedDeviceId;
+        this.ensureValidSelections();
         return;
       } catch (e) {
         console.error('Error loading saved state', e);
@@ -490,6 +605,9 @@ export class StateService {
       userRole: this.userRole,
       casas: this.casas,
       habitaciones: this.habitaciones,
+      selectedCasaId: this.selectedCasaId,
+      selectedHabitacionId: this.selectedHabitacionId,
+      selectedDeviceId: this.selectedDeviceId,
     };
     localStorage.setItem(storageKey, JSON.stringify(data));
   }
@@ -532,7 +650,7 @@ export class StateService {
   /** Converts frontend day abbreviation to backend enum */
   static dayToBackend(day: string): string {
     const map: { [key: string]: string } = {
-      'L': 'MONDAY', 'M': 'TUESDAY', 'X': 'WEDNESDAY',
+      'L': 'MONDAY', 'M': 'TUESDAY', 'MI': 'WEDNESDAY',
       'J': 'THURSDAY', 'V': 'FRIDAY', 'S': 'SATURDAY', 'D': 'SUNDAY'
     };
     return map[day] || day;
@@ -541,7 +659,7 @@ export class StateService {
   /** Converts backend day enum to frontend abbreviation */
   static dayToFrontend(day: string): string {
     const map: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'X',
+      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
       'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
     };
     return map[day] || day;

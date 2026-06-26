@@ -211,16 +211,18 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="submit-btn">
-          Crear mi cuenta
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          @if (isLoading) {
+            Creando cuenta...
+          } @else {
+            Crear mi cuenta
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          }
         </button>
-
       </form>
-
       <div class="form-footer">
         <p>¿Ya tienes una cuenta? <a routerLink="/login" class="login-link">Iniciar sesión</a></p>
       </div>

@@ -22,6 +22,10 @@ export class Alertas implements OnInit {
   busqueda = '';
   mostrarModal = false;
   alertaSeleccionada: Alerta | null = null;
+  selectedDeviceId: number | null = null;
+  limitKwh: number | null = null;
+  isSavingLimit = false;
+  filtroCasaId: number | null = null;
 
   constructor(
     private router: Router,
@@ -132,6 +136,10 @@ export class Alertas implements OnInit {
     return this.stateService.alertas;
   }
 
+  get dispositivos() {
+    return this.stateService.dispositivosDeCasaSeleccionada;
+  }
+
   get userAvatar(): string | null {
     return this.stateService.usuario.avatar;
   }
@@ -147,7 +155,46 @@ export class Alertas implements OnInit {
         a.titulo.toLowerCase().includes(this.busqueda.toLowerCase()) ||
         a.dispositivo.toLowerCase().includes(this.busqueda.toLowerCase());
 
-      return matchFiltro && matchBusqueda;
+      const matchDevice = !this.selectedDeviceId || a.deviceId === this.selectedDeviceId;
+
+      const matchCasa = !this.filtroCasaId ||
+        (!!a.deviceId && this.stateService.casaDeDispositivo(a.deviceId)?.id === this.filtroCasaId);
+
+      return matchFiltro && matchBusqueda && matchDevice && matchCasa;
+    });
+  }
+
+  casaDeAlerta(alerta: Alerta): string {
+    if (!alerta.deviceId) return '';
+    return this.stateService.casaDeDispositivo(alerta.deviceId)?.nombre || '';
+  }
+
+  guardarLimite() {
+    if (!this.selectedDeviceId) {
+      alert('Selecciona un dispositivo.');
+      return;
+    }
+    if (!this.limitKwh || this.limitKwh <= 0) {
+      alert('Ingresa un límite mayor a 0 kWh.');
+      return;
+    }
+    if (!this.stateService.isBackendConnected) {
+      alert('Necesitas conexión con el backend para configurar límites.');
+      return;
+    }
+
+    this.isSavingLimit = true;
+    this.apiService.setAlertLimit(this.selectedDeviceId, this.limitKwh).subscribe({
+      next: (res) => {
+        this.isSavingLimit = false;
+        if (res.success) {
+          this.stateService.showToast('INFO', 'Límite configurado', 'El dispositivo ya tiene un umbral de consumo.');
+        }
+      },
+      error: (err) => {
+        this.isSavingLimit = false;
+        alert(err.error?.message || 'No se pudo configurar el límite.');
+      }
     });
   }
 

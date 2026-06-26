@@ -31,6 +31,29 @@
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+
+        <li>
+          <a [routerLink]="['/habitacion']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M9 21V9"/>
+            </svg>
+            <span class="nav-text">Habitaciones</span>
+          </a>
+        </li>
+
         <li>
           <a [routerLink]="['/dispositivos']">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
@@ -209,12 +232,23 @@
       </div>
     </header>
 
+    @if (stateService.esEmpresarial && stateService.casas.length > 1) {
+      <div class="resumen-por-casa">
+        @for (item of resumenPorCasa; track item.casa.id) {
+          <span class="badge badge-activa">{{ item.casa.nombre }}: {{ item.activas }} activas</span>
+        }
+      </div>
+    }
+
     <!-- Content Columns Layout -->
     <div class="rutinas-columns-grid">
       <!-- COLUMN 1: ROUTINES LIST -->
       <section class="routines-list-column">
         <header class="column-header-flex">
-          <h2>TUS RUTINAS</h2>
+          <div>
+            <h2>TUS RUTINAS</h2>
+            <p class="active-home-label">Casa activa: {{ selectedCasaNombre }}</p>
+          </div>
           <button class="create-routine-btn" (click)="createRoutine()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="add-icon">
               <line x1="12" y1="5" x2="12" y2="19"/>
@@ -226,8 +260,8 @@
 
         <div class="routines-deck">
           @for (routine of routines; track routine.id) {
-            <div 
-              class="routine-card" 
+            <div
+              class="routine-card"
               [class.active-card]="selectedRoutine?.id === routine.id"
               [class.card-inactive]="!routine.activa"
               (click)="selectRoutine(routine)"
@@ -260,7 +294,7 @@
                 <div class="card-main-info">
                   <h3 class="routine-title-lbl">{{ routine.nombre }}</h3>
                   <p class="routine-meta-lbl">
-                    {{ routine.hora }} {{ routine.periodo }} • 
+                    {{ routine.hora }} {{ routine.periodo }} •
                     @for (day of routine.dias; track day; let last = $last) {
                       <span>{{ day }}</span>{{ !last ? ' ' : '' }}
                     }
@@ -334,9 +368,9 @@
                 <label>DÍAS DE EJECUCIÓN</label>
                 <div class="days-selector-row">
                   @for (day of diasSemana; track day) {
-                    <button 
-                      type="button" 
-                      class="day-btn" 
+                    <button
+                      type="button"
+                      class="day-btn"
                       [class.day-selected]="isDaySelected(day)"
                       (click)="toggleDay(day)"
                     >
@@ -377,7 +411,9 @@
                   <label>Acciones de Dispositivos</label>
                   <div class="add-action-controls">
                     <select class="device-select" [(ngModel)]="selectedAddDeviceId" name="selectedAddDeviceId">
-                      <option value="" disabled selected>Selecciona dispositivo...</option>
+                      <option value="" disabled selected>
+                        {{ registeredDevices.length ? 'Selecciona dispositivo...' : 'Sin dispositivos en esta casa' }}
+                      </option>
                       @for (dev of registeredDevices; track dev.id) {
                         <option [value]="dev.id">{{ dev.nombre }} ({{ dev.ubicacion }})</option>
                       }
@@ -427,8 +463,8 @@
                       </div>
 
                       <div class="action-action-toggle">
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           class="toggle-action-badge"
                           [class.badge-encender]="action.tipoAccion === 'ENCENDER'"
                           [class.badge-apagar]="action.tipoAccion === 'APAGAR'"

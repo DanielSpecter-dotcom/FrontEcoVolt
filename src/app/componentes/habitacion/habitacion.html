@@ -1,0 +1,317 @@
+<div class="habitacion-container" [class.sidebar-minimized]="stateService.sidebarMinimized" (click)="closeMenus()">
+
+  <!-- 1. LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="logo-icon">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+        <span class="logo-text">EcoVolt</span>
+      </div>
+      <button type="button" class="sidebar-toggle-btn" (click)="stateService.toggleSidebar()" [title]="stateService.sidebarMinimized ? 'Expandir' : 'Minimizar'">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="toggle-icon">
+          @if (stateService.sidebarMinimized) {
+            <polyline points="9 18 15 12 9 6"/>
+          } @else {
+            <polyline points="15 18 9 12 15 6"/>
+          }
+        </svg>
+      </button>
+      <div class="brand-subtitle">INTELIGENCIA ENERGÉTICA</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul>
+        <li>
+          <a [routerLink]="['/dashboard']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span class="nav-text">Dashboard</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+        <li class="active">
+          <a [routerLink]="['/habitacion']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M9 21V9"/>
+            </svg>
+            <span class="nav-text">Habitaciones</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/dispositivos']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+            <span class="nav-text">Dispositivos</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/consumo']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span class="nav-text">Consumo</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/rutinas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <span class="nav-text">Rutinas</span>
+          </a>
+        </li>
+        <li>
+          <a [routerLink]="['/alertas']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span class="nav-text">Alertas</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <a [routerLink]="['/perfil']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span class="nav-text">Perfil</span>
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/configuracion']">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              <span class="nav-text">Configuración</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" (click)="logout()">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              <span class="nav-text">Salir</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <button class="optimize-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="btn-leaf-icon">
+          <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.58-1 9.8A7 7 0 0 1 11 20z"/>
+          <path d="M9 22v-6"/>
+        </svg>
+        OPTIMIZAR ENERGÍA
+      </button>
+    </div>
+  </aside>
+
+  <!-- 2. MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- Top Bar -->
+    <header class="top-bar">
+      <div class="search-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" placeholder="Buscar habitaciones..." class="search-input" (click)="$event.stopPropagation()">
+      </div>
+
+      <div class="top-bar-actions">
+        <div class="notification-btn-container">
+          <button class="icon-btn" (click)="toggleNotifications($event)" aria-label="Notificaciones">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="bar-icon">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            @if (unreadNotificationsCount > 0) {
+              <span class="notif-badge">{{ unreadNotificationsCount }}</span>
+            }
+          </button>
+          @if (showNotifications) {
+            <div class="notifications-dropdown" (click)="$event.stopPropagation()">
+              <div class="notifications-header">
+                <h4>Notificaciones</h4>
+                <button class="mark-read-btn" (click)="markAllNotificationsAsRead(); $event.stopPropagation()">Marcar leídas</button>
+              </div>
+              <div class="notifications-list">
+                @if (notificationsList.length === 0) {
+                  <div class="empty-notifications">No hay notificaciones</div>
+                } @else {
+                  @for (notif of notificationsList; track notif.id) {
+                    <div class="notification-item" [class.unread]="!notif.leido">
+                      <p class="notification-text">{{ notif.texto }}</p>
+                      <span class="notification-time">{{ notif.tiempo }}</span>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="profile-circle-container">
+          <div class="user-profile-circle" (click)="toggleProfileMenu($event)" title="Perfil de Usuario">
+            <img [src]="userAvatar || '/images/carlos_avatar.png'" alt="Usuario avatar">
+          </div>
+          @if (showProfileMenu) {
+            <div class="profile-dropdown circle-dropdown" (click)="$event.stopPropagation()">
+              <div class="dropdown-header">
+                <p class="dropdown-email">{{ userEmail }}</p>
+              </div>
+              <div class="dropdown-actions">
+                <a [routerLink]="['/perfil']" class="dropdown-item">Ir a Perfil</a>
+                <button (click)="logout()" class="dropdown-item logout-btn">Cerrar Sesión</button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Title -->
+    <section class="page-title-section">
+      <div class="title-text">
+        <h1>Habitaciones</h1>
+        <p>Aquí solo administras ambientes. Elige una casa y crea habitaciones para esa casa.</p>
+      </div>
+      <button class="add-habitacion-btn" (click)="$event.stopPropagation()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="add-btn-icon">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Crear habitación
+      </button>
+    </section>
+
+    <!-- Casa seleccionada + resumen -->
+    <section class="casa-selector-panel" (click)="$event.stopPropagation()">
+      <div class="casa-selector-field">
+        <label>Casa seleccionada</label>
+        @if (casas.length > 0) {
+          <select [ngModel]="selectedCasaId" (ngModelChange)="onCasaChange($event)" name="selectedCasa">
+            @for (casa of casas; track casa.id) {
+              <option [ngValue]="casa.id">{{ casa.nombre }}</option>
+            }
+          </select>
+        } @else {
+          <p class="empty-flow-text">No tienes casas registradas. Crea una en la sección Hogares.</p>
+        }
+      </div>
+
+      <div class="casa-resumen">
+        <strong>{{ totalHabitaciones }} habitaciones</strong>
+        <span>{{ totalDispositivosEnCasa }} dispositivos dentro de esta casa</span>
+      </div>
+
+      <div class="casa-resumen">
+        <strong>{{ consumoTotalCasaHoy }} kWh</strong>
+        <span>consumo de hoy</span>
+      </div>
+    </section>
+
+    <!-- Stats Row -->
+    <section class="stats-row">
+      <div class="stat-card">
+        <span class="stat-label">Habitaciones en esta casa</span>
+        <div class="stat-num">{{ totalHabitaciones }}</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Dispositivos asociados</span>
+        <div class="stat-num">{{ totalDispositivosEnCasa }}</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Ambientes activos</span>
+        <div class="stat-num">{{ totalAmbientesActivos }}</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Más eficiente</span>
+        <div class="stat-num stat-num-text">{{ habitacionMasEficiente }}</div>
+      </div>
+    </section>
+
+    <!-- Crear habitación inline -->
+    @if (selectedCasaId) {
+      <section class="inline-create-section" (click)="$event.stopPropagation()">
+        <input type="text" [(ngModel)]="newHabitacionNombre" name="newHabitacionNombre" placeholder="Nombre de la nueva habitación">
+        <button type="button" (click)="createRoom()" [disabled]="isCreatingRoom">
+          {{ isCreatingRoom ? 'Creando...' : 'Crear habitación' }}
+        </button>
+      </section>
+    }
+
+    <!-- Habitaciones Grid -->
+    @if (!selectedCasaId) {
+      <div class="empty-habitaciones">
+        <p>Selecciona una casa para ver sus habitaciones.</p>
+      </div>
+    } @else if (habitacionesConDatos.length === 0) {
+      <div class="empty-habitaciones">
+        <p>Esta casa todavía no tiene habitaciones. Crea la primera arriba.</p>
+      </div>
+    } @else {
+      <section class="habitaciones-grid">
+        @for (item of habitacionesConDatos; track item.habitacion.id) {
+          <div class="habitacion-card">
+            <div class="habitacion-image" [ngClass]="item.colorClass">
+              <div class="hab-sun"></div>
+              <div class="hab-base"></div>
+            </div>
+            <div class="habitacion-body">
+              <div class="habitacion-header-row">
+                <span class="habitacion-name">{{ item.habitacion.name }}</span>
+                <span class="badge-status" [ngClass]="item.badge.clase">{{ item.badge.texto }}</span>
+              </div>
+              <p class="habitacion-meta">{{ item.dispositivos.length }} dispositivos</p>
+              <p class="habitacion-meta">{{ item.consumoHoy }} kWh hoy</p>
+
+              <div class="consumo-relativo-row">
+                <span class="consumo-relativo-label">Consumo relativo</span>
+                <div class="consumo-relativo-bar">
+                  <div class="consumo-relativo-fill" [ngClass]="item.colorClass" [style.width.%]="consumoRelativoPorcentaje(item.consumoHoy)"></div>
+                </div>
+              </div>
+
+              <div class="habitacion-actions">
+                <button class="btn-editar" (click)="editarHabitacion(item.habitacion, $event)">Editar</button>
+                <button class="btn-ver" (click)="verDispositivos(item.habitacion.id, $event)">Ver</button>
+              </div>
+            </div>
+          </div>
+        }
+      </section>
+    }
+
+  </main>
+</div>

@@ -62,6 +62,18 @@
             <span class="nav-text">Dashboard</span>
           </a>
         </li>
+
+        <li>
+          <a [routerLink]="['/casa']">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
+              <path d="M3 9.5L12 4l9 5.5"/>
+              <path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/>
+              <path d="M9 22V12"/>
+            </svg>
+            <span class="nav-text">Hogares</span>
+          </a>
+        </li>
+
         <li>
           <a [routerLink]="['/dispositivos']">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="nav-icon">
@@ -255,6 +267,41 @@
       </div>
     </div>
 
+    <section class="device-alert-panel" (click)="$event.stopPropagation()">
+      <div class="alert-field">
+        <label>Dispositivo</label>
+        <select [(ngModel)]="selectedDeviceId" name="selectedDeviceId">
+          <option [ngValue]="null">Todos los dispositivos de la casa activa</option>
+          <option *ngFor="let device of dispositivos" [ngValue]="device.backendId">
+            {{ device.nombre }} - {{ device.ubicacion }}
+          </option>
+        </select>
+      </div>
+      <div class="alert-field">
+        <label>Límite de consumo</label>
+        <div class="limit-control">
+          <input type="number" min="0.1" step="0.1" [(ngModel)]="limitKwh" name="limitKwh" placeholder="kWh">
+          <button type="button" (click)="guardarLimite()" [disabled]="isSavingLimit || !selectedDeviceId">
+            {{ isSavingLimit ? 'Guardando...' : 'Guardar límite' }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    @if (stateService.esEmpresarial && stateService.casas.length > 1) {
+      <section class="device-alert-panel" (click)="$event.stopPropagation()">
+        <div class="alert-field">
+          <label>Casa</label>
+          <select [(ngModel)]="filtroCasaId" name="filtroCasaId">
+            <option [ngValue]="null">Todas las casas</option>
+            @for (casa of stateService.casas; track casa.id) {
+              <option [ngValue]="casa.id">{{ casa.nombre }}</option>
+            }
+          </select>
+        </div>
+      </section>
+    }
+
     <!-- Filter tabs -->
     <div class="filter-tabs">
       <button class="tab" [class.active]="filtroActivo === 'TODAS'" (click)="setFiltro('TODAS')">Todas</button>
@@ -293,6 +340,7 @@
             </span>
             <span class="alert-unread-dot" *ngIf="!alerta.leida"></span>
             <span class="alert-time">{{ alerta.fecha }} · {{ alerta.hora }}</span>
+            <span class="alert-badge alert-badge-casa" *ngIf="stateService.esEmpresarial && casaDeAlerta(alerta)">{{ casaDeAlerta(alerta) }}</span>
           </div>
           <h3 class="alert-title">{{ alerta.titulo }}</h3>
           <p class="alert-device">{{ alerta.dispositivo }}</p>

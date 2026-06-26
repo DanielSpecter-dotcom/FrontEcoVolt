@@ -5,6 +5,7 @@ import { RouterModule, Router } from '@angular/router';
 import { StateService, Rutina, AccionDispositivo, Dispositivo } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
+import { CasaDTO } from '../../modelos';
 
 @Component({
   selector: 'app-rutinas',
@@ -19,7 +20,7 @@ export class Rutinas implements OnInit {
   showNotifications = false;
 
   selectedRoutine: Rutina | null = null;
-  
+
   // Working copy for editing
   editNombre = '';
   editHora = '';
@@ -28,7 +29,7 @@ export class Rutinas implements OnInit {
   editActiva = true;
   editAcciones: AccionDispositivo[] = [];
 
-  diasSemana = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  diasSemana = ['L', 'M', 'MI', 'J', 'V', 'S', 'D'];
 
   constructor(
     private router: Router,
@@ -107,7 +108,18 @@ export class Rutinas implements OnInit {
   }
 
   get routines(): Rutina[] {
-    return this.stateService.routines;
+    return this.stateService.rutinasDeCasaSeleccionada;
+  }
+
+  get selectedCasaNombre(): string {
+    return this.stateService.selectedCasa?.nombre || 'Sin casa seleccionada';
+  }
+
+  get resumenPorCasa(): { casa: CasaDTO; activas: number }[] {
+    return this.stateService.casas.map(casa => ({
+      casa,
+      activas: this.stateService.routines.filter(r => r.homeId === casa.id && r.activa).length,
+    }));
   }
 
   get userAvatar(): string | null {
@@ -147,7 +159,7 @@ export class Rutinas implements OnInit {
   selectedAddDeviceId = '';
 
   get registeredDevices(): Dispositivo[] {
-    return this.stateService.devices;
+    return this.stateService.dispositivosDeCasaSeleccionada;
   }
 
   addActionForSelected() {
@@ -183,7 +195,19 @@ export class Rutinas implements OnInit {
 
   saveRoutine() {
     if (!this.selectedRoutine) return;
-    
+    if (!this.stateService.selectedCasaId && !this.selectedRoutine.homeId) {
+      alert('Primero selecciona o crea una casa en Dispositivos.');
+      return;
+    }
+    if (this.editDias.length === 0) {
+      alert('Selecciona al menos un día de ejecución.');
+      return;
+    }
+    if (this.editAcciones.length === 0) {
+      alert('Agrega al menos una acción con dispositivo.');
+      return;
+    }
+
     this.selectedRoutine.nombre = this.editNombre;
     this.selectedRoutine.hora = this.editHora;
     this.selectedRoutine.periodo = this.editPeriodo;
@@ -194,20 +218,22 @@ export class Rutinas implements OnInit {
 
     this.stateService.saveStateToStorage();
 
+    const time24 = this.convertTo24h(this.editHora, this.editPeriodo);
+    const backendDays = this.editDias.map(d => StateService.dayToBackend(d));
+    const backendAcciones = this.editAcciones
+      .filter(a => a.deviceId)
+      .map(a => ({
+        device_id: a.deviceId!,
+        encendido: a.tipoAccion === 'ENCENDER'
+      }));
+
+    if (this.stateService.isBackendConnected && backendAcciones.length !== this.editAcciones.length) {
+      alert('Todas las acciones deben usar dispositivos creados en el backend.');
+      return;
+    }
+
     // Sync with backend
     if (this.selectedRoutine.backendId && this.stateService.isBackendConnected) {
-      // Convert frontend time to 24h HH:mm format
-      const time24 = this.convertTo24h(this.editHora, this.editPeriodo);
-      // Convert days to backend format
-      const backendDays = this.editDias.map(d => StateService.dayToBackend(d));
-      // Convert actions
-      const backendAcciones = this.editAcciones
-        .filter(a => a.deviceId)
-        .map(a => ({
-          device_id: a.deviceId!,
-          encendido: a.tipoAccion === 'ENCENDER'
-        }));
-
       this.apiService.updateRoutine(this.selectedRoutine.backendId, {
         name: this.editNombre,
         execution_time: time24,
@@ -219,6 +245,31 @@ export class Rutinas implements OnInit {
         error: (err) => {
           console.warn('Error syncing routine:', err);
           alert('Rutina guardada localmente. Error al sincronizar con el servidor.');
+        }
+      });
+    } else if (this.stateService.isBackendConnected) {
+      this.apiService.createRoutine({
+        home_id: this.selectedRoutine.homeId || this.stateService.selectedCasaId!,
+        nombre: this.editNombre,
+        execution_time: time24,
+        days_of_week: backendDays,
+        acciones: backendAcciones,
+      }).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const created = this.stateService.mapRoutineFromBackend(res.data);
+            const index = this.stateService.routines.findIndex(r => r.id === this.selectedRoutine?.id);
+            if (index >= 0) {
+              this.stateService.routines[index] = created;
+              this.selectRoutine(created);
+            }
+            this.stateService.saveStateToStorage();
+            alert('Rutina creada correctamente.');
+          }
+        },
+        error: (err) => {
+          console.warn('Error creating routine:', err);
+          alert(err.error?.message || 'No se pudo crear la rutina en el servidor.');
         }
       });
     } else {
@@ -241,36 +292,19 @@ export class Rutinas implements OnInit {
   }
 
   createRoutine() {
-    const homeId = this.stateService.casas.length > 0 ? this.stateService.casas[0].id : 1;
-
-    if (this.stateService.isBackendConnected) {
-      this.apiService.createRoutine({
-        home_id: homeId,
-        nombre: 'Nueva Rutina',
-        execution_time: '12:00',
-        days_of_week: ['MONDAY'],
-        acciones: [],
-      }).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            const newRoutine = this.stateService['mapRoutineFromBackend'](res.data);
-            this.stateService.routines.push(newRoutine);
-            this.stateService.saveStateToStorage();
-            this.selectRoutine(newRoutine);
-          }
-        },
-        error: () => this.createRoutineLocally()
-      });
-    } else {
-      this.createRoutineLocally();
+    if (!this.stateService.selectedCasaId) {
+      alert('Primero crea o selecciona una casa en Dispositivos.');
+      return;
     }
+    this.createRoutineLocally();
   }
 
   private createRoutineLocally() {
-    const newId = (this.routines.length + 1).toString();
+    const newId = 'routine_' + Date.now();
     const newRoutine: Rutina = {
       id: newId,
-      nombre: 'Nueva Rutina ' + newId,
+      homeId: this.stateService.selectedCasaId || undefined,
+      nombre: 'Nueva Rutina',
       hora: '12:00',
       periodo: 'PM',
       dias: ['L'],

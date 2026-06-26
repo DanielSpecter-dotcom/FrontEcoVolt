@@ -1,20 +1,46 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
-import { Dispositivo, HabitacionDTO } from '../../modelos';
+import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
 
 @Component({
   selector: 'app-dispositivos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatSlideToggleModule,
+    MatChipsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',
 })
-export class Dispositivos implements OnInit {
+export class Dispositivos implements OnInit, OnDestroy {
+  /** Refresca el estado de los dispositivos cada 30s para reflejar cambios hechos por rutinas automáticas. */
+  private pollSub?: Subscription;
+  private readonly POLL_INTERVAL_MS = 30000;
+
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -52,6 +78,34 @@ export class Dispositivos implements OnInit {
         if (success) this.refreshDevices();
       });
     }
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.pollSub?.unsubscribe();
+  }
+
+  /** Vuelve a pedir los dispositivos periódicamente para reflejar cambios de estado hechos por rutinas automáticas en el backend. */
+  private startPolling() {
+    this.pollSub = interval(this.POLL_INTERVAL_MS)
+      .pipe(
+        filter(() => this.stateService.isBackendConnected),
+        switchMap(() => this.apiService.getDevices())
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const openMenuId = this.stateService.devices.find(d => d.showMenu)?.id;
+            this.stateService.devices = res.data.map(d => this.stateService.mapDeviceFromBackend(d));
+            if (openMenuId) {
+              const reopened = this.stateService.devices.find(d => d.id === openMenuId);
+              if (reopened) reopened.showMenu = true;
+            }
+            this.stateService.saveStateToStorage();
+          }
+        },
+        error: () => {} // Mantener los datos actuales y reintentar en el próximo ciclo
+      });
   }
 
   /** Reloads the full device list from backend, replacing local state */
@@ -108,11 +162,33 @@ export class Dispositivos implements OnInit {
 
   // Getters connected to StateService
   get devices(): Dispositivo[] {
-    return this.stateService.devices;
+    return this.stateService.dispositivosDeHabitacionSeleccionada;
+  }
+
+  get casas(): CasaDTO[] {
+    return this.stateService.casas;
   }
 
   get habitaciones(): HabitacionDTO[] {
-    return this.stateService.habitaciones;
+    return this.stateService.habitacionesDeCasaSeleccionada;
+  }
+
+  get selectedCasaId(): number | null {
+    return this.stateService.selectedCasaId;
+  }
+
+  get selectedHabitacionId(): number | null {
+    return this.stateService.selectedHabitacionId;
+  }
+
+  onCasaChange(casaId: number | null) {
+    this.stateService.setActiveHome(casaId);
+    this.newHabitacionId = this.stateService.selectedHabitacionId;
+  }
+
+  onHabitacionChange(habitacionId: number | null) {
+    this.stateService.setActiveRoom(habitacionId);
+    this.newHabitacionId = habitacionId;
   }
 
   get userAvatar(): string | null {
@@ -136,6 +212,7 @@ export class Dispositivos implements OnInit {
     return parseFloat(total.toFixed(1));
   }
 
+
   get peakLoad(): number {
     let wattsSum = 0;
     this.devices.forEach(d => {
@@ -148,9 +225,8 @@ export class Dispositivos implements OnInit {
     return Math.max(1.5, parseFloat((wattsSum / 1000).toFixed(1)));
   }
 
-  toggleState(device: Dispositivo, event?: Event) {
-    if (event) event.stopPropagation();
 
+  toggleState(device: Dispositivo) {
     const newState = !device.estado;
     device.estado = newState;
 
@@ -164,7 +240,6 @@ export class Dispositivos implements OnInit {
       device.badge = 'OFF';
       device.badgeType = 'off';
     }
-    device.showMenu = false;
     this.stateService.saveStateToStorage();
 
     // Sync with backend
@@ -175,12 +250,9 @@ export class Dispositivos implements OnInit {
     }
   }
 
-  toggleModo(device: Dispositivo, event?: Event) {
-    if (event) event.stopPropagation();
-
+  toggleModo(device: Dispositivo) {
     const newMode = device.modo === 'AUTO' ? 'MANUAL' : 'AUTO';
     device.modo = newMode;
-    device.showMenu = false;
     this.stateService.saveStateToStorage();
 
     // Sync with backend
@@ -208,24 +280,13 @@ export class Dispositivos implements OnInit {
     }
   }
 
-  toggleMenu(device: Dispositivo, event: Event) {
-    event.stopPropagation();
-    const currentState = device.showMenu;
-    this.devices.forEach(d => d.showMenu = false);
-    device.showMenu = !currentState;
-  }
-
-  closeAllMenus() {
-    this.devices.forEach(d => d.showMenu = false);
-  }
-
   openModal() {
     this.editMode = false;
     this.selectedDevice = null;
     this.isSubmitting = false;
     this.newNombre = '';
     this.newTipo = 'Luz';
-    this.newHabitacionId = this.habitaciones.length > 0 ? this.habitaciones[0].id : null;
+    this.newHabitacionId = this.stateService.selectedHabitacionId;
     this.newUbicacion = '';
     this.newCarga = '';
     this.newModo = 'AUTO';
@@ -265,9 +326,7 @@ export class Dispositivos implements OnInit {
 
     // Validate required fields
     const hasHabitacion = this.newHabitacionId !== null;
-    const hasUbicacionText = this.newUbicacion.trim().length > 0;
-
-    if (!this.newNombre.trim() || (!hasHabitacion && !hasUbicacionText) || !this.newCarga.trim()) {
+    if (!this.newNombre.trim() || !hasHabitacion || !this.newCarga.trim()) {
       alert('Por favor complete todos los campos obligatorios.');
       return;
     }
@@ -348,7 +407,7 @@ export class Dispositivos implements OnInit {
     } else {
       // ============ ADD NEW DEVICE ============
       // Determine habitacion_id: use selected dropdown or first available
-      const habitacionId = this.newHabitacionId || (this.habitaciones.length > 0 ? this.habitaciones[0].id : null);
+      const habitacionId = this.newHabitacionId || this.stateService.selectedHabitacionId;
 
       if (this.stateService.isBackendConnected && habitacionId) {
         // Create on backend FIRST, then add to local state on success
@@ -432,6 +491,7 @@ export class Dispositivos implements OnInit {
             badgeType: 'efficient',
             icon: iconMap[this.newTipo] || 'other',
             showMenu: false,
+            habitacionId: this.newHabitacionId || undefined,
           };
           // Avoid duplicates
           const alreadyExists = this.stateService.devices.some(

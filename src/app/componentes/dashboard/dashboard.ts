@@ -1,7 +1,9 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { Subscription, interval } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -14,7 +16,11 @@ import { Dispositivo, Actividad, ActividadPanelDto, ResumenPanelDto } from '../.
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, OnDestroy {
+  /** Refresca el estado de los dispositivos cada 30s para reflejar cambios hechos por rutinas automáticas. */
+  private pollSub?: Subscription;
+  private readonly POLL_INTERVAL_MS = 30000;
+
   // Dropdown states
   showProfileMenu = false;
   showNotifications = false;
@@ -63,6 +69,30 @@ export class Dashboard implements OnInit {
       });
     }
     this.recalculateConsumption();
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.pollSub?.unsubscribe();
+  }
+
+  /** Vuelve a pedir los dispositivos periódicamente para reflejar cambios de estado hechos por rutinas automáticas en el backend. */
+  private startPolling() {
+    this.pollSub = interval(this.POLL_INTERVAL_MS)
+      .pipe(
+        filter(() => this.stateService.isBackendConnected),
+        switchMap(() => this.apiService.getDevices())
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.devices = res.data.map(d => this.stateService.mapDeviceFromBackend(d));
+            this.recalculateConsumption();
+            this.stateService.saveStateToStorage();
+          }
+        },
+        error: () => {} // Mantener los datos actuales y reintentar en el próximo ciclo
+      });
   }
 
   private loadDashboardData() {
@@ -194,10 +224,10 @@ export class Dashboard implements OnInit {
 
   get devices(): Dispositivo[] {
     if (!this.dashSearchTerm.trim()) {
-      return this.stateService.devices;
+      return this.stateService.dispositivosDeCasaSeleccionada;
     }
     const term = this.dashSearchTerm.toLowerCase();
-    return this.stateService.devices.filter(d => d.nombre.toLowerCase().includes(term));
+    return this.stateService.dispositivosDeCasaSeleccionada.filter(d => d.nombre.toLowerCase().includes(term));
   }
 
   get activities(): Actividad[] {
@@ -249,7 +279,7 @@ export class Dashboard implements OnInit {
 
   toggleEcoMode() {
     this.isEcoModeActive = !this.isEcoModeActive;
-    
+
     this.devices.forEach(device => {
       if (device.estado) {
         if (this.isEcoModeActive) {
@@ -351,10 +381,10 @@ export class Dashboard implements OnInit {
     if (!this.stateService.isBackendConnected) {
       let sum = 0;
       this.stateService.devices.forEach(d => sum += d.consumoHoy);
-      
+
       this.todayConsumption = parseFloat((4.0 + sum).toFixed(1));
       this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
-      
+
       this.monthlyConsumption = parseFloat((120.0 + (sum * 30)).toFixed(1));
       this.monthlyCost = parseFloat((this.monthlyConsumption * 0.52).toFixed(2));
 
@@ -394,7 +424,7 @@ export class Dashboard implements OnInit {
     const userText = this.chatInput.trim();
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
+
     this.chatMessages.push({
       sender: 'user',
       text: userText,
@@ -442,6 +472,11 @@ export class Dashboard implements OnInit {
 
   // Device addition modal operations
   openAddModal() {
+    if (!this.stateService.selectedHabitacionId) {
+      alert('Primero crea o selecciona una casa y una habitación en Dispositivos.');
+      this.router.navigate(['/dispositivos']);
+      return;
+    }
     this.showAddModal = true;
     this.isSubmitting = false;
     this.newNombre = '';
@@ -460,7 +495,7 @@ export class Dashboard implements OnInit {
     // Prevent double-click submissions
     if (this.isSubmitting) return;
 
-    if (!this.newNombre.trim() || !this.newUbicacion.trim() || !this.newCarga.trim()) {
+    if (!this.newNombre.trim() || !this.newCarga.trim()) {
       alert('Por favor complete todos los campos obligatorios.');
       return;
     }
@@ -486,8 +521,8 @@ export class Dashboard implements OnInit {
     };
 
     // Try to create on backend first
-    if (this.stateService.isBackendConnected && this.stateService.habitaciones.length > 0) {
-      const habitacionId = this.stateService.habitaciones[0].id;
+    if (this.stateService.isBackendConnected && this.stateService.selectedHabitacionId) {
+      const habitacionId = this.stateService.selectedHabitacionId;
       this.apiService.createDevice({
         habitacion_id: habitacionId,
         nombre: this.newNombre,
