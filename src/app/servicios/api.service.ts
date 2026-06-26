@@ -17,6 +17,8 @@ export interface UsuarioDTO {
   uso_prolongado: boolean;
   reporte_semanal: boolean;
   roles: string[];
+  telefono?: string;
+  ciudad?: string;
 }
 
 export interface CasaDTO {
@@ -182,7 +184,7 @@ export class ApiService {
     return this.http.get<ApiResponse<UsuarioDTO>>(`${this.base}/usuarios/encontrarusuario/${id}`);
   }
 
-  updateUser(id: number, data: { nombre: string }): Observable<ApiResponse<UsuarioDTO>> {
+  updateUser(id: number, data: { nombre: string; apellido?: string; correo?: string; telefono?: string; ciudad?: string }): Observable<ApiResponse<UsuarioDTO>> {
     return this.http.put<ApiResponse<UsuarioDTO>>(`${this.base}/usuarios/actualizarusuario/${id}`, data);
   }
 

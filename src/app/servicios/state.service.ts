@@ -231,8 +231,8 @@ export class StateService {
     this.usuario = {
       nombre: fullName,
       email: dto.correo,
-      telefono: '',
-      ciudad: 'Lima, Perú',
+      telefono: dto.telefono || '',
+      ciudad: dto.ciudad || 'Lima, Perú',
       plan: dto.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal',
       miembro: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
       avatar: null,

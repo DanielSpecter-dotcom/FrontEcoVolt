@@ -17,4 +17,6 @@ export interface UsuarioDTO {
   /** Preferencia: recibir reporte semanal */
   reporte_semanal: boolean;
   roles: string[];
+  telefono?: string;
+  ciudad?: string;
 }

@@ -331,6 +331,14 @@ export class Dispositivos implements OnInit, OnDestroy {
       return;
     }
 
+    // Enforce device limit for Personal plan
+    if (!this.editMode) {
+      if (this.stateService.userRole === 'PERSONAL' && this.stateService.devices.length >= 5) {
+        alert('Tu plan Personal permite gestionar un máximo de 5 dispositivos. Actualiza a EcoVolt Empresarial para administrar dispositivos ilimitados.');
+        return;
+      }
+    }
+
     // Lock the form to prevent double submission
     this.isSubmitting = true;
 

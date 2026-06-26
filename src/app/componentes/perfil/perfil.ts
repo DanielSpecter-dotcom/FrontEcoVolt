@@ -100,6 +100,8 @@ export class Perfil implements OnInit {
           this.stateService.usuario.email = dto.correo;
           this.stateService.usuario.apellido = dto.apellido || '';
           this.stateService.usuario.username = dto.username || '';
+          this.stateService.usuario.telefono = dto.telefono || '';
+          this.stateService.usuario.ciudad = dto.ciudad || 'Lima, Perú';
           this.stateService.usuario.tipoUsuario = dto.tipo_usuario || 'PERSONAL';
           this.stateService.usuario.plan = dto.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal';
           this.stateService.notificaciones.consumoCritico = dto.consumo_excesivo ?? true;
@@ -168,13 +170,24 @@ export class Perfil implements OnInit {
 
     // Sync with backend
     if (this.stateService.userId && this.stateService.isBackendConnected) {
+      const parts = this.editUsuario.nombre.trim().split(/\s+/);
+      const nombre = parts[0] || '';
+      const apellido = parts.slice(1).join(' ');
+
       this.apiService.updateUser(this.stateService.userId, {
-        nombre: this.editUsuario.nombre.trim()
+        nombre: nombre,
+        apellido: apellido,
+        correo: this.editUsuario.email.trim(),
+        telefono: this.editUsuario.telefono.trim(),
+        ciudad: this.editUsuario.ciudad.trim()
       }).subscribe({
         next: (res) => {
           if (res.success && res.data) {
             const fullName = [res.data.nombre, res.data.apellido].filter(Boolean).join(' ');
             this.editUsuario.nombre = fullName;
+            this.editUsuario.email = res.data.correo;
+            this.editUsuario.telefono = res.data.telefono || '';
+            this.editUsuario.ciudad = res.data.ciudad || '';
           }
           this.stateService.saveProfile(this.editUsuario);
           this.editMode = false;
