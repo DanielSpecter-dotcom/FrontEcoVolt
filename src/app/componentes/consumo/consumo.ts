@@ -478,6 +478,11 @@ export class Consumo implements OnInit {
   }
 
   exportData() {
+    if (this.stateService.userRole === 'PERSONAL') {
+      alert('La descarga de gráficos y reportes PDF es una función exclusiva del plan EcoVolt Empresarial. ¡Actualiza tu plan hoy para desbloquear esta característica!');
+      return;
+    }
+
     if (this.stateService.isBackendConnected) {
       this.apiService.downloadReportPdf().subscribe({
         next: (blob) => {

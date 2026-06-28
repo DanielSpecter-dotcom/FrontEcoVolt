@@ -1,20 +1,4 @@
 :host {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --dark-bg: #030712;
-  --emerald-deep: #064e3b;
-  --bg-light: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
-  --critical: #ef4444;
-  --critical-bg: #fff1f2;
   display: block;
 }
 
@@ -191,7 +175,7 @@
 .search-container {
   display: flex;
   align-items: center;
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 99px;
   padding: 8px 20px;
   width: 450px;
@@ -201,8 +185,8 @@
 }
 
 .search-container:focus-within {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: var(--border-color);
+  background: var(--card-bg);
 }
 
 .search-icon {
@@ -223,7 +207,7 @@
 }
 
 .search-input::placeholder {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .top-bar-actions {
@@ -248,7 +232,7 @@
 }
 
 .icon-btn:hover {
-  background: #e2e8f0;
+  background: var(--bg-light);
   color: var(--text-main);
 }
 
@@ -283,7 +267,7 @@
   height: 38px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--bg-light);
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
@@ -518,7 +502,7 @@
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr;
   gap: 16px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px 22px;
@@ -542,7 +526,7 @@
   height: 42px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--card-bg);
   color: var(--text-main);
   font-size: 14px;
   font-weight: 700;
@@ -593,7 +577,7 @@
 }
 
 .stat-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 18px 20px;
@@ -637,7 +621,8 @@
   padding: 0 14px;
   font-size: 13.5px;
   outline: none;
-  background: white;
+  background: var(--card-bg);
+  color: var(--text-main);
 }
 
 .inline-create-section input:focus {
@@ -671,7 +656,7 @@
   text-align: center;
   padding: 60px 20px;
   color: var(--text-muted);
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
 }
@@ -683,7 +668,7 @@
 }
 
 .habitacion-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   overflow: hidden;
@@ -803,7 +788,7 @@
 .consumo-relativo-bar {
   width: 100%;
   height: 8px;
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -838,13 +823,13 @@
 }
 
 .btn-editar {
-  background: white;
+  background: var(--card-bg);
   color: var(--text-main);
   border: 1px solid var(--border-color);
 }
 
 .btn-editar:hover {
-  background: #f1f5f9;
+  background: var(--bg-light);
 }
 
 .btn-ver {

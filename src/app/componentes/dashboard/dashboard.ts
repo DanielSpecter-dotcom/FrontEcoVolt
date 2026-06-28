@@ -279,7 +279,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   toggleEcoMode() {
     this.isEcoModeActive = !this.isEcoModeActive;
-    
+
     this.devices.forEach(device => {
       if (device.estado) {
         if (this.isEcoModeActive) {
@@ -381,10 +381,10 @@ export class Dashboard implements OnInit, OnDestroy {
     if (!this.stateService.isBackendConnected) {
       let sum = 0;
       this.stateService.devices.forEach(d => sum += d.consumoHoy);
-      
+
       this.todayConsumption = parseFloat((4.0 + sum).toFixed(1));
       this.todayCost = parseFloat((this.todayConsumption * 0.52).toFixed(2));
-      
+
       this.monthlyConsumption = parseFloat((120.0 + (sum * 30)).toFixed(1));
       this.monthlyCost = parseFloat((this.monthlyConsumption * 0.52).toFixed(2));
 
@@ -424,7 +424,7 @@ export class Dashboard implements OnInit, OnDestroy {
     const userText = this.chatInput.trim();
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-    
+
     this.chatMessages.push({
       sender: 'user',
       text: userText,

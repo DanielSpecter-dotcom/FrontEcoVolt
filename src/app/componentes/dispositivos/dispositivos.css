@@ -1,18 +1,4 @@
 :host {
-  --primary: #10b981; /* Emerald */
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --dark-bg: #030712;
-  --emerald-deep: #064e3b;
-  --bg-light: #f8fafc; /* Slate 50 */
-  --text-main: #0f172a; /* Slate 900 */
-  --text-muted: #64748b; /* Slate 500 */
-  --text-light: #94a3b8; /* Slate 400 */
-  --border-color: #e2e8f0; /* Slate 200 */
-  --card-bg: #ffffff;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
   display: block;
 }
 
@@ -31,7 +17,7 @@
 }
 
 /* ==========================================================================
-   1. LEFT SIDEBAR (Copy of dashboard style for matching sidebar layout)
+   1. LEFT SIDEBAR
    ========================================================================== */
 
 .sidebar {
@@ -179,10 +165,6 @@
   overflow-y: auto;
 }
 
-/* ==========================================================================
-   DEVICE FILTER BAR (Material) — reemplaza el viejo panel de pasos 1/2/3
-   ========================================================================== */
-
 .device-filter-bar {
   display: flex;
   align-items: center;
@@ -240,7 +222,6 @@
   cursor: not-allowed;
 }
 
-/* Top search bar and icons */
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -251,7 +232,7 @@
 .search-container {
   display: flex;
   align-items: center;
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 99px;
   padding: 8px 20px;
   width: 450px;
@@ -261,8 +242,8 @@
 }
 
 .search-container:focus-within {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: var(--border-color);
+  background: var(--card-bg);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
@@ -284,7 +265,7 @@
 }
 
 .search-input::placeholder {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .top-bar-actions {
@@ -308,7 +289,7 @@
 }
 
 .icon-btn:hover {
-  background: #e2e8f0;
+  background: var(--bg-light);
   color: var(--text-main);
 }
 
@@ -322,7 +303,7 @@
   height: 38px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--bg-light);
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
@@ -339,7 +320,6 @@
   object-fit: cover;
 }
 
-/* Page Title & Button section */
 .page-title-section {
   display: flex;
   justify-content: space-between;
@@ -351,7 +331,7 @@
   font-family: var(--font-title);
   font-size: 28px;
   font-weight: 800;
-  color: var(--text-main); /* Slate/dark green theme matching eco */
+  color: var(--text-main);
   letter-spacing: -0.5px;
 }
 
@@ -390,9 +370,8 @@
   height: 16px;
 }
 
-/* Device Table Container */
 .device-table-container {
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   border: 1px solid var(--border-color);
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
@@ -409,11 +388,11 @@
 .device-table th {
   font-size: 11px;
   font-weight: 800;
-  color: #94a3b8;
+  color: var(--text-light);
   letter-spacing: 0.8px;
   padding: 18px 24px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #ffffff;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg);
 }
 
 .device-table td {
@@ -421,7 +400,7 @@
   font-size: 14px;
   color: var(--text-main);
   font-weight: 500;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
   transition: var(--transition);
 }
 
@@ -430,11 +409,11 @@
 }
 
 .device-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--bg-light);
 }
 
 .device-table tbody tr.row-inactive td {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
 .device-name-cell {
@@ -474,12 +453,12 @@
 }
 
 .row-inactive .device-icon-wrap {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--bg-light);
+  color: var(--text-light);
 }
 
 .device-table tbody tr.row-inactive .device-name-cell {
-  color: #94a3b8 !important;
+  color: var(--text-light) !important;
 }
 
 .empty-table-cell {
@@ -495,10 +474,9 @@
 }
 
 .row-inactive .consumption-cell {
-  color: #94a3b8;
+  color: var(--text-light);
 }
 
-/* Modo chip (mat-chip) */
 .modo-chip-auto {
   --mdc-chip-elevated-container-color: #ccfbf1;
   --mdc-chip-label-text-color: #0d9488;
@@ -516,7 +494,6 @@ mat-chip {
   letter-spacing: 0.3px;
 }
 
-/* Actions Column */
 .actions-column {
   width: 60px;
   text-align: right;
@@ -543,7 +520,7 @@ mat-chip {
 }
 
 .summary-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
@@ -739,7 +716,7 @@ mat-chip {
 }
 
 .modal-content {
-  background: #ffffff;
+  background: var(--card-bg);
   border-radius: 16px;
   width: 550px;
   max-width: 90%;
@@ -753,13 +730,18 @@ mat-chip {
   to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 24px;
   border-bottom: 1px solid var(--border-color);
-  background: #f8fafc;
+  background: var(--bg-light);
 }
 
 .modal-header h2 {
@@ -784,7 +766,7 @@ mat-chip {
 }
 
 .modal-close-btn:hover {
-  background: #e2e8f0;
+  background: var(--border-color);
   color: var(--text-main);
 }
 
@@ -820,13 +802,12 @@ mat-chip {
   margin-top: 10px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 900px) {
   .dispositivos-container {
     grid-template-columns: 1fr;
   }
   .sidebar {
-    display: none; /* simple hidden for mobile mockup */
+    display: none;
   }
   .search-container {
     width: 100%;
@@ -835,4 +816,128 @@ mat-chip {
   .summary-cards-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ==========================================================================
+   6. ANGULAR MATERIAL OVERRIDES (Casa / Habitación selects)
+   ========================================================================== */
+
+.filter-field {
+  width: 220px;
+}
+
+/* Texto del label flotante */
+::ng-deep .filter-field .mat-mdc-form-field-label,
+::ng-deep .filter-field .mdc-floating-label {
+  color: var(--text-muted) !important;
+}
+
+/* Cuando el label está "arriba" (campo con valor o focus) */
+::ng-deep .filter-field.mat-focused .mdc-floating-label,
+::ng-deep .filter-field .mdc-floating-label--float-above {
+  color: var(--primary) !important;
+}
+
+/* Borde del outline (reposo) */
+::ng-deep .filter-field .mdc-notched-outline__leading,
+::ng-deep .filter-field .mdc-notched-outline__notch,
+::ng-deep .filter-field .mdc-notched-outline__trailing {
+  border-color: var(--border-color) !important;
+}
+
+/* Borde al hacer focus */
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__leading,
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__notch,
+::ng-deep .filter-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--primary) !important;
+}
+
+/* Fondo del campo y texto del valor seleccionado */
+::ng-deep .filter-field .mat-mdc-text-field-wrapper {
+  background: var(--card-bg) !important;
+  border-radius: 10px;
+}
+
+::ng-deep .filter-field .mat-mdc-select-value,
+::ng-deep .filter-field .mat-mdc-select-arrow,
+::ng-deep .filter-field input.mat-mdc-input-element {
+  color: var(--text-main) !important;
+}
+
+::ng-deep .filter-field input.mat-mdc-input-element::placeholder {
+  color: var(--text-light) !important;
+}
+
+/* Icono sufijo (casa / habitación) */
+::ng-deep .filter-field .filter-suffix-icon {
+  color: var(--text-muted);
+}
+
+/* Panel desplegable del mat-select (opciones) */
+::ng-deep .mat-mdc-select-panel,
+::ng-deep .cdk-overlay-pane .mat-mdc-select-panel {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--border-color);
+}
+
+::ng-deep .mat-mdc-option {
+  color: var(--text-main) !important;
+}
+
+::ng-deep .mat-mdc-option:hover:not(.mdc-list-item--disabled),
+::ng-deep .mat-mdc-option.mat-mdc-option-active {
+  background: var(--bg-light) !important;
+}
+
+::ng-deep .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: var(--primary-glow) !important;
+}
+
+/* Mismos overrides para los campos del modal (full-width-field / half-width-field) */
+::ng-deep .full-width-field .mat-mdc-form-field-label,
+::ng-deep .half-width-field .mat-mdc-form-field-label,
+::ng-deep .full-width-field .mdc-floating-label,
+::ng-deep .half-width-field .mdc-floating-label {
+  color: var(--text-muted) !important;
+}
+
+::ng-deep .full-width-field .mdc-notched-outline__leading,
+::ng-deep .full-width-field .mdc-notched-outline__notch,
+::ng-deep .full-width-field .mdc-notched-outline__trailing,
+::ng-deep .half-width-field .mdc-notched-outline__leading,
+::ng-deep .half-width-field .mdc-notched-outline__notch,
+::ng-deep .half-width-field .mdc-notched-outline__trailing {
+  border-color: var(--border-color) !important;
+}
+
+::ng-deep .full-width-field .mat-mdc-text-field-wrapper,
+::ng-deep .half-width-field .mat-mdc-text-field-wrapper {
+  background: var(--card-bg) !important;
+}
+
+::ng-deep .full-width-field input.mat-mdc-input-element,
+::ng-deep .half-width-field input.mat-mdc-input-element,
+::ng-deep .full-width-field .mat-mdc-select-value,
+::ng-deep .half-width-field .mat-mdc-select-value {
+  color: var(--text-main) !important;
+}
+
+/* Slide toggle (estado activo/inactivo) texto */
+::ng-deep .device-table mat-slide-toggle .mdc-label {
+  color: var(--text-main);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+/* Menú contextual (los 3 puntos) */
+::ng-deep .cdk-overlay-pane .mat-mdc-menu-panel {
+  background: var(--card-bg) !important;
+}
+
+::ng-deep .mat-mdc-menu-item {
+  color: var(--text-main) !important;
+}
+
+::ng-deep .mat-mdc-menu-item:hover:not([disabled]) {
+  background: var(--bg-light) !important;
 }

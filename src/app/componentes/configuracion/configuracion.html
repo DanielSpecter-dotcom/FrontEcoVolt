@@ -400,10 +400,8 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="idioma">Idioma</label>
-              <select id="idioma" [(ngModel)]="apariencia.idioma" class="select-styled">
-                <option *ngFor="let i of idiomaOpciones" [value]="i.code">{{ i.label }}</option>
-              </select>
+              <label>Idioma</label>
+              <div class="idioma-fijo">Español</div>
             </div>
             <div class="form-group">
               <label for="zona">Zona Horaria</label>

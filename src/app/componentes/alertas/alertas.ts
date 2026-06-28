@@ -6,10 +6,29 @@ import { StateService, Alerta } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
 
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+
 @Component({
   selector: 'app-alertas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    MatCardModule,
+    MatButtonModule,
+    MatProgressBarModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    MatIconModule
+  ],
   templateUrl: './alertas.html',
   styleUrl: './alertas.css',
 })
@@ -26,6 +45,7 @@ export class Alertas implements OnInit {
   limitKwh: number | null = null;
   isSavingLimit = false;
   filtroCasaId: number | null = null;
+  currentConsumptionKwh = 0;
 
   constructor(
     private router: Router,
@@ -169,6 +189,33 @@ export class Alertas implements OnInit {
     return this.stateService.casaDeDispositivo(alerta.deviceId)?.nombre || '';
   }
 
+  onDeviceChange() {
+    if (!this.selectedDeviceId) {
+      this.limitKwh = null;
+      this.currentConsumptionKwh = 0;
+      return;
+    }
+    const dev = this.stateService.devices.find(d => d.backendId === this.selectedDeviceId);
+    if (dev) {
+      this.limitKwh = dev.limiteKwh || null;
+    }
+
+    if (this.stateService.isBackendConnected) {
+      this.apiService.getConsumptionByDevice(this.selectedDeviceId).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.currentConsumptionKwh = res.data.monthly_kwh || 0;
+          }
+        },
+        error: () => {
+          this.currentConsumptionKwh = 0;
+        }
+      });
+    } else {
+      this.currentConsumptionKwh = dev ? dev.consumoHoy * 30 : 0;
+    }
+  }
+
   guardarLimite() {
     if (!this.selectedDeviceId) {
       alert('Selecciona un dispositivo.');
@@ -178,6 +225,13 @@ export class Alertas implements OnInit {
       alert('Ingresa un límite mayor a 0 kWh.');
       return;
     }
+
+    // Enforce Personal plan limit of 50 kWh
+    if (this.stateService.userRole === 'PERSONAL' && this.limitKwh > 50) {
+      alert('Como usuario del plan Personal, tu límite máximo permitido es de 50 kWh por dispositivo. Actualiza a Empresarial para configurar umbrales ilimitados.');
+      return;
+    }
+
     if (!this.stateService.isBackendConnected) {
       alert('Necesitas conexión con el backend para configurar límites.');
       return;
@@ -188,7 +242,13 @@ export class Alertas implements OnInit {
       next: (res) => {
         this.isSavingLimit = false;
         if (res.success) {
+          const dev = this.stateService.devices.find(d => d.backendId === this.selectedDeviceId);
+          if (dev) {
+            dev.limiteKwh = this.limitKwh || undefined;
+          }
+          this.stateService.saveStateToStorage();
           this.stateService.showToast('INFO', 'Límite configurado', 'El dispositivo ya tiene un umbral de consumo.');
+          this.loadAlerts();
         }
       },
       error: (err) => {
