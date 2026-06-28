@@ -1,18 +1,4 @@
-:host {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --dark-bg: #030712;
-  --emerald-deep: #064e3b;
-  --bg-light: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+﻿:host {
   display: block;
 }
 
@@ -486,7 +472,7 @@
 .form-group input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
-  background: white;
+  background: var(--card-bg);
 }
 
 .form-actions {
@@ -592,7 +578,7 @@
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 99px;
-  background: #f1f5f9;
+  background: var(--bg-light);
   color: var(--text-muted);
 }
 
@@ -640,7 +626,7 @@
 .slider {
   position: absolute;
   inset: 0;
-  background: #e2e8f0;
+  background: var(--border-color);
   border-radius: 99px;
   cursor: pointer;
   transition: var(--transition);
@@ -741,7 +727,7 @@
 }
 
 .logro-card.bloqueado .logro-icon {
-  background: #f1f5f9;
+  background: var(--bg-light);
   color: var(--text-muted);
 }
 
@@ -749,7 +735,7 @@
   position: absolute;
   bottom: -4px;
   right: -4px;
-  background: white;
+  background: var(--card-bg);
   border-radius: 4px;
   padding: 1px;
   color: var(--text-muted);
@@ -767,3 +753,29 @@
   color: var(--text-muted);
   line-height: 1.3;
 }
+:host-context(.dark-theme) .stat-card,
+:host-context(.dark-theme) .card {
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.16);
+}
+
+:host-context(.dark-theme) .profile-hero {
+  border: 1px solid var(--border-color);
+}
+
+:host-context(.dark-theme) .info-item,
+:host-context(.dark-theme) .form-group input,
+:host-context(.dark-theme) .logro-card.bloqueado,
+:host-context(.dark-theme) .logro-card.bloqueado .logro-icon,
+:host-context(.dark-theme) .badge-disabled {
+  background: var(--bg-light);
+}
+
+:host-context(.dark-theme) .form-group input::placeholder {
+  color: var(--text-light);
+}
+
+:host-context(.dark-theme) .slider::before,
+:host-context(.dark-theme) .lock-icon {
+  background: var(--card-bg);
+}
+

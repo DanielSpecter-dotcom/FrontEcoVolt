@@ -442,6 +442,19 @@
   gap: 12px;
 }
 
+.idioma-fijo {
+  height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .tema-option {
   flex: 1;
   display: flex;
