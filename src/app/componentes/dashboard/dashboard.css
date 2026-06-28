@@ -1,18 +1,4 @@
 :host {
-  --primary: #10b981; /* Emerald */
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --dark-bg: #030712;
-  --emerald-deep: #064e3b;
-  --bg-light: #f8fafc; /* Slate 50 */
-  --text-main: #0f172a; /* Slate 900 */
-  --text-muted: #64748b; /* Slate 500 */
-  --text-light: #94a3b8; /* Slate 400 */
-  --border-color: #e2e8f0; /* Slate 200 */
-  --card-bg: #ffffff;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
   display: block;
 }
 
@@ -214,7 +200,7 @@
 .search-container {
   display: flex;
   align-items: center;
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 99px;
   padding: 8px 20px;
   width: 300px;
@@ -223,8 +209,8 @@
 }
 
 .search-container:focus-within {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: var(--border-color);
+  background: var(--card-bg);
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
@@ -254,7 +240,7 @@
   height: 42px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
-  background: white;
+  background: var(--card-bg);
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -278,7 +264,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   padding: 6px 16px 6px 8px;
   border-radius: 99px;
@@ -339,7 +325,7 @@
 }
 
 .analytics-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
@@ -613,7 +599,7 @@ input:checked + .slider:before {
 }
 
 .device-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 24px;
@@ -668,7 +654,7 @@ input:checked + .slider:before {
 }
 
 .device-icon-wrapper.off {
-  background: #f8fafc;
+  background: var(--bg-light);
   color: #94a3b8;
 }
 
@@ -739,13 +725,14 @@ input:checked + .slider:before {
 }
 
 .dev-badge.off {
-  background: #f8fafc;
+  background: var(--bg-light);
   color: #94a3b8;
 }
 
 /* Styling when device is OFF */
 .device-card.device-off {
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--bg-light);
+  opacity: 0.85;
 }
 
 .device-card.device-off h3 {
@@ -759,7 +746,7 @@ input:checked + .slider:before {
 /* Add Device Button */
 .add-device-card {
   height: 190px;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--border-color);
   border-radius: 16px;
   background: transparent;
   display: flex;
@@ -773,7 +760,7 @@ input:checked + .slider:before {
 }
 
 .add-device-card:hover {
-  background: white;
+  background: var(--card-bg);
   border-color: var(--primary);
   color: var(--primary);
 }
@@ -806,7 +793,7 @@ input:checked + .slider:before {
   width: 100%;
   height: 100%;
   background: linear-gradient(rgba(16, 185, 129, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
+  linear-gradient(90deg, rgba(16, 185, 129, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
   opacity: 0.6;
   pointer-events: none;
@@ -858,7 +845,7 @@ input:checked + .slider:before {
    ========================================================================== */
 
 .right-panel {
-  background: white;
+  background: var(--card-bg);
   border-left: 1px solid var(--border-color);
   padding: 40px 24px;
   display: flex;
@@ -890,7 +877,7 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
@@ -902,7 +889,7 @@ input:checked + .slider:before {
 
 .scene-card:hover {
   border-color: var(--primary);
-  background: #f8fafc;
+  background: var(--bg-light);
   transform: translateY(-1px);
 }
 
@@ -910,7 +897,7 @@ input:checked + .slider:before {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f1f5f9;
+  background: var(--bg-light);
   color: var(--text-main);
   display: flex;
   align-items: center;
@@ -920,7 +907,7 @@ input:checked + .slider:before {
 }
 
 .scene-card:hover .scene-icon-wrapper {
-  background: var(--primary-light);
+  background: var(--primary-glow);
   color: var(--primary);
 }
 
@@ -946,7 +933,7 @@ input:checked + .slider:before {
 /* Highlight Red scene card */
 .scene-card.highlight-red:hover {
   border-color: #f87171;
-  background: #fef2f2;
+  background: var(--critical-bg);
 }
 
 .scene-card.highlight-red:hover .scene-icon-wrapper {
@@ -1008,7 +995,7 @@ input:checked + .slider:before {
   height: 10px;
   border-radius: 50%;
   background: #cbd5e1;
-  border: 2px solid white;
+  border: 2px solid var(--card-bg);
   z-index: 2;
 }
 
@@ -1045,7 +1032,7 @@ input:checked + .slider:before {
 .report-btn {
   width: 100%;
   height: 48px;
-  background: white;
+  background: var(--card-bg);
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
   font-size: 12px;
@@ -1273,10 +1260,10 @@ input:checked + .slider:before {
   bottom: 90px;
   width: 350px;
   height: 450px;
-  background: white;
+  background: var(--card-bg);
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1345,7 +1332,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: #f8fafc;
+  background: var(--bg-light);
 }
 
 .chat-message {
@@ -1371,9 +1358,9 @@ input:checked + .slider:before {
 }
 
 .chat-message.bot .message-content {
-  background: white;
-  border: 1px solid var(--border-color, #e2e8f0);
-  color: #1e293b;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   border-bottom-left-radius: 2px;
   text-align: left;
 }
@@ -1395,19 +1382,21 @@ input:checked + .slider:before {
 
 .chat-footer {
   padding: 12px;
-  background: white;
-  border-top: 1px solid var(--border-color, #e2e8f0);
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
   display: flex;
   gap: 8px;
 }
 
 .chat-footer input {
   flex: 1;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 13px;
   outline: none;
+  background: var(--card-bg);
+  color: var(--text-main);
 }
 
 .chat-footer input:focus {
@@ -1701,4 +1690,10 @@ input:checked + .slider:before {
   text-align: center;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+:host {
+  --critical: #ef4444;
+  --critical-bg: #fff1f2;
+  --primary-light: rgba(16, 185, 129, 0.1);
 }

@@ -20,6 +20,7 @@ export class Registro {
   dni = '';
   nombreEmpresa = '';
   ruc = '';
+  acceptTerms = false;
 
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -46,6 +47,11 @@ export class Registro {
 
     if (!this.email.trim() || !this.password.trim() || !this.dni.trim()) {
       this.errorMessage = 'Por favor complete los campos obligatorios.';
+      return;
+    }
+
+    if (!this.acceptTerms) {
+      this.errorMessage = 'Debe aceptar los Términos de servicio y la Política de privacidad.';
       return;
     }
 

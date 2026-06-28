@@ -20,7 +20,7 @@ export class Configuracion implements OnInit {
     private router: Router,
     public stateService: StateService,
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   ngOnInit() {
@@ -45,7 +45,7 @@ export class Configuracion implements OnInit {
           this.stateService.saveStateToStorage();
         }
       },
-      error: () => {}
+      error: () => {},
     });
 
     // Load rooms
@@ -56,7 +56,7 @@ export class Configuracion implements OnInit {
           this.stateService.saveStateToStorage();
         }
       },
-      error: () => {}
+      error: () => {},
     });
   }
 
@@ -90,7 +90,13 @@ export class Configuracion implements OnInit {
   }
 
   tiposPropiedades = ['CASA', 'APARTAMENTO', 'OFICINA', 'LOCAL'];
-  zonaHorariaOpciones = ['America/Lima', 'America/Bogota', 'America/Santiago', 'America/Buenos_Aires', 'America/Mexico_City'];
+  zonaHorariaOpciones = [
+    'America/Lima',
+    'America/Bogota',
+    'America/Santiago',
+    'America/Buenos_Aires',
+    'America/Mexico_City',
+  ];
   idiomaOpciones = [
     { code: 'ES', label: 'Español' },
     { code: 'EN', label: 'English' },
@@ -107,24 +113,24 @@ export class Configuracion implements OnInit {
       : `$ ${this.energia.presupuestomensual}`;
   }
 
-  setMoneda(m: string) { 
-    this.energia.moneda = m; 
+  setMoneda(m: string) {
+    this.energia.moneda = m;
   }
-  
-  setUnidad(u: string) { 
-    this.energia.unidad = u; 
+
+  setUnidad(u: string) {
+    this.energia.unidad = u;
   }
-  
-  setTema(t: string) { 
-    this.apariencia.tema = t; 
+
+  setTema(t: 'CLARO' | 'OSCURO' | 'SISTEMA') {
+    this.stateService.setTema(t);
   }
-  
-  setTipoTarifa(t: string) { 
-    this.tarifa.tipoTarifa = t; 
+
+  setTipoTarifa(t: string) {
+    this.tarifa.tipoTarifa = t;
   }
-  
-  setFrecuenciaConsejos(f: string) { 
-    this.ecoIA.frecuenciaConsejos = f; 
+
+  setFrecuenciaConsejos(f: string) {
+    this.ecoIA.frecuenciaConsejos = f;
   }
 
   guardarCambios() {
@@ -134,25 +140,29 @@ export class Configuracion implements OnInit {
 
     // Sync notification settings with backend
     if (this.stateService.userId && this.stateService.isBackendConnected) {
-      this.apiService.updateNotificationSettings(this.stateService.userId, {
-        consumo_excesivo: this.notificaciones.consumoCritico,
-        uso_prolongado: this.notificaciones.mantenimiento,
-        reporte_semanal: this.notificaciones.reporteMensual,
-      }).subscribe({
-        next: () => {},
-        error: () => {}
-      });
+      this.apiService
+        .updateNotificationSettings(this.stateService.userId, {
+          consumo_excesivo: this.notificaciones.consumoCritico,
+          uso_prolongado: this.notificaciones.mantenimiento,
+          reporte_semanal: this.notificaciones.reporteMensual,
+        })
+        .subscribe({
+          next: () => {},
+          error: () => {},
+        });
 
       // Update home name if changed
       if (this.stateService.casas.length > 0) {
         const casa = this.stateService.casas[0];
-        this.apiService.updateHome(casa.id, {
-          nombre: this.hogar.nombrePropiedad,
-          usuario_id: this.stateService.userId!
-        }).subscribe({
-          next: () => {},
-          error: () => {}
-        });
+        this.apiService
+          .updateHome(casa.id, {
+            nombre: this.hogar.nombrePropiedad,
+            usuario_id: this.stateService.userId!,
+          })
+          .subscribe({
+            next: () => {},
+            error: () => {},
+          });
       }
     }
 

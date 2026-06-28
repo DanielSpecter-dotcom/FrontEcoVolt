@@ -207,20 +207,16 @@
         <h1>Hogares</h1>
         <p>Aquí solo administras casas. Las habitaciones y dispositivos se gestionan en sus propios apartados.</p>
       </div>
-      @if (stateService.puedeCrearCasa) {
         <div class="crear-casa-box" (click)="$event.stopPropagation()">
-          <input type="text" [(ngModel)]="newCasaNombre" name="newCasaNombre" placeholder="Nombre de la nueva casa">
+          <input type="text" *ngIf="stateService.esEmpresarial || stateService.casas.length < 1" [(ngModel)]="newCasaNombre" name="newCasaNombre" placeholder="Nombre de la nueva casa">
           <button class="add-casa-btn" (click)="createHome()" [disabled]="isCreatingHome">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="add-btn-icon">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            {{ isCreatingHome ? 'Creando...' : 'Crear casa' }}
+            {{ isCreatingHome ? 'Creando...' : 'Agregar Nuevo Hogar' }}
           </button>
         </div>
-      } @else {
-        <p class="empty-flow-text">Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.</p>
-      }
     </section>
 
     <!-- Stats Row -->

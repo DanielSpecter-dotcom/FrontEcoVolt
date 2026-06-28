@@ -1,14 +1,40 @@
 /* You can add global styles to this file, and also import other style files */
+
+:root {
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.15);
+  --dark-bg: #030712;
+  --emerald-deep: #064e3b;
+  --bg-light: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --border-color: #e2e8f0;
+  --card-bg: #ffffff;
+  --critical: #ef4444;
+  --critical-bg: #fff1f2;
+}
+
+html.dark-theme {
+  --bg-light: #0a0e16;
+  --text-main: #ffffff;
+  --text-muted: #b8c2d4;
+  --text-light: #8a96ab;
+  --border-color: #2a3650;
+  --card-bg: #1c2740;
+  --critical-bg: #2a1216;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background: #030712; /* Match EcoVolt dark background */
+  background: var(--bg-light);
 }
 
 .mobile-top-bar,
 .mobile-bottom-nav {
   display: none;
 }
-

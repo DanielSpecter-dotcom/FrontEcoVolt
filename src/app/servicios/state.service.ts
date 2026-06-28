@@ -24,11 +24,16 @@ export type { Dispositivo, Rutina, AccionDispositivo, Alerta, Actividad, Notific
 // ==================== State Service ====================
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StateService {
   sidebarMinimized = false;
-  toasts: { id: string; tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO'; titulo: string; descripcion: string }[] = [];
+  toasts: {
+    id: string;
+    tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO';
+    titulo: string;
+    descripcion: string;
+  }[] = [];
 
   // Flags
   isLoading = false;
@@ -121,9 +126,10 @@ export class StateService {
 
   constructor(
     private apiService: ApiService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {
     this.loadState();
+    this.applyTema();
   }
 
   // ==================== Load from Backend ====================
@@ -166,7 +172,7 @@ export class StateService {
           this.isLoading = false;
           this.loadState();
           resolve(false);
-        }
+        },
       });
     });
   }
@@ -183,17 +189,17 @@ export class StateService {
         next: (results) => {
           // Map devices
           if (results.devices.success && results.devices.data) {
-            this.devices = results.devices.data.map(d => this.mapDeviceFromBackend(d));
+            this.devices = results.devices.data.map((d) => this.mapDeviceFromBackend(d));
           }
 
           // Map routines
           if (results.routines.success && results.routines.data) {
-            this.routines = results.routines.data.map(r => this.mapRoutineFromBackend(r));
+            this.routines = results.routines.data.map((r) => this.mapRoutineFromBackend(r));
           }
 
           // Map alerts
           if (results.alerts.success && results.alerts.data) {
-            this.alertas = results.alerts.data.map(a => this.mapAlertFromBackend(a));
+            this.alertas = results.alerts.data.map((a) => this.mapAlertFromBackend(a));
           }
 
           // Store homes and rooms
@@ -211,7 +217,12 @@ export class StateService {
           }
 
           this.notificationsList = [
-            { id: '1', texto: '¡Bienvenido a EcoVolt! Datos cargados desde el servidor.', leido: false, tiempo: 'Ahora' }
+            {
+              id: '1',
+              texto: '¡Bienvenido a EcoVolt! Datos cargados desde el servidor.',
+              leido: false,
+              tiempo: 'Ahora',
+            },
           ];
 
           resolve();
@@ -219,7 +230,7 @@ export class StateService {
         error: (err) => {
           console.warn('Error loading data from backend:', err);
           resolve(); // resolve anyway so the app doesn't hang
-        }
+        },
       });
     });
   }
@@ -231,8 +242,8 @@ export class StateService {
     this.usuario = {
       nombre: fullName,
       email: dto.correo,
-      telefono: '',
-      ciudad: 'Lima, Perú',
+      telefono: dto.telefono || '',
+      ciudad: dto.ciudad || 'Lima, Perú',
       plan: dto.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal',
       miembro: new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }),
       avatar: null,
@@ -252,19 +263,29 @@ export class StateService {
     const isAuto = dto.mode === 'AUTOMATIC';
 
     const iconMap: { [key: string]: string } = {
-      'luz': 'lamp', 'lampara': 'lamp', 'iluminacion': 'lamp',
-      'tv': 'tv', 'television': 'tv',
-      'refrigerador': 'fridge', 'refrigeradora': 'fridge', 'nevera': 'fridge',
-      'ac': 'ac', 'aire': 'ac', 'aire acondicionado': 'ac',
-      'lavadora': 'washer',
-      'cafetera': 'coffee',
-      'microondas': 'other', 'horno': 'other',
+      luz: 'lamp',
+      lampara: 'lamp',
+      iluminacion: 'lamp',
+      tv: 'tv',
+      television: 'tv',
+      refrigerador: 'fridge',
+      refrigeradora: 'fridge',
+      nevera: 'fridge',
+      ac: 'ac',
+      aire: 'ac',
+      'aire acondicionado': 'ac',
+      lavadora: 'washer',
+      cafetera: 'coffee',
+      microondas: 'other',
+      horno: 'other',
     };
     const tipoLower = (dto.tipo || '').toLowerCase();
     const icon = iconMap[tipoLower] || 'other';
 
     let badge = isOn ? 'ACTIVO' : 'OFF';
-    let badgeType: 'efficient' | 'eco' | 'constant' | 'standby' | 'off' = isOn ? 'efficient' : 'off';
+    let badgeType: 'efficient' | 'eco' | 'constant' | 'standby' | 'off' = isOn
+      ? 'efficient'
+      : 'off';
 
     return {
       id: dto.id.toString(),
@@ -288,11 +309,16 @@ export class StateService {
   public mapRoutineFromBackend(dto: RutinaDTO): Rutina {
     // Map backend day names to frontend abbreviations
     const dayMap: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
-      'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
+      MONDAY: 'L',
+      TUESDAY: 'M',
+      WEDNESDAY: 'MI',
+      THURSDAY: 'J',
+      FRIDAY: 'V',
+      SATURDAY: 'S',
+      SUNDAY: 'D',
     };
 
-    const dias = (dto.days_of_week || []).map(d => dayMap[d] || d);
+    const dias = (dto.days_of_week || []).map((d) => dayMap[d] || d);
 
     // Parse execution_time "HH:mm" to hora + periodo
     let hora = dto.execution_time || '12:00';
@@ -311,14 +337,14 @@ export class StateService {
       id: `act_${dto.id}_${idx}`,
       dispositivo: `Dispositivo ${a.device_id}`,
       tipo: '',
-      tipoAccion: a.turn_on ? 'ENCENDER' as const : 'APAGAR' as const,
+      tipoAccion: a.turn_on ? ('ENCENDER' as const) : ('APAGAR' as const),
       icon: 'other',
       deviceId: a.device_id,
     }));
 
     // Enrich action names with device info
-    acciones.forEach(acc => {
-      const dev = this.devices.find(d => d.backendId === acc.deviceId);
+    acciones.forEach((acc) => {
+      const dev = this.devices.find((d) => d.backendId === acc.deviceId);
       if (dev) {
         acc.dispositivo = dev.nombre;
         acc.tipo = dev.tipo.toUpperCase();
@@ -346,7 +372,8 @@ export class StateService {
     let tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO' = 'INFO';
     const backendTipo = (dto.tipo || '').toUpperCase();
     if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA')) tipo = 'CRITICA';
-    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING')) tipo = 'ADVERTENCIA';
+    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING'))
+      tipo = 'ADVERTENCIA';
 
     // Parse fecha_creacion
     let fecha = 'Hoy';
@@ -359,7 +386,8 @@ export class StateService {
       } else {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        fecha = d.toDateString() === yesterday.toDateString() ? 'Ayer' : d.toLocaleDateString('es-ES');
+        fecha =
+          d.toDateString() === yesterday.toDateString() ? 'Ayer' : d.toLocaleDateString('es-ES');
       }
       hora = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     }
@@ -384,7 +412,7 @@ export class StateService {
 
   get selectedCasa(): CasaDTO | null {
     if (!this.selectedCasaId) return null;
-    return this.casas.find(casa => casa.id === this.selectedCasaId) || null;
+    return this.casas.find((casa) => casa.id === this.selectedCasaId) || null;
   }
 
   /** EMPRESARIAL desbloquea las vistas multi-casa; PERSONAL queda limitado a 1 sola. */
@@ -399,52 +427,58 @@ export class StateService {
   /** Suma el consumo de hoy (kWh) de los dispositivos de una casa puntual. */
   consumoKwhDeCasa(casaId: number): number {
     const roomIds = new Set(
-      this.habitaciones.filter(habitacion => habitacion.casa_id === casaId).map(habitacion => habitacion.id)
+      this.habitaciones
+        .filter((habitacion) => habitacion.casa_id === casaId)
+        .map((habitacion) => habitacion.id),
     );
     return this.devices
-      .filter(device => !!device.habitacionId && roomIds.has(device.habitacionId))
+      .filter((device) => !!device.habitacionId && roomIds.has(device.habitacionId))
       .reduce((acc, device) => acc + (device.consumoHoy || 0), 0);
   }
 
   /** Resuelve a qué casa pertenece un dispositivo (vía su habitación). */
   casaDeDispositivo(deviceId: number): CasaDTO | null {
-    const device = this.devices.find(d => d.backendId === deviceId);
+    const device = this.devices.find((d) => d.backendId === deviceId);
     if (!device || !device.habitacionId) return null;
-    const habitacion = this.habitaciones.find(h => h.id === device.habitacionId);
+    const habitacion = this.habitaciones.find((h) => h.id === device.habitacionId);
     if (!habitacion) return null;
-    return this.casas.find(casa => casa.id === habitacion.casa_id) || null;
+    return this.casas.find((casa) => casa.id === habitacion.casa_id) || null;
   }
 
   get selectedHabitacion(): HabitacionDTO | null {
     if (!this.selectedHabitacionId) return null;
-    return this.habitaciones.find(habitacion => habitacion.id === this.selectedHabitacionId) || null;
+    return (
+      this.habitaciones.find((habitacion) => habitacion.id === this.selectedHabitacionId) || null
+    );
   }
 
   get habitacionesDeCasaSeleccionada(): HabitacionDTO[] {
     if (!this.selectedCasaId) return [];
-    return this.habitaciones.filter(habitacion => habitacion.casa_id === this.selectedCasaId);
+    return this.habitaciones.filter((habitacion) => habitacion.casa_id === this.selectedCasaId);
   }
 
   get dispositivosDeHabitacionSeleccionada(): Dispositivo[] {
     if (!this.selectedHabitacionId) return [];
-    return this.devices.filter(device => device.habitacionId === this.selectedHabitacionId);
+    return this.devices.filter((device) => device.habitacionId === this.selectedHabitacionId);
   }
 
   get dispositivosDeCasaSeleccionada(): Dispositivo[] {
     if (!this.selectedCasaId) return this.devices;
-    const roomIds = new Set(this.habitacionesDeCasaSeleccionada.map(habitacion => habitacion.id));
-    return this.devices.filter(device => !!device.habitacionId && roomIds.has(device.habitacionId));
+    const roomIds = new Set(this.habitacionesDeCasaSeleccionada.map((habitacion) => habitacion.id));
+    return this.devices.filter(
+      (device) => !!device.habitacionId && roomIds.has(device.habitacionId),
+    );
   }
 
   get rutinasDeCasaSeleccionada(): Rutina[] {
     if (!this.selectedCasaId) return this.routines;
-    return this.routines.filter(routine => routine.homeId === this.selectedCasaId);
+    return this.routines.filter((routine) => routine.homeId === this.selectedCasaId);
   }
 
   setActiveHome(casaId: number | null): void {
     this.selectedCasaId = casaId;
     const firstRoom = casaId
-      ? this.habitaciones.find(habitacion => habitacion.casa_id === casaId)
+      ? this.habitaciones.find((habitacion) => habitacion.casa_id === casaId)
       : null;
     this.selectedHabitacionId = firstRoom?.id || null;
     this.selectedDeviceId = null;
@@ -454,7 +488,7 @@ export class StateService {
   setActiveRoom(habitacionId: number | null): void {
     this.selectedHabitacionId = habitacionId;
     const habitacion = habitacionId
-      ? this.habitaciones.find(item => item.id === habitacionId)
+      ? this.habitaciones.find((item) => item.id === habitacionId)
       : null;
     if (habitacion) {
       this.selectedCasaId = habitacion.casa_id;
@@ -469,7 +503,7 @@ export class StateService {
   }
 
   ensureValidSelections(): void {
-    if (this.selectedCasaId && !this.casas.some(casa => casa.id === this.selectedCasaId)) {
+    if (this.selectedCasaId && !this.casas.some((casa) => casa.id === this.selectedCasaId)) {
       this.selectedCasaId = null;
     }
 
@@ -478,7 +512,10 @@ export class StateService {
     }
 
     const validRooms = this.habitacionesDeCasaSeleccionada;
-    if (this.selectedHabitacionId && !validRooms.some(habitacion => habitacion.id === this.selectedHabitacionId)) {
+    if (
+      this.selectedHabitacionId &&
+      !validRooms.some((habitacion) => habitacion.id === this.selectedHabitacionId)
+    ) {
       this.selectedHabitacionId = null;
     }
 
@@ -491,7 +528,10 @@ export class StateService {
 
   isTestUser(): boolean {
     const email = localStorage.getItem('currentUserEmail');
-    return !!email && (email.toLowerCase() === 'pruebas@ecovolt.com' || email.toLowerCase().includes('pruebas'));
+    return (
+      !!email &&
+      (email.toLowerCase() === 'pruebas@ecovolt.com' || email.toLowerCase().includes('pruebas'))
+    );
   }
 
   loadState() {
@@ -518,7 +558,13 @@ export class StateService {
         if (data.tarifa) this.tarifa = data.tarifa;
         if (data.ecoIA) this.ecoIA = data.ecoIA;
         this.notificationsList = data.notificationsList || [
-          { id: '1', texto: '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.', leido: false, tiempo: 'Ahora' }
+          {
+            id: '1',
+            texto:
+              '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.',
+            leido: false,
+            tiempo: 'Ahora',
+          },
         ];
         if (data.userId) this.userId = data.userId;
         if (data.userRole) this.userRole = data.userRole;
@@ -557,7 +603,13 @@ export class StateService {
       this.alertas = [];
       this.activities = [];
       this.notificationsList = [
-        { id: '1', texto: '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.', leido: false, tiempo: 'Ahora' }
+        {
+          id: '1',
+          texto:
+            '¡Bienvenido a EcoVolt! Comienza a gestionar inteligentemente tu consumo de energía.',
+          leido: false,
+          tiempo: 'Ahora',
+        },
       ];
     } else {
       this.usuario = {
@@ -575,7 +627,12 @@ export class StateService {
       this.alertas = [];
       this.activities = [];
       this.notificationsList = [
-        { id: '1', texto: '¡Bienvenido a EcoVolt! Conectando con el servidor...', leido: false, tiempo: 'Ahora' }
+        {
+          id: '1',
+          texto: '¡Bienvenido a EcoVolt! Conectando con el servidor...',
+          leido: false,
+          tiempo: 'Ahora',
+        },
       ];
     }
 
@@ -623,7 +680,7 @@ export class StateService {
       id: 'not_' + Date.now(),
       texto,
       leido: false,
-      tiempo: 'Hace un momento'
+      tiempo: 'Hace un momento',
     });
     this.saveStateToStorage();
   }
@@ -642,7 +699,30 @@ export class StateService {
   }
 
   removeToast(id: string) {
-    this.toasts = this.toasts.filter(t => t.id !== id);
+    this.toasts = this.toasts.filter((t) => t.id !== id);
+  }
+
+  setTema(tema: 'CLARO' | 'OSCURO' | 'SISTEMA') {
+    this.apariencia.tema = tema;
+    this.applyTema();
+    this.saveStateToStorage();
+  }
+
+  applyTema() {
+    const root = document.documentElement;
+    let modoOscuro = false;
+
+    if (this.apariencia.tema === 'OSCURO') {
+      modoOscuro = true;
+    } else if (this.apariencia.tema === 'SISTEMA') {
+      modoOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    if (modoOscuro) {
+      root.classList.add('dark-theme');
+    } else {
+      root.classList.remove('dark-theme');
+    }
   }
 
   // ==================== Utility: Day Mapping ====================
@@ -650,8 +730,13 @@ export class StateService {
   /** Converts frontend day abbreviation to backend enum */
   static dayToBackend(day: string): string {
     const map: { [key: string]: string } = {
-      'L': 'MONDAY', 'M': 'TUESDAY', 'MI': 'WEDNESDAY',
-      'J': 'THURSDAY', 'V': 'FRIDAY', 'S': 'SATURDAY', 'D': 'SUNDAY'
+      L: 'MONDAY',
+      M: 'TUESDAY',
+      MI: 'WEDNESDAY',
+      J: 'THURSDAY',
+      V: 'FRIDAY',
+      S: 'SATURDAY',
+      D: 'SUNDAY',
     };
     return map[day] || day;
   }
@@ -659,8 +744,13 @@ export class StateService {
   /** Converts backend day enum to frontend abbreviation */
   static dayToFrontend(day: string): string {
     const map: { [key: string]: string } = {
-      'MONDAY': 'L', 'TUESDAY': 'M', 'WEDNESDAY': 'MI',
-      'THURSDAY': 'J', 'FRIDAY': 'V', 'SATURDAY': 'S', 'SUNDAY': 'D'
+      MONDAY: 'L',
+      TUESDAY: 'M',
+      WEDNESDAY: 'MI',
+      THURSDAY: 'J',
+      FRIDAY: 'V',
+      SATURDAY: 'S',
+      SUNDAY: 'D',
     };
     return map[day] || day;
   }

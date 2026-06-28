@@ -1,18 +1,4 @@
 :host {
-  --primary: #10b981; /* Emerald */
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --dark-bg: #030712;
-  --emerald-deep: #064e3b;
-  --bg-light: #f8fafc; /* Slate 50 */
-  --text-main: #0f172a; /* Slate 900 */
-  --text-muted: #64748b; /* Slate 500 */
-  --text-light: #94a3b8; /* Slate 400 */
-  --border-color: #e2e8f0; /* Slate 200 */
-  --card-bg: #ffffff;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
   display: block;
 }
 
@@ -31,7 +17,7 @@
 }
 
 /* ==========================================================================
-   1. LEFT SIDEBAR (Copy of standard styles)
+   1. LEFT SIDEBAR
    ========================================================================== */
 
 .sidebar {
@@ -186,7 +172,6 @@
   font-weight: 600;
 }
 
-/* Top bar style */
 .top-bar {
   display: flex;
   justify-content: space-between;
@@ -223,7 +208,7 @@
 }
 
 .icon-btn:hover {
-  background: #e2e8f0;
+  background: var(--bg-light);
   color: var(--text-main);
 }
 
@@ -237,7 +222,7 @@
   height: 38px;
   border-radius: 50%;
   overflow: hidden;
-  background: #e2e8f0;
+  background: var(--bg-light);
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
@@ -283,7 +268,7 @@
 .create-routine-btn {
   background: transparent;
   border: none;
-  color: #0d9488;
+  color: var(--primary);
   font-size: 13px;
   font-weight: 800;
   display: flex;
@@ -311,7 +296,7 @@
 }
 
 .routine-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 20px;
@@ -334,7 +319,7 @@
 }
 
 .routine-card.active-card:before {
-  background: #0d9488;
+  background: var(--primary);
 }
 
 .routine-card:hover {
@@ -343,7 +328,7 @@
 }
 
 .routine-card.active-card {
-  border-color: #0d9488;
+  border-color: var(--primary);
   box-shadow: 0 8px 20px -4px rgba(13, 148, 136, 0.15);
 }
 
@@ -356,7 +341,7 @@
 .card-icon-wrapper {
   width: 42px;
   height: 42px;
-  background: #f1f5f9;
+  background: var(--bg-light);
   color: var(--text-muted);
   border-radius: 50%;
   display: flex;
@@ -367,8 +352,8 @@
 
 .routine-card:hover .card-icon-wrapper,
 .routine-card.active-card .card-icon-wrapper {
-  background: #ecfdf5;
-  color: #059669;
+  background: var(--primary-glow);
+  color: var(--primary);
 }
 
 .r-icon {
@@ -500,7 +485,7 @@
    ========================================================================== */
 
 .edit-panel-card {
-  background: white;
+  background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 20px;
   padding: 32px;
@@ -583,7 +568,7 @@
 }
 
 input:checked + .slider {
-  background-color: #0c5a47;
+  background-color: var(--emerald-deep);
 }
 
 input:checked + .slider:before {
@@ -616,7 +601,7 @@ input:checked + .slider:before {
 
 .routine-input-field {
   padding: 14px 18px;
-  background: #f8fafc;
+  background: var(--bg-light);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   font-size: 14px;
@@ -628,7 +613,7 @@ input:checked + .slider:before {
 
 .routine-input-field:focus {
   border-color: var(--primary);
-  background: white;
+  background: var(--card-bg);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
@@ -643,7 +628,7 @@ input:checked + .slider:before {
   height: 38px;
   border-radius: 50%;
   border: 1px solid var(--border-color);
-  background: #f1f5f9;
+  background: var(--bg-light);
   color: var(--text-muted);
   font-weight: 800;
   font-size: 12.5px;
@@ -655,13 +640,13 @@ input:checked + .slider:before {
 }
 
 .day-btn:hover {
-  background: #e2e8f0;
+  background: var(--border-color);
   color: var(--text-main);
 }
 
 .day-btn.day-selected {
-  background-color: #0c5a47;
-  border-color: #0c5a47;
+  background-color: var(--emerald-deep);
+  border-color: var(--emerald-deep);
   color: white;
   box-shadow: 0 2px 6px rgba(12, 90, 71, 0.25);
 }
@@ -678,7 +663,7 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: space-between;
   padding: 10px 18px;
-  background: #f8fafc;
+  background: var(--bg-light);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   width: 190px;
@@ -710,7 +695,7 @@ input:checked + .slider:before {
 .period-selectors {
   display: flex;
   flex-direction: column;
-  background: #f1f5f9;
+  background: var(--bg-light);
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
@@ -729,7 +714,7 @@ input:checked + .slider:before {
 }
 
 .period-btn.active-p {
-  background: white;
+  background: var(--card-bg);
   color: var(--text-main);
   box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
@@ -750,7 +735,7 @@ input:checked + .slider:before {
 .add-action-btn {
   background: transparent;
   border: none;
-  color: #0d9488;
+  color: var(--primary);
   font-size: 12.5px;
   font-weight: 800;
   display: flex;
@@ -783,19 +768,19 @@ input:checked + .slider:before {
   padding: 12px 18px;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--bg-light);
   transition: var(--transition);
 }
 
 .device-action-row:hover {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: var(--text-light);
+  background: var(--card-bg);
 }
 
 .action-device-icon-box {
   width: 38px;
   height: 38px;
-  background: #e2e8f0;
+  background: var(--border-color);
   color: var(--text-muted);
   border-radius: 8px;
   display: flex;
@@ -905,13 +890,13 @@ input:checked + .slider:before {
 }
 
 .btn-discard {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--bg-light);
+  color: var(--text-muted);
   border: 1px solid var(--border-color);
 }
 
 .btn-discard:hover {
-  background: #e2e8f0;
+  background: var(--border-color);
 }
 
 .btn-save {
@@ -979,7 +964,7 @@ input:checked + .slider:before {
 
 .device-select {
   padding: 8px 12px;
-  background: #f8fafc;
+  background: var(--bg-light);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 13.5px;
@@ -992,7 +977,7 @@ input:checked + .slider:before {
 
 .device-select:focus {
   border-color: var(--primary);
-  background: white;
+  background: var(--card-bg);
 }
 
 /* DELETE ROUTINE BUTTON IN CARD */
@@ -1210,4 +1195,7 @@ input:checked + .slider:before {
   font-size: 13px;
 }
 
-
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

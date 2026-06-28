@@ -128,8 +128,9 @@ export class Casa implements OnInit {
   }
 
   createHome() {
-    if (!this.stateService.puedeCrearCasa) {
-      alert('Tu plan Personal permite gestionar 1 sola casa. Actualiza a EcoVolt Empresarial para administrar más propiedades.');
+    if (!this.stateService.esEmpresarial && this.stateService.casas.length >= 1) {
+      alert('Tu plan Personal permite gestionar 1 sola casa. Debes actualizar tu plan para agregar un nuevo hogar.');
+      this.router.navigate(['/perfil']);
       return;
     }
 
