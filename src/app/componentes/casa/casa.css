@@ -493,28 +493,32 @@
 }
 
 .add-casa-btn {
-  background: var(--primary);
+  background: var(--emerald-deep);
   color: white;
   border: none;
-  border-radius: 10px;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 44px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(6, 78, 59, 0.25);
 }
 
 .add-casa-btn:hover {
   background: var(--primary-hover);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
 }
 
 .add-casa-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 

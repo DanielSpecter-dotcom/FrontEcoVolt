@@ -6,13 +6,6 @@ import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
 
-interface Logro {
-  icono: string;
-  titulo: string;
-  descripcion: string;
-  obtenido: boolean;
-}
-
 @Component({
   selector: 'app-perfil',
   standalone: true,
@@ -42,38 +35,12 @@ export class Perfil implements OnInit {
     confirmar: '',
   };
 
-  logros: Logro[] = [
-    {
-      icono: 'leaf',
-      titulo: 'Eco Iniciado',
-      descripcion: 'Primer mes de ahorro',
-      obtenido: true,
-    },
-    {
-      icono: 'lightning',
-      titulo: 'Ahorrador Eficiente',
-      descripcion: '100 kWh ahorrados',
-      obtenido: true,
-    },
-    {
-      icono: 'star',
-      titulo: 'Maestro de Rutinas',
-      descripcion: '5 rutinas activas',
-      obtenido: true,
-    },
-    {
-      icono: 'shield',
-      titulo: 'Hogar Seguro',
-      descripcion: '0 alertas críticas en 30 días',
-      obtenido: false,
-    },
-    {
-      icono: 'sun',
-      titulo: 'Solar Champion',
-      descripcion: 'Panel solar integrado',
-      obtenido: false,
-    },
-  ];
+  showPaymentModal = false;
+  isProcessingPayment = false;
+  paymentCardholder = '';
+  paymentCardNumber = '';
+  paymentExpiry = '';
+  paymentCvv = '';
 
   constructor(
     private router: Router,
@@ -86,8 +53,17 @@ export class Perfil implements OnInit {
     if (this.stateService.isBackendConnected) {
       this.loadProfile();
     } else {
-      this.stateService.loadFromBackend();
+      this.stateService.loadFromBackend().then(() => {
+        this.syncLocalNotifications();
+      });
     }
+    this.syncLocalNotifications();
+  }
+
+  syncLocalNotifications() {
+    this.notificaciones.alertasCriticas = this.stateService.notificaciones.consumoCritico;
+    this.notificaciones.advertencias = this.stateService.notificaciones.mantenimiento;
+    this.notificaciones.resumenSemanal = this.stateService.notificaciones.reporteMensual;
   }
 
   private loadProfile() {
@@ -107,6 +83,7 @@ export class Perfil implements OnInit {
           this.stateService.notificaciones.consumoCritico = dto.consumo_excesivo ?? true;
           this.stateService.notificaciones.reporteMensual = dto.reporte_semanal ?? true;
           this.stateService.saveStateToStorage();
+          this.syncLocalNotifications();
         }
       },
       error: () => {}
@@ -258,6 +235,12 @@ export class Perfil implements OnInit {
   }
 
   saveNotifications() {
+    // Update local state service
+    this.stateService.notificaciones.consumoCritico = this.notificaciones.alertasCriticas;
+    this.stateService.notificaciones.mantenimiento = this.notificaciones.advertencias;
+    this.stateService.notificaciones.reporteMensual = this.notificaciones.resumenSemanal;
+    this.stateService.saveStateToStorage();
+
     // Sync with backend
     if (this.stateService.userId && this.stateService.isBackendConnected) {
       this.apiService.updateNotificationSettings(this.stateService.userId, {
@@ -265,11 +248,17 @@ export class Perfil implements OnInit {
         uso_prolongado: this.notificaciones.advertencias,
         reporte_semanal: this.notificaciones.resumenSemanal,
       }).subscribe({
-        next: () => {
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.notificaciones.consumoCritico = res.data.consumo_excesivo ?? true;
+            this.stateService.notificaciones.reporteMensual = res.data.reporte_semanal ?? true;
+            this.stateService.saveStateToStorage();
+          }
           this.guardadoExitoso = true;
           setTimeout(() => (this.guardadoExitoso = false), 3000);
         },
-        error: () => {
+        error: (err) => {
+          console.warn('Error saving notifications to backend:', err);
           this.guardadoExitoso = true;
           setTimeout(() => (this.guardadoExitoso = false), 3000);
         }
@@ -278,6 +267,71 @@ export class Perfil implements OnInit {
       this.guardadoExitoso = true;
       setTimeout(() => (this.guardadoExitoso = false), 3000);
     }
+  }
+
+  actualizarPlanAEmpresarial() {
+    this.stateService.usuario.plan = 'EcoVolt Empresarial';
+    this.stateService.usuario.tipoUsuario = 'EMPRESARIAL';
+    this.stateService.userRole = 'EMPRESARIAL';
+    localStorage.setItem('ecovolt_user_role', 'EMPRESARIAL');
+    this.stateService.saveStateToStorage();
+
+    // Attempt to sync with backend if possible
+    if (this.stateService.userId && this.stateService.isBackendConnected) {
+      const parts = this.usuario.nombre.trim().split(/\s+/);
+      const nombre = parts[0] || '';
+      const apellido = parts.slice(1).join(' ');
+
+      this.apiService.updateUser(this.stateService.userId, {
+        nombre: nombre,
+        apellido: apellido,
+        correo: this.usuario.email.trim(),
+        telefono: this.usuario.telefono.trim(),
+        ciudad: this.usuario.ciudad.trim(),
+        ...({ tipo_usuario: 'EMPRESARIAL' } as any)
+      } as any).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.stateService.usuario.plan = res.data.tipo_usuario === 'EMPRESARIAL' ? 'EcoVolt Empresarial' : 'EcoVolt Personal';
+            this.stateService.usuario.tipoUsuario = res.data.tipo_usuario || 'EMPRESARIAL';
+            this.stateService.userRole = res.data.tipo_usuario || 'EMPRESARIAL';
+            localStorage.setItem('ecovolt_user_role', this.stateService.userRole);
+          }
+          this.stateService.saveStateToStorage();
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        },
+        error: (err) => {
+          console.warn('Error updating plan on backend:', err);
+          this.guardadoExitoso = true;
+          setTimeout(() => (this.guardadoExitoso = false), 3000);
+        }
+      });
+    } else {
+      this.guardadoExitoso = true;
+      setTimeout(() => (this.guardadoExitoso = false), 3000);
+    }
+  }
+
+  abrirSimulacionPago() {
+    this.showPaymentModal = true;
+    this.paymentCardNumber = '4557 8812 3456 7890';
+    this.paymentExpiry = '12/29';
+    this.paymentCvv = '123';
+    this.paymentCardholder = this.usuario.nombre || 'Carlos Mendoza';
+  }
+
+  cerrarSimulacionPago() {
+    this.showPaymentModal = false;
+    this.isProcessingPayment = false;
+  }
+
+  procesarSimulacionPago() {
+    this.isProcessingPayment = true;
+    setTimeout(() => {
+      this.actualizarPlanAEmpresarial();
+      this.cerrarSimulacionPago();
+    }, 2000);
   }
 
   logout() {

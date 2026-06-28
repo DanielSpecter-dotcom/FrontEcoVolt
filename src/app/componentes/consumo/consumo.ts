@@ -56,7 +56,7 @@ export class Consumo implements OnInit {
   showNotifications = false;
 
   activeTab: 'dispositivo' | 'ambiente' | 'reporte' | 'comparativa' = 'ambiente';
-  activeTimeframe: 'dia' | 'semana' | 'mes' = 'semana';
+  activeTimeframe: 'dia' | 'semana' | 'mes' = 'dia';
   searchTerm = '';
 
   // Backend data
