@@ -12,6 +12,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -32,6 +33,7 @@ import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
     MatSlideToggleModule,
     MatChipsModule,
     MatTooltipModule,
+    LucideDynamicIcon,
   ],
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',

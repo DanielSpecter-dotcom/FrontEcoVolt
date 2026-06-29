@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -9,7 +10,7 @@ import { AuthService } from '../../servicios/auth.service';
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LucideDynamicIcon],
   templateUrl: './configuracion.html',
   styleUrl: './configuracion.css',
 })
@@ -77,16 +78,8 @@ export class Configuracion implements OnInit {
     return this.stateService.notificaciones;
   }
 
-  get integracion() {
-    return this.stateService.integracion;
-  }
-
   get tarifa() {
     return this.stateService.tarifa;
-  }
-
-  get ecoIA() {
-    return this.stateService.ecoIA;
   }
 
   tiposPropiedades = ['CASA', 'APARTAMENTO', 'OFICINA', 'LOCAL'];
@@ -127,10 +120,6 @@ export class Configuracion implements OnInit {
 
   setTipoTarifa(t: string) {
     this.tarifa.tipoTarifa = t;
-  }
-
-  setFrecuenciaConsejos(f: string) {
-    this.ecoIA.frecuenciaConsejos = f;
   }
 
   guardarCambios() {

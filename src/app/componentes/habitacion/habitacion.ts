@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -18,7 +19,7 @@ interface HabitacionConDatos {
 @Component({
   selector: 'app-habitacion',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LucideDynamicIcon],
   templateUrl: './habitacion.html',
   styleUrl: './habitacion.css',
 })
