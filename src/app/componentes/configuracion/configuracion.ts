@@ -78,16 +78,8 @@ export class Configuracion implements OnInit {
     return this.stateService.notificaciones;
   }
 
-  get integracion() {
-    return this.stateService.integracion;
-  }
-
   get tarifa() {
     return this.stateService.tarifa;
-  }
-
-  get ecoIA() {
-    return this.stateService.ecoIA;
   }
 
   tiposPropiedades = ['CASA', 'APARTAMENTO', 'OFICINA', 'LOCAL'];
@@ -128,10 +120,6 @@ export class Configuracion implements OnInit {
 
   setTipoTarifa(t: string) {
     this.tarifa.tipoTarifa = t;
-  }
-
-  setFrecuenciaConsejos(f: string) {
-    this.ecoIA.frecuenciaConsejos = f;
   }
 
   guardarCambios() {
