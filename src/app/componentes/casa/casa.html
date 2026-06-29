@@ -259,32 +259,6 @@
       </section>
     }
 
-    <!-- Habitaciones de la casa seleccionada -->
-    @if (selectedCasaId) {
-      <section class="habitaciones-section" (click)="$event.stopPropagation()">
-        <div class="habitaciones-header">
-          <h2>Habitaciones de {{ stateService.selectedCasa?.nombre }}</h2>
-        </div>
-
-        <div class="inline-create">
-          <input type="text" [(ngModel)]="newHabitacionNombre" name="newHabitacionNombre" placeholder="Nueva habitación">
-          <button type="button" (click)="createRoom()" [disabled]="isCreatingRoom">
-            {{ isCreatingRoom ? 'Creando...' : 'Crear habitación' }}
-          </button>
-        </div>
-
-        @if (habitacionesCasaSeleccionada.length === 0) {
-          <p class="empty-flow-text">Esta casa todavía no tiene habitaciones registradas.</p>
-        } @else {
-          <div class="habitaciones-list">
-            @for (hab of habitacionesCasaSeleccionada; track hab.id) {
-              <div class="habitacion-chip">{{ hab.name }}</div>
-            }
-          </div>
-        }
-      </section>
-    }
-
     <!-- Tip Card -->
     <section class="tip-card">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="tip-pattern">
