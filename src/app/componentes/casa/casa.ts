@@ -92,6 +92,11 @@ export class Casa implements OnInit {
     return this.casas.length;
   }
 
+  /** Límite de casas permitido según el plan: ilimitado en Empresarial, 1 en Personal. */
+  get limiteCasasTexto(): string {
+    return this.stateService.esEmpresarial ? 'Ilimitado' : '1';
+  }
+
   /**
    * Habitaciones de la CASA SELECCIONADA únicamente.
    * (El backend no nos da habitaciones de todas las casas a la vez,

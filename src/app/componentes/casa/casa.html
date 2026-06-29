@@ -187,8 +187,9 @@
     <!-- Stats Row -->
     <section class="stats-row">
       <div class="stat-card">
-        <span class="stat-label">Casas registradas</span>
-        <div class="stat-num">{{ totalCasas }}</div>
+        <span class="stat-label">Cantidad de hogares administrados</span>
+        <div class="stat-num">{{ totalCasas }} <span class="stat-num-limit">/ {{ limiteCasasTexto }}</span></div>
+        <span class="stat-sublabel">Límite permitido según tu plan</span>
       </div>
       <div class="stat-card">
         <span class="stat-label">Habitaciones (casa seleccionada)</span>
