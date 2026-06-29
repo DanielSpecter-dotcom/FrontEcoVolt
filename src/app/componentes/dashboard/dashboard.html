@@ -201,7 +201,7 @@
               <img [src]="userAvatar || '/images/carlos_avatar.png'" alt="Avatar" class="profile-avatar">
             </div>
             <div class="profile-info">
-              <span class="profile-name">{{ userName }}</span>
+              <a [routerLink]="['/casa']" class="profile-name" title="Hogares" (click)="$event.stopPropagation()">{{ userName }}</a>
               <span class="profile-status">{{ userProfile }}</span>
             </div>
           </div>
