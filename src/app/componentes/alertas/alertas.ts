@@ -13,6 +13,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { LucideDynamicIcon } from '@lucide/angular';
 
 @Component({
   selector: 'app-alertas',
@@ -27,7 +28,8 @@ import { MatIconModule } from '@angular/material/icon';
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
-    MatIconModule
+    MatIconModule,
+    LucideDynamicIcon
   ],
   templateUrl: './alertas.html',
   styleUrl: './alertas.css',

@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { Subscription, interval } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
 import { StateService } from '../../servicios/state.service';
@@ -12,7 +13,7 @@ import { Dispositivo, Actividad, ActividadPanelDto, ResumenPanelDto } from '../.
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LucideDynamicIcon],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
 })

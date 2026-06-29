@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -16,7 +17,7 @@ interface Logro {
 @Component({
   selector: 'app-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LucideDynamicIcon],
   templateUrl: './perfil.html',
   styleUrl: './perfil.css',
 })
