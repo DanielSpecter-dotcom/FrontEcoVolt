@@ -298,6 +298,27 @@
   height: 20px;
 }
 
+.notif-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: var(--critical);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-btn-container,
+.profile-circle-container {
+  position: relative;
+}
+
 .user-profile-circle {
   width: 38px;
   height: 38px;
@@ -307,6 +328,7 @@
   cursor: pointer;
   border: 2px solid transparent;
   transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .user-profile-circle:hover {
@@ -318,6 +340,158 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 320px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeInDropdown 0.2s ease;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notifications-header h4 {
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.mark-read-btn {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.notifications-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-color);
+  transition: var(--transition);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-item:hover {
+  background: var(--bg-light);
+}
+
+.notification-item.unread {
+  background: var(--primary-glow);
+  border-left: 3px solid var(--primary);
+}
+
+.notification-text {
+  font-size: 13px;
+  color: var(--text-main);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.notification-time {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.empty-notifications {
+  padding: 30px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 200px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeInDropdown 0.2s ease;
+}
+
+.dropdown-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-light);
+}
+
+.dropdown-email {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.dropdown-actions {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main);
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-light);
+  color: var(--primary);
+}
+
+.logout-btn {
+  color: var(--critical);
+}
+
+.logout-btn:hover {
+  background: var(--critical-bg);
+  color: var(--critical);
+}
+
+@keyframes fadeInDropdown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .page-title-section {
