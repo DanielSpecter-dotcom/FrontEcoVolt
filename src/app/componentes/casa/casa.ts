@@ -92,6 +92,11 @@ export class Casa implements OnInit {
     return this.casas.length;
   }
 
+  /** Límite de casas permitido según el plan: ilimitado en Empresarial, 1 en Personal. */
+  get limiteCasasTexto(): string {
+    return this.stateService.esEmpresarial ? 'Ilimitado' : '1';
+  }
+
   /**
    * Habitaciones de la CASA SELECCIONADA únicamente.
    * (El backend no nos da habitaciones de todas las casas a la vez,
@@ -172,50 +177,6 @@ export class Casa implements OnInit {
     this.stateService.setActiveHome(localCasa.id);
     this.newCasaNombre = '';
     this.isCreatingHome = false;
-  }
-
-  // ==================== Habitaciones (de la casa seleccionada) ====================
-
-  newHabitacionNombre = '';
-  isCreatingRoom = false;
-
-  createRoom() {
-    const nombre = this.newHabitacionNombre.trim();
-    if (!nombre) {
-      alert('Ingresa un nombre para la habitación.');
-      return;
-    }
-    if (!this.selectedCasaId) {
-      alert('Primero selecciona una casa.');
-      return;
-    }
-
-    this.isCreatingRoom = true;
-    if (this.stateService.isBackendConnected) {
-      this.apiService.createRoom({ casa_id: this.selectedCasaId, nombre }).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.stateService.habitaciones.push(res.data);
-            this.newHabitacionNombre = '';
-          }
-          this.isCreatingRoom = false;
-        },
-        error: (err) => {
-          this.isCreatingRoom = false;
-          alert(err.error?.message || 'No se pudo crear la habitación.');
-        },
-      });
-      return;
-    }
-
-    const localRoom: HabitacionDTO = {
-      id: Date.now(),
-      name: nombre,
-      casa_id: this.selectedCasaId,
-    };
-    this.stateService.habitaciones.push(localRoom);
-    this.newHabitacionNombre = '';
-    this.isCreatingRoom = false;
   }
 
   logout() {

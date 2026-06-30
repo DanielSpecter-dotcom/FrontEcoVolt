@@ -187,8 +187,9 @@
     <!-- Stats Row -->
     <section class="stats-row">
       <div class="stat-card">
-        <span class="stat-label">Casas registradas</span>
-        <div class="stat-num">{{ totalCasas }}</div>
+        <span class="stat-label">Cantidad de hogares administrados</span>
+        <div class="stat-num">{{ totalCasas }} <span class="stat-num-limit">/ {{ limiteCasasTexto }}</span></div>
+        <span class="stat-sublabel">Límite permitido según tu plan</span>
       </div>
       <div class="stat-card">
         <span class="stat-label">Habitaciones (casa seleccionada)</span>
@@ -218,12 +219,37 @@
         @for (casa of casas; track casa.id) {
           <div class="casa-card" [class.casa-card-activa]="isCasaSeleccionada(casa)" (click)="seleccionarCasa(casa); $event.stopPropagation()">
             <div class="casa-image">
-              <div class="casa-roof"></div>
               <div class="casa-sun"></div>
-              <div class="casa-base">
-                <div class="casa-window"></div>
-                <div class="casa-door"></div>
-              </div>
+              <svg class="casa-illustration" viewBox="0 0 200 110" xmlns="http://www.w3.org/2000/svg">
+                <!-- Sombra del piso -->
+                <ellipse class="casa-ill-shadow" cx="100" cy="98" rx="72" ry="6"/>
+                <!-- Chimenea -->
+                <rect class="casa-ill-roof" x="128" y="18" width="14" height="32" rx="1.5"/>
+                <rect class="casa-ill-chimney-cap" x="125" y="15" width="20" height="6" rx="1.5"/>
+                <!-- Techo a dos aguas -->
+                <polygon class="casa-ill-roof" points="100,12 184,58 16,58"/>
+                <polygon class="casa-ill-roof-shade" points="100,12 184,58 158,58"/>
+                <!-- Líneas de tejas -->
+                <path class="casa-ill-shingle" d="M38,46 L162,46"/>
+                <path class="casa-ill-shingle" d="M48,34 L152,34"/>
+                <!-- Alero -->
+                <rect class="casa-ill-eave" x="14" y="56" width="172" height="6" rx="2"/>
+                <!-- Cuerpo de la casa -->
+                <rect class="casa-ill-body" x="30" y="60" width="140" height="38" rx="3"/>
+                <!-- Ventana izquierda -->
+                <rect class="casa-ill-window" x="46" y="70" width="26" height="22" rx="2"/>
+                <line class="casa-ill-window-cross" x1="59" y1="70" x2="59" y2="92"/>
+                <line class="casa-ill-window-cross" x1="46" y1="81" x2="72" y2="81"/>
+                <rect class="casa-ill-window-box" x="44" y="92" width="30" height="4" rx="1"/>
+                <!-- Ventana derecha -->
+                <rect class="casa-ill-window" x="128" y="70" width="26" height="22" rx="2"/>
+                <line class="casa-ill-window-cross" x1="141" y1="70" x2="141" y2="92"/>
+                <line class="casa-ill-window-cross" x1="128" y1="81" x2="154" y2="81"/>
+                <rect class="casa-ill-window-box" x="126" y="92" width="30" height="4" rx="1"/>
+                <!-- Puerta -->
+                <rect class="casa-ill-door" x="89" y="72" width="22" height="26" rx="2"/>
+                <circle class="casa-ill-doorknob" cx="106" cy="86" r="1.6"/>
+              </svg>
               <span class="casa-location-tag">
                 {{ stateService.usuario.ciudad }}
               </span>
@@ -254,32 +280,6 @@
                 <p class="casa-no-seleccionada-text">{{ textoNoSeleccionada }}</p>
               }
             </div>
-          </div>
-        }
-      </section>
-    }
-
-    <!-- Habitaciones de la casa seleccionada -->
-    @if (selectedCasaId) {
-      <section class="habitaciones-section" (click)="$event.stopPropagation()">
-        <div class="habitaciones-header">
-          <h2>Habitaciones de {{ stateService.selectedCasa?.nombre }}</h2>
-        </div>
-
-        <div class="inline-create">
-          <input type="text" [(ngModel)]="newHabitacionNombre" name="newHabitacionNombre" placeholder="Nueva habitación">
-          <button type="button" (click)="createRoom()" [disabled]="isCreatingRoom">
-            {{ isCreatingRoom ? 'Creando...' : 'Crear habitación' }}
-          </button>
-        </div>
-
-        @if (habitacionesCasaSeleccionada.length === 0) {
-          <p class="empty-flow-text">Esta casa todavía no tiene habitaciones registradas.</p>
-        } @else {
-          <div class="habitaciones-list">
-            @for (hab of habitacionesCasaSeleccionada; track hab.id) {
-              <div class="habitacion-chip">{{ hab.name }}</div>
-            }
           </div>
         }
       </section>
