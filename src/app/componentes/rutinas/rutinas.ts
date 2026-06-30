@@ -108,6 +108,11 @@ export class Rutinas implements OnInit {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   get routines(): Rutina[] {
     return this.stateService.rutinasDeCasaSeleccionada;
   }

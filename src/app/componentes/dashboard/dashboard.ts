@@ -196,6 +196,11 @@ export class Dashboard implements OnInit, OnDestroy {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   // Getters connected to StateService
   get userName(): string {
     return this.stateService.usuario.nombre;

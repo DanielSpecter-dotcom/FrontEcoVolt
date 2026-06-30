@@ -82,6 +82,11 @@ export class Habitacion implements OnInit {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   // ==================== Casa seleccionada (combo box) ====================
 
   get casas(): CasaDTO[] {

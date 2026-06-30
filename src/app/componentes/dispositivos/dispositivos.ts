@@ -162,6 +162,11 @@ export class Dispositivos implements OnInit, OnDestroy {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   // Getters connected to StateService
   get devices(): Dispositivo[] {
     return this.stateService.dispositivosDeHabitacionSeleccionada;

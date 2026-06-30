@@ -167,11 +167,14 @@
                   <div class="empty-notifications">No hay notificaciones</div>
                 } @else {
                   @for (notif of notificationsList; track notif.id) {
-                    <div class="notification-item" [class.unread]="!notif.leido">
+                    <div class="notification-item" [class.unread]="!notif.leido" (click)="navigateToAlertas()">
                       <p class="notification-text">{{ notif.texto }}</p>
                       <span class="notification-time">{{ notif.tiempo }}</span>
                     </div>
                   }
+                  <div class="notifications-footer">
+                    <button (click)="navigateToAlertas()">Ver todas las alertas →</button>
+                  </div>
                 }
               </div>
             </div>

@@ -157,6 +157,7 @@ export class StateService {
             this.loadAllData().then(() => {
               this.isLoading = false;
               this.saveStateToStorage();
+              this.startAlertPolling();
               resolve(true);
             });
           } else {
@@ -200,6 +201,7 @@ export class StateService {
           // Map alerts
           if (results.alerts.success && results.alerts.data) {
             this.alertas = results.alerts.data.map((a) => this.mapAlertFromBackend(a));
+            this.syncAlertasToNotifications(this.alertas, false);
           }
 
           // Store homes and rooms
@@ -367,12 +369,67 @@ export class StateService {
     };
   }
 
+  private _alertPollInterval: ReturnType<typeof setInterval> | null = null;
+
+  startAlertPolling(intervalMs = 30000) {
+    if (this._alertPollInterval) return;
+    this._alertPollInterval = setInterval(() => {
+      if (!this.isBackendConnected || !this.authService.isLoggedIn()) {
+        this.stopAlertPolling();
+        return;
+      }
+      this.apiService.getAlertHistory().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const nuevas = res.data.map((a) => this.mapAlertFromBackend(a));
+            const noLeidas = nuevas.filter((a) => !a.leida);
+            this.alertas = nuevas;
+            this.syncAlertasToNotifications(noLeidas, true);
+          }
+        },
+        error: () => {},
+      });
+    }, intervalMs);
+  }
+
+  stopAlertPolling() {
+    if (this._alertPollInterval) {
+      clearInterval(this._alertPollInterval);
+      this._alertPollInterval = null;
+    }
+  }
+
+  syncAlertasToNotifications(nuevas: Alerta[], showToasts = true) {
+    const idsExistentes = new Set(this.notificationsList.map(n => n.id));
+    let added = 0;
+
+    for (const alerta of nuevas) {
+      if (alerta.leida) continue;
+      const notifId = `alerta_${alerta.id}`;
+      if (idsExistentes.has(notifId)) continue;
+
+      this.notificationsList.unshift({
+        id: notifId,
+        texto: alerta.titulo + (alerta.dispositivo ? ' — ' + alerta.dispositivo : ''),
+        leido: false,
+        tiempo: alerta.hora || 'Hace un momento',
+      });
+
+      if (showToasts) {
+        this.showToast(alerta.tipo, alerta.titulo, alerta.descripcion || alerta.dispositivo);
+      }
+      added++;
+    }
+
+    if (added > 0) this.saveStateToStorage();
+  }
+
   public mapAlertFromBackend(dto: BackendAlertaDTO): Alerta {
     // Map tipo to frontend's expected format
     let tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO' = 'INFO';
     const backendTipo = (dto.tipo || '').toUpperCase();
-    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA')) tipo = 'CRITICA';
-    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING'))
+    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA') || backendTipo === 'CONSUMO_EXCESIVO') tipo = 'CRITICA';
+    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING') || backendTipo === 'CONSUMO_ELEVADO')
       tipo = 'ADVERTENCIA';
 
     // Parse fecha_creacion
@@ -396,7 +453,7 @@ export class StateService {
       id: dto.id.toString(),
       backendId: dto.id,
       tipo,
-      titulo: dto.mensaje?.substring(0, 50) || 'Alerta',
+      titulo: dto.mensaje || 'Alerta',
       descripcion: dto.mensaje || '',
       dispositivo: dto.device_name || 'Sistema',
       icono: 'lightning',

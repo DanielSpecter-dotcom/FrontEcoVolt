@@ -70,19 +70,21 @@ export class Alertas implements OnInit {
     this.apiService.getAlertHistory().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.stateService.alertas = res.data.map(a => this.mapAlert(a));
+          const nuevas = res.data.map(a => this.mapAlert(a));
+          this.stateService.alertas = nuevas;
+          this.stateService.syncAlertasToNotifications(nuevas, false);
           this.stateService.saveStateToStorage();
         }
       },
-      error: () => {} // Keep existing alerts
+      error: () => {}
     });
   }
 
   private mapAlert(dto: any): Alerta {
     let tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO' = 'INFO';
     const backendTipo = (dto.tipo || '').toUpperCase();
-    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA')) tipo = 'CRITICA';
-    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING')) tipo = 'ADVERTENCIA';
+    if (backendTipo.includes('CRIT') || backendTipo.includes('CRITICA') || backendTipo === 'CONSUMO_EXCESIVO') tipo = 'CRITICA';
+    else if (backendTipo.includes('ADVERT') || backendTipo.includes('WARNING') || backendTipo === 'CONSUMO_ELEVADO') tipo = 'ADVERTENCIA';
 
     let fecha = 'Hoy';
     let hora = '';
@@ -103,7 +105,7 @@ export class Alertas implements OnInit {
       id: dto.id.toString(),
       backendId: dto.id,
       tipo,
-      titulo: dto.mensaje?.substring(0, 50) || 'Alerta',
+      titulo: dto.mensaje || 'Alerta',
       descripcion: dto.mensaje || '',
       dispositivo: dto.device_name || 'Sistema',
       icono: 'lightning',
@@ -152,6 +154,10 @@ export class Alertas implements OnInit {
   markAllNotificationsAsRead() {
     this.stateService.notificationsList.forEach(n => n.leido = true);
     this.stateService.saveStateToStorage();
+  }
+
+  navigateToAlertas() {
+    this.showNotifications = false;
   }
 
   get alertas(): Alerta[] {
@@ -218,6 +224,25 @@ export class Alertas implements OnInit {
     }
   }
 
+  get consumoStatus(): 'safe' | 'warning' | 'critical' {
+    if (!this.limitKwh || this.limitKwh <= 0) return 'safe';
+    const ratio = this.currentConsumptionKwh / this.limitKwh;
+    if (ratio > 1) return 'critical';
+    if (ratio >= 0.75) return 'warning';
+    return 'safe';
+  }
+
+  get consumoRatioPct(): number {
+    if (!this.limitKwh || this.limitKwh <= 0) return 0;
+    return Math.min((this.currentConsumptionKwh / this.limitKwh) * 100, 100);
+  }
+
+  get progressBarColor(): string {
+    if (this.consumoStatus === 'critical') return 'warn';
+    if (this.consumoStatus === 'warning') return 'accent';
+    return 'primary';
+  }
+
   guardarLimite() {
     if (!this.selectedDeviceId) {
       alert('Selecciona un dispositivo.');
@@ -225,12 +250,6 @@ export class Alertas implements OnInit {
     }
     if (!this.limitKwh || this.limitKwh <= 0) {
       alert('Ingresa un límite mayor a 0 kWh.');
-      return;
-    }
-
-    // Enforce Personal plan limit of 50 kWh
-    if (this.stateService.userRole === 'PERSONAL' && this.limitKwh > 50) {
-      alert('Como usuario del plan Personal, tu límite máximo permitido es de 50 kWh por dispositivo. Actualiza a Empresarial para configurar umbrales ilimitados.');
       return;
     }
 

@@ -77,6 +77,11 @@ export class Casa implements OnInit {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   // ==================== Casas ====================
 
   get casas(): CasaDTO[] {

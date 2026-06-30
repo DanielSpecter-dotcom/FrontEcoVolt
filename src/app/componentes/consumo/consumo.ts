@@ -146,6 +146,11 @@ export class Consumo implements OnInit {
     this.stateService.saveStateToStorage();
   }
 
+  navigateToAlertas() {
+    this.showNotifications = false;
+    this.router.navigate(['/alertas']);
+  }
+
   get devices(): Dispositivo[] {
     return this.stateService.dispositivosDeCasaSeleccionada;
   }
