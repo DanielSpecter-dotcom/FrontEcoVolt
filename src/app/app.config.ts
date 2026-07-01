@@ -38,6 +38,7 @@ import {
   LucideWashingMachine,
   LucideCoffee,
   LucideRefrigerator,
+  LucideMenu,
 } from '@lucide/angular';
 
 import { routes } from './app.routes';
@@ -84,7 +85,8 @@ export const appConfig: ApplicationConfig = {
       LucideWind,
       LucideWashingMachine,
       LucideCoffee,
-      LucideRefrigerator
+      LucideRefrigerator,
+      LucideMenu
     ),
   ]
 };

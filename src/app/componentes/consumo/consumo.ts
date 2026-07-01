@@ -7,7 +7,6 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { BaseChartDirective } from 'ng2-charts';
-import { LucideDynamicIcon } from '@lucide/angular';
 import type { ChartConfiguration, ChartData } from 'chart.js';
 import { StateService, Dispositivo } from '../../servicios/state.service';
 import { ApiService, ComparacionConsumoRespuestaDto } from '../../servicios/api.service';
@@ -47,7 +46,6 @@ const PALETA_AMBIENTES = ['#0d9488', '#16a34a', '#4ade80', '#2dd4bf', '#0ea5e9',
     MatButtonModule,
     MatCardModule,
     BaseChartDirective,
-    LucideDynamicIcon,
   ],
   templateUrl: './consumo.html',
   styleUrl: './consumo.css',

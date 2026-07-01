@@ -12,6 +12,7 @@ import { VerificarCodigo } from './componentes/verificar-codigo/verificar-codigo
 import { authGuard } from './servicios/auth.guard';
 import { Casa } from './componentes/casa/casa';
 import { Habitacion } from './componentes/habitacion/habitacion';
+import { Layout } from './componentes/layout/layout';
 
 export const routes: Routes = [
   {
@@ -32,52 +33,19 @@ export const routes: Routes = [
     component: Login,
   },
   {
-    path: 'dashboard',
-    component: Dashboard,
+    path: '',
+    component: Layout,
     canActivate: [authGuard],
-  },
-
-  {
-    path: 'casa',
-    component: Casa,
-    canActivate: [authGuard],
-  },
-
-  {
-    path: 'dispositivos',
-    component: Dispositivos,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'consumo',
-    component: Consumo,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'rutinas',
-    component: Rutinas,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'alertas',
-    component: Alertas,
-    canActivate: [authGuard],
-  },
-
-  {
-    path: 'habitacion',
-    component: Habitacion,
-    canActivate: [authGuard],
-  },
-
-  {
-    path: 'perfil',
-    component: Perfil,
-    canActivate: [authGuard],
-  },
-  {
-    path: 'configuracion',
-    component: Configuracion,
-    canActivate: [authGuard],
+    children: [
+      { path: 'dashboard', component: Dashboard },
+      { path: 'casa', component: Casa },
+      { path: 'dispositivos', component: Dispositivos },
+      { path: 'consumo', component: Consumo },
+      { path: 'rutinas', component: Rutinas },
+      { path: 'alertas', component: Alertas },
+      { path: 'habitacion', component: Habitacion },
+      { path: 'perfil', component: Perfil },
+      { path: 'configuracion', component: Configuracion },
+    ],
   },
 ];

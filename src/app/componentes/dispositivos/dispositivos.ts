@@ -1,7 +1,7 @@
 import { Component, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 import { filter, switchMap } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,7 +12,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -33,7 +32,6 @@ import { CasaDTO, Dispositivo, HabitacionDTO } from '../../modelos';
     MatSlideToggleModule,
     MatChipsModule,
     MatTooltipModule,
-    LucideDynamicIcon,
   ],
   templateUrl: './dispositivos.html',
   styleUrl: './dispositivos.css',
@@ -67,6 +65,7 @@ export class Dispositivos implements OnInit, OnDestroy {
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     public stateService: StateService,
     private apiService: ApiService,
     private authService: AuthService
@@ -81,6 +80,19 @@ export class Dispositivos implements OnInit, OnDestroy {
       });
     }
     this.startPolling();
+
+    // Check for query parameters to open the modal
+    this.route.queryParams.subscribe(params => {
+      if (params['openAdd'] === 'true') {
+        this.openModal();
+        // Clear query parameters so reloading doesn't keep opening it
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { openAdd: null },
+          queryParamsHandling: 'merge'
+        });
+      }
+    });
   }
 
   ngOnDestroy() {

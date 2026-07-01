@@ -2,7 +2,6 @@ import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
-import { LucideDynamicIcon } from '@lucide/angular';
 import { StateService, Rutina, AccionDispositivo, Dispositivo } from '../../servicios/state.service';
 import { ApiService } from '../../servicios/api.service';
 import { AuthService } from '../../servicios/auth.service';
@@ -11,7 +10,7 @@ import { CasaDTO } from '../../modelos';
 @Component({
   selector: 'app-rutinas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, LucideDynamicIcon],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './rutinas.html',
   styleUrl: './rutinas.css',
 })
