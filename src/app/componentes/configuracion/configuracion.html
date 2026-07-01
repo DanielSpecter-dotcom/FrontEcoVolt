@@ -329,7 +329,7 @@
             <div class="form-group">
               <label>Tema de la Aplicación</label>
               <div class="tema-selector">
-                <button class="tema-option" [class.tema-active]="apariencia.tema === 'CLARO'" (click)="setTema('CLARO')">
+                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'CLARO'" (click)="setTema('CLARO')">
                   <div class="tema-preview tema-claro">
                     <div class="preview-sidebar"></div>
                     <div class="preview-content">
@@ -339,7 +339,7 @@
                   </div>
                   <span>Claro</span>
                 </button>
-                <button class="tema-option" [class.tema-active]="apariencia.tema === 'OSCURO'" (click)="setTema('OSCURO')">
+                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'OSCURO'" (click)="setTema('OSCURO')">
                   <div class="tema-preview tema-oscuro">
                     <div class="preview-sidebar"></div>
                     <div class="preview-content">
@@ -349,7 +349,7 @@
                   </div>
                   <span>Oscuro</span>
                 </button>
-                <button class="tema-option" [class.tema-active]="apariencia.tema === 'SISTEMA'" (click)="setTema('SISTEMA')">
+                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'SISTEMA'" (click)="setTema('SISTEMA')">
                   <div class="tema-preview tema-sistema">
                     <div class="preview-sidebar"></div>
                     <div class="preview-content">
@@ -369,10 +369,8 @@
               <div class="idioma-fijo">Español</div>
             </div>
             <div class="form-group">
-              <label for="zona">Zona Horaria</label>
-              <select id="zona" [(ngModel)]="apariencia.zonaHoraria" class="select-styled">
-                <option *ngFor="let z of zonaHorariaOpciones" [value]="z">{{ z }}</option>
-              </select>
+              <label>Zona Horaria</label>
+              <div class="idioma-fijo">America/Lima</div>
             </div>
           </div>
         </section>

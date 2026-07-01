@@ -16,6 +16,7 @@ import { AuthService } from '../../servicios/auth.service';
 })
 export class Configuracion implements OnInit {
   guardadoExitoso = false;
+  temaSeleccionado: 'CLARO' | 'OSCURO' | 'SISTEMA' = 'CLARO';
 
   constructor(
     private router: Router,
@@ -25,6 +26,7 @@ export class Configuracion implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.temaSeleccionado = this.apariencia.tema as 'CLARO' | 'OSCURO' | 'SISTEMA';
     if (this.stateService.isBackendConnected) {
       this.loadConfigData();
     } else {
@@ -115,7 +117,7 @@ export class Configuracion implements OnInit {
   }
 
   setTema(t: 'CLARO' | 'OSCURO' | 'SISTEMA') {
-    this.stateService.setTema(t);
+    this.temaSeleccionado = t;
   }
 
   setTipoTarifa(t: string) {
@@ -123,6 +125,10 @@ export class Configuracion implements OnInit {
   }
 
   guardarCambios() {
+    // Aplicar el tema seleccionado al guardar
+    this.stateService.setTema(this.temaSeleccionado);
+    this.apariencia.zonaHoraria = 'America/Lima';
+
     // Sync configured location back to profile city
     this.stateService.usuario.ciudad = this.hogar.ubicacion;
     this.stateService.saveStateToStorage();
@@ -160,6 +166,7 @@ export class Configuracion implements OnInit {
   }
 
   cancelar() {
+    this.temaSeleccionado = this.apariencia.tema as 'CLARO' | 'OSCURO' | 'SISTEMA';
     this.guardadoExitoso = false;
   }
 
