@@ -759,7 +759,7 @@ export class StateService {
     this.toasts = this.toasts.filter((t) => t.id !== id);
   }
 
-  setTema(tema: 'CLARO' | 'OSCURO' | 'SISTEMA') {
+  setTema(tema: 'CLARO' | 'OSCURO') {
     this.apariencia.tema = tema;
     this.applyTema();
     this.saveStateToStorage();
@@ -767,15 +767,8 @@ export class StateService {
 
   applyTema() {
     const root = document.documentElement;
-    let modoOscuro = false;
 
     if (this.apariencia.tema === 'OSCURO') {
-      modoOscuro = true;
-    } else if (this.apariencia.tema === 'SISTEMA') {
-      modoOscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-
-    if (modoOscuro) {
       root.classList.add('dark-theme');
     } else {
       root.classList.remove('dark-theme');

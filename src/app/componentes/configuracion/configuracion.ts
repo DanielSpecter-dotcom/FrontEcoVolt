@@ -13,7 +13,6 @@ import { ApiService } from '../../servicios/api.service';
 })
 export class Configuracion implements OnInit {
   guardadoExitoso = false;
-  temaSeleccionado: 'CLARO' | 'OSCURO' | 'SISTEMA' = 'CLARO';
 
   constructor(
     public stateService: StateService,
@@ -21,7 +20,6 @@ export class Configuracion implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.temaSeleccionado = this.apariencia.tema as 'CLARO' | 'OSCURO' | 'SISTEMA';
     if (this.stateService.isBackendConnected) {
       this.loadConfigData();
     } else {
@@ -111,8 +109,8 @@ export class Configuracion implements OnInit {
     this.energia.unidad = u;
   }
 
-  setTema(t: 'CLARO' | 'OSCURO' | 'SISTEMA') {
-    this.temaSeleccionado = t;
+  setTema(t: 'CLARO' | 'OSCURO') {
+    this.stateService.setTema(t);
   }
 
   setTipoTarifa(t: string) {
@@ -120,8 +118,6 @@ export class Configuracion implements OnInit {
   }
 
   guardarCambios() {
-    // Aplicar el tema seleccionado al guardar
-    this.stateService.setTema(this.temaSeleccionado);
     this.apariencia.zonaHoraria = 'America/Lima';
 
     // Sync configured location back to profile city
@@ -161,7 +157,6 @@ export class Configuracion implements OnInit {
   }
 
   cancelar() {
-    this.temaSeleccionado = this.apariencia.tema as 'CLARO' | 'OSCURO' | 'SISTEMA';
     this.guardadoExitoso = false;
   }
 }

@@ -1,20 +1,5 @@
 :host {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.15);
-  --emerald-deep: #064e3b;
-  --dark-bg: #030712;
-  --bg-light: #f8fafc;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
   --danger: #ef4444;
-  --warning: #f59e0b;
-  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --font-title: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
   display: block;
 }
 
@@ -380,9 +365,6 @@
 
 .tema-oscuro { background: #0f172a; color: #94a3b8; }
 .tema-oscuro .preview-sidebar { background: #030712; }
-
-.tema-sistema { background: linear-gradient(135deg, #f8fafc 50%, #0f172a 50%); color: #64748b; }
-.tema-sistema .preview-sidebar { background: linear-gradient(135deg, #1e293b 50%, #030712 50%); }
 
 /* ============================================================
    NOTIFICATION ROWS

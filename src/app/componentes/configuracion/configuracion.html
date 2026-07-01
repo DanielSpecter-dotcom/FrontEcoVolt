@@ -198,7 +198,7 @@
             <div class="form-group">
               <label>Tema de la Aplicación</label>
               <div class="tema-selector">
-                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'CLARO'" (click)="setTema('CLARO')">
+                <button class="tema-option" [class.tema-active]="apariencia.tema === 'CLARO'" (click)="setTema('CLARO')">
                   <div class="tema-preview tema-claro">
                     <div class="preview-sidebar"></div>
                     <div class="preview-content">
@@ -208,7 +208,7 @@
                   </div>
                   <span>Claro</span>
                 </button>
-                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'OSCURO'" (click)="setTema('OSCURO')">
+                <button class="tema-option" [class.tema-active]="apariencia.tema === 'OSCURO'" (click)="setTema('OSCURO')">
                   <div class="tema-preview tema-oscuro">
                     <div class="preview-sidebar"></div>
                     <div class="preview-content">
@@ -217,16 +217,6 @@
                     </div>
                   </div>
                   <span>Oscuro</span>
-                </button>
-                <button class="tema-option" [class.tema-active]="temaSeleccionado === 'SISTEMA'" (click)="setTema('SISTEMA')">
-                  <div class="tema-preview tema-sistema">
-                    <div class="preview-sidebar"></div>
-                    <div class="preview-content">
-                      <div class="preview-bar"></div>
-                      <div class="preview-card"></div>
-                    </div>
-                  </div>
-                  <span>Sistema</span>
                 </button>
               </div>
             </div>
