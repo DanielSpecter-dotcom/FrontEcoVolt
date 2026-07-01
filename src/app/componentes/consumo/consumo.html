@@ -239,9 +239,9 @@
                 </div>
                 <div class="room-progress-container">
                   <div class="progress-bar-wrapper">
-                    <div class="progress-bar-fill" [style.width.%]="fila.pct" style="background-color:#0d9488"></div>
+                    <div class="progress-bar-fill progress-bar-teal" [style.width.%]="fila.pct"></div>
                   </div>
-                  <span class="progress-percent" style="color:#0d9488">{{ fila.pct }}%</span>
+                  <span class="progress-percent progress-percent-teal">{{ fila.pct }}%</span>
                 </div>
                 <div class="room-kwh-avg">
                   <span class="kwh-value">{{ fila.kwh }} kWh</span>
@@ -296,7 +296,7 @@
       <section class="detail-section">
         <mat-card class="report-summary-card">
           <h2>Resumen de Consumo</h2>
-          <p class="empty-flow-text" style="text-align: left; padding: 0 0 16px;">
+          <p class="report-desc-text">
             {{ esConsumoAcumulado ? 'Acumulado histórico registrado por el backend para esta casa.' : 'Estimado local proyectado a 30 días (sin conexión al backend).' }}
           </p>
           <div class="report-summary-grid">

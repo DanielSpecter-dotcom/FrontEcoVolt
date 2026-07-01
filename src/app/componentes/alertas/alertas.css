@@ -173,7 +173,7 @@
    MAIN CONTENT
    ============================================================ */
 .main-content {
-  padding: 36px 40px;
+  padding: 40px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -191,8 +191,8 @@
 
 .page-title {
   font-family: var(--font-title);
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   color: var(--text-main);
   letter-spacing: -0.5px;
 }
@@ -943,12 +943,13 @@
 }
 
 .user-profile-circle {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
-  border: 2px solid var(--border-color);
+  border: 2px solid transparent;
+  transition: var(--transition);
   flex-shrink: 0;
 }
 
@@ -958,6 +959,11 @@
   object-fit: cover;
 }
 
+.user-profile-circle:hover {
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
 .notification-btn-container {
   position: relative;
 }
@@ -965,9 +971,9 @@
 .icon-btn {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  border: 1.5px solid var(--border-color);
-  background: var(--card-bg);
+  border-radius: 50%;
+  border: none;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
@@ -978,15 +984,14 @@
 }
 
 .icon-btn:hover {
-  background: var(--primary-glow);
-  color: var(--primary);
-  border-color: var(--primary);
+  background: var(--bg-light);
+  color: var(--text-main);
 }
 
 .notif-badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -2px;
+  right: -2px;
   background: var(--critical);
   color: white;
   font-size: 10px;
@@ -1269,6 +1274,181 @@
   color: var(--text-main);
 }
 
+/* ==========================================================================
+   SIDEBAR TOGGLE BUTTON & MINIMIZED STATE
+   ========================================================================== */
 
+.sidebar-toggle-btn {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 20;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
 
+.sidebar-toggle-btn:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.alertas-container.sidebar-minimized {
+  grid-template-columns: 64px 1fr;
+}
+
+.sidebar-minimized .sidebar {
+  padding: 32px 8px;
+  align-items: center;
+}
+
+.sidebar-minimized .sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sidebar-minimized .nav-text,
+.sidebar-minimized .brand-subtitle,
+.sidebar-minimized .sidebar-header .logo span {
+  display: none;
+}
+
+.sidebar-minimized .sidebar-nav a {
+  justify-content: center;
+  padding: 12px;
+  gap: 0;
+}
+
+.sidebar-minimized .optimize-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+  gap: 0;
+}
+
+.sidebar-minimized .optimize-btn .btn-leaf-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* ==========================================================================
+   LIMITS PANEL — clases para reemplazar estilos inline
+   ========================================================================== */
+
+.limits-card {
+  margin: 1.5rem 0 !important;
+  padding: 1.5rem !important;
+  background: var(--card-bg) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.limits-card-header {
+  margin-bottom: 1rem;
+}
+
+.limits-card-title {
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: var(--text-main) !important;
+}
+
+.limits-card-subtitle {
+  font-size: 0.875rem !important;
+  color: var(--text-muted) !important;
+}
+
+.limits-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.limits-device-field {
+  flex: 1;
+  min-width: 240px;
+}
+
+.limits-kwh-field {
+  width: 180px;
+}
+
+.kwh-suffix {
+  padding-right: 8px;
+}
+
+.save-limit-btn {
+  height: 54px !important;
+  padding: 0 1.5rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+}
+
+.limit-progress-section {
+  background: var(--bg-light);
+  padding: 1.25rem;
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
+  margin-top: 1rem;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+
+.consumption-value {
+  color: var(--primary);
+}
+
+.limit-value {
+  color: var(--danger);
+}
+
+.limit-status-alert {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.limit-status-critical {
+  color: #d32f2f;
+}
+
+.limit-status-warning {
+  color: #ed6c02;
+}
+
+.limit-status-ok {
+  color: #2e7d32;
+}
 

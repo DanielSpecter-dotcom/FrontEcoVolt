@@ -368,7 +368,7 @@
 .routine-title-lbl {
   font-family: var(--font-title);
   font-size: 16px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.3px;
 }
@@ -568,7 +568,7 @@
 }
 
 input:checked + .slider {
-  background-color: var(--emerald-deep);
+  background-color: var(--primary);
 }
 
 input:checked + .slider:before {
@@ -801,7 +801,7 @@ input:checked + .slider:before {
 .device-act-title {
   font-family: var(--font-title);
   font-size: 14.5px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--text-main);
   letter-spacing: -0.3px;
 }
@@ -1221,4 +1221,81 @@ input:checked + .slider:before {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   SIDEBAR TOGGLE BUTTON & MINIMIZED STATE
+   ========================================================================== */
+
+.sidebar-toggle-btn {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  z-index: 20;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--primary-glow);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.toggle-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.rutinas-container.sidebar-minimized {
+  grid-template-columns: 64px 1fr;
+}
+
+.sidebar-minimized .sidebar {
+  padding: 32px 8px;
+  align-items: center;
+}
+
+.sidebar-minimized .sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sidebar-minimized .nav-text,
+.sidebar-minimized .brand-subtitle,
+.sidebar-minimized .sidebar-header .logo span {
+  display: none;
+}
+
+.sidebar-minimized .sidebar-nav a {
+  justify-content: center;
+  padding: 12px;
+  gap: 0;
+}
+
+.sidebar-minimized .optimize-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+  gap: 0;
+}
+
+.sidebar-minimized .optimize-btn .btn-leaf-icon {
+  width: 20px;
+  height: 20px;
 }
