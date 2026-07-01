@@ -527,3 +527,40 @@
     justify-content: center;
   }
 }
+
+/* ============================================================
+   DARK THEME SYSTEM
+   ============================================================ */
+
+:host-context(.dark-theme) .footer-actions {
+  background: var(--card-bg) !important;
+  border-top: 1px solid var(--border-color);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
+}
+
+:host-context(.dark-theme) .form-group input:focus,
+:host-context(.dark-theme) .select-styled:focus {
+  background: var(--card-bg) !important;
+}
+
+:host-context(.dark-theme) .idioma-fijo {
+  background: var(--border-color);
+  border-color: var(--border-color);
+  color: var(--text-muted);
+}
+
+:host-context(.dark-theme) .slider {
+  background: var(--border-color);
+}
+
+:host-context(.dark-theme) .slider::before {
+  background: var(--card-bg);
+}
+
+:host-context(.dark-theme) .btn-cancel {
+  border-color: var(--border-color);
+}
+
+:host-context(.dark-theme) .btn-cancel:hover {
+  border-color: var(--text-muted);
+}
