@@ -130,8 +130,8 @@
   cursor: pointer;
   transition: var(--transition);
   user-select: none;
-  max-width: 220px;
-  min-width: 0;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .profile-card:hover {
@@ -164,10 +164,6 @@
   font-weight: 700;
   color: var(--text-main);
   text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
 
 .profile-status {

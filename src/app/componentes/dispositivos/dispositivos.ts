@@ -41,11 +41,6 @@ export class Dispositivos implements OnInit, OnDestroy {
   private pollSub?: Subscription;
   private readonly POLL_INTERVAL_MS = 30000;
 
-  // Dropdown states
-  showProfileMenu = false;
-  showNotifications = false;
-
-  searchTerm = '';
   showAddModal = false;
   editMode = false;
   selectedDevice: Dispositivo | null = null;
@@ -135,49 +130,7 @@ export class Dispositivos implements OnInit, OnDestroy {
     });
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userName(): string {
-    return this.stateService.usuario.nombre;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter(n => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach(n => n.leido = true);
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   // Getters connected to StateService
   get devices(): Dispositivo[] {
@@ -215,10 +168,10 @@ export class Dispositivos implements OnInit, OnDestroy {
   }
 
   get filteredDevices() {
-    if (!this.searchTerm.trim()) {
+    if (!this.stateService.searchQuery.trim()) {
       return this.devices;
     }
-    const term = this.searchTerm.toLowerCase();
+    const term = this.stateService.searchQuery.toLowerCase();
     return this.devices.filter(d =>
       d.nombre.toLowerCase().includes(term) ||
       d.tipo.toLowerCase().includes(term) ||
@@ -288,7 +241,7 @@ export class Dispositivos implements OnInit, OnDestroy {
   deleteDevice(device: Dispositivo, event?: Event) {
     if (event) event.stopPropagation();
 
-    this.stateService.devices = this.devices.filter(d => d.id !== device.id);
+    this.stateService.devices = this.stateService.devices.filter(d => d.id !== device.id);
     this.stateService.saveStateToStorage();
 
     // Sync with backend
@@ -346,14 +299,14 @@ export class Dispositivos implements OnInit, OnDestroy {
     // Validate required fields
     const hasHabitacion = this.newHabitacionId !== null;
     if (!this.newNombre.trim() || !hasHabitacion || !this.newCarga.trim()) {
-      alert('Por favor complete todos los campos obligatorios.');
+      this.stateService.showToast('ADVERTENCIA', 'Campos requeridos', 'Por favor complete todos los campos obligatorios.');
       return;
     }
 
     // Enforce device limit for Personal plan
     if (!this.editMode) {
       if (this.stateService.userRole === 'PERSONAL' && this.stateService.devices.length >= 5) {
-        alert('Tu plan Personal permite gestionar un máximo de 5 dispositivos. Actualiza a EcoVolt Empresarial para administrar dispositivos ilimitados.');
+        this.stateService.showToast('ADVERTENCIA', 'Límite de plan', 'Tu plan Personal permite gestionar un máximo de 5 dispositivos. Actualiza a EcoVolt Empresarial para administrar dispositivos ilimitados.');
         return;
       }
     }

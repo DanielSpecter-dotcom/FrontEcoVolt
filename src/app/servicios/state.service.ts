@@ -28,6 +28,11 @@ export type { Dispositivo, Rutina, AccionDispositivo, Alerta, Actividad, Notific
 })
 export class StateService {
   sidebarMinimized = false;
+
+  // Global search state managed by the layout shell
+  searchQuery = '';
+  searchPlaceholder = 'Buscar...';
+  showSearch = false;
   toasts: {
     id: string;
     tipo: 'CRITICA' | 'ADVERTENCIA' | 'INFO';

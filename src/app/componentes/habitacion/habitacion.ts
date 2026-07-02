@@ -23,9 +23,6 @@ interface HabitacionConDatos {
   styleUrl: './habitacion.css',
 })
 export class Habitacion implements OnInit {
-  showProfileMenu = false;
-  showNotifications = false;
-
   newHabitacionNombre = '';
   isCreatingRoom = false;
 
@@ -42,49 +39,7 @@ export class Habitacion implements OnInit {
     }
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userAvatar(): string | null {
-    return this.stateService.usuario.avatar;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter((n) => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach((n) => (n.leido = true));
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   // ==================== Casa seleccionada (combo box) ====================
 
@@ -139,9 +94,13 @@ export class Habitacion implements OnInit {
     return { texto: 'Normal', clase: 'badge-verde-claro' };
   }
 
-  /** Habitaciones de la casa seleccionada, enriquecidas con dispositivos/consumo/badge/color */
   get habitacionesConDatos(): HabitacionConDatos[] {
-    const habitaciones = this.stateService.habitacionesDeCasaSeleccionada;
+    let habitaciones = this.stateService.habitacionesDeCasaSeleccionada;
+
+    if (this.stateService.searchQuery.trim()) {
+      const term = this.stateService.searchQuery.toLowerCase();
+      habitaciones = habitaciones.filter(h => h.name.toLowerCase().includes(term));
+    }
 
     // Primero calculamos consumo de cada habitación para saber cuál es la más eficiente
     const base = habitaciones.map((hab) => {
@@ -204,11 +163,11 @@ export class Habitacion implements OnInit {
   createRoom() {
     const nombre = this.newHabitacionNombre.trim();
     if (!nombre) {
-      alert('Ingresa un nombre para la habitación.');
+      this.stateService.showToast('ADVERTENCIA', 'Campo requerido', 'Ingresa un nombre para la habitación.');
       return;
     }
     if (!this.selectedCasaId) {
-      alert('Primero selecciona una casa.');
+      this.stateService.showToast('ADVERTENCIA', 'Sin casa', 'Primero selecciona una casa.');
       return;
     }
 
@@ -224,7 +183,7 @@ export class Habitacion implements OnInit {
         },
         error: (err) => {
           this.isCreatingRoom = false;
-          alert(err.error?.message || 'No se pudo crear la habitación.');
+          this.stateService.showToast('CRITICA', 'Error', err.error?.message || 'No se pudo crear la habitación.');
         },
       });
       return;
@@ -263,7 +222,7 @@ export class Habitacion implements OnInit {
           }
         },
         error: () => {
-          alert('No se pudo actualizar en el servidor, pero se cambió localmente.');
+          this.stateService.showToast('ADVERTENCIA', 'Sincronización', 'No se pudo actualizar en el servidor, pero se cambió localmente.');
           hab.name = nombre;
         },
       });

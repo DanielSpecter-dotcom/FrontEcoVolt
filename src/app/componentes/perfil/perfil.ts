@@ -137,7 +137,7 @@ export class Perfil implements OnInit {
 
   saveProfile() {
     if (!this.editUsuario.nombre.trim()) {
-      alert('El nombre es obligatorio.');
+      this.stateService.showToast('ADVERTENCIA', 'Campo requerido', 'El nombre es obligatorio.');
       return;
     }
 

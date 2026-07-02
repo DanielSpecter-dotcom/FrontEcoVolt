@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { ApiResponse, LoginResponse, RegisterResponse, JwtPayload } from '../modelos';
+import { environment } from '../../environments/environment';
 
 // Re-export types for backward compatibility
 export type { ApiResponse, LoginResponse, RegisterResponse, JwtPayload };
@@ -10,7 +11,7 @@ export type { ApiResponse, LoginResponse, RegisterResponse, JwtPayload };
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = '/api/v1/auth';
+  private baseUrl = `${environment.apiURL}/auth`;
 
   constructor(private http: HttpClient) {}
 

@@ -51,13 +51,8 @@ const PALETA_AMBIENTES = ['#0d9488', '#16a34a', '#4ade80', '#2dd4bf', '#0ea5e9',
   styleUrl: './consumo.css',
 })
 export class Consumo implements OnInit {
-  // Dropdown states
-  showProfileMenu = false;
-  showNotifications = false;
-
-  activeTab: 'dispositivo' | 'ambiente' | 'reporte' | 'comparativa' = 'ambiente';
+  activeTab: 'dispositivo' | 'ambiente' | 'comparativa' | 'reporte' = 'ambiente';
   activeTimeframe: 'dia' | 'semana' | 'mes' = 'dia';
-  searchTerm = '';
 
   // Backend data
   backendCompare: ComparacionConsumoRespuestaDto | null = null;
@@ -105,49 +100,7 @@ export class Consumo implements OnInit {
     });
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userName(): string {
-    return this.stateService.usuario.nombre;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter(n => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach(n => n.leido = true);
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   get devices(): Dispositivo[] {
     return this.stateService.dispositivosDeCasaSeleccionada;
@@ -254,7 +207,7 @@ export class Consumo implements OnInit {
         countPorHabitacion.set(d.room_id, (countPorHabitacion.get(d.room_id) || 0) + 1);
       });
     } else if (!this.backendCompare) {
-      const term = this.searchTerm.toLowerCase().trim();
+      const term = this.stateService.searchQuery.toLowerCase().trim();
       this.devices
         .filter(d => !term || d.nombre.toLowerCase().includes(term) || d.tipo.toLowerCase().includes(term))
         .forEach(d => {
@@ -484,7 +437,7 @@ export class Consumo implements OnInit {
 
   exportData() {
     if (this.stateService.userRole === 'PERSONAL') {
-      alert('La descarga de gráficos y reportes PDF es una función exclusiva del plan EcoVolt Empresarial. ¡Actualiza tu plan hoy para desbloquear esta característica!');
+      this.stateService.showToast('ADVERTENCIA', 'Función exclusiva', 'La descarga de gráficos y reportes PDF es una función exclusiva del plan EcoVolt Empresarial. ¡Actualiza tu plan hoy para desbloquear esta característica!');
       return;
     }
 
@@ -498,15 +451,11 @@ export class Consumo implements OnInit {
           a.click();
           window.URL.revokeObjectURL(url);
         },
-        error: () => alert('Error al exportar. Intente nuevamente.')
+        error: () => this.stateService.showToast('CRITICA', 'Error de exportación', 'Error al exportar. Intente nuevamente.')
       });
     } else {
-      alert('Exportando datos de consumo en formato CSV/Excel...');
+      this.stateService.showToast('INFO', 'Exportando', 'Exportando datos de consumo en formato CSV/Excel...');
     }
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }

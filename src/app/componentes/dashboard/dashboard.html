@@ -2,82 +2,20 @@
   <!-- 2. MAIN CONTENT -->
   <main class="main-content">
     <!-- Header -->
-    <header class="content-header">
+    <header class="content-header" style="margin-bottom: 36px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
       <div class="header-titles">
         <h1>Mi Hogar Virtual — Dashboard</h1>
         <p class="subtitle">{{ currentCity }} • {{ currentTemp }}</p>
       </div>
-
-      <div class="header-actions">
-        <div class="search-container" (click)="$event.stopPropagation()">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="search-icon">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input
-            type="text"
-            placeholder="Buscar dispositivos..."
-            [(ngModel)]="dashSearchTerm"
-            class="search-input"
-          >
+      
+      <!-- Welcome Profile Card -->
+      <div class="profile-card" [routerLink]="['/perfil']" title="Ver Perfil">
+        <div class="profile-avatar-wrapper">
+          <img [src]="stateService.usuario.avatar || '/images/carlos_avatar.png'" alt="Avatar" class="profile-avatar">
         </div>
-
-        <div class="notification-btn-container">
-          <button class="header-icon-btn" (click)="toggleNotifications($event)" aria-label="Notificaciones">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-icon">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-            </svg>
-            @if (unreadNotificationsCount > 0) {
-              <span class="notif-badge">{{ unreadNotificationsCount }}</span>
-            }
-          </button>
-          @if (showNotifications) {
-            <div class="notifications-dropdown" (click)="$event.stopPropagation()">
-              <div class="notifications-header">
-                <h4>Notificaciones</h4>
-                <button class="mark-read-btn" (click)="markAllNotificationsAsRead(); $event.stopPropagation()">Marcar leídas</button>
-              </div>
-              <div class="notifications-list">
-                @if (notificationsList.length === 0) {
-                  <div class="empty-notifications">No hay notificaciones</div>
-                } @else {
-                  @for (notif of notificationsList; track notif.id) {
-                    <div class="notification-item" [class.unread]="!notif.leido" (click)="navigateToAlertas()">
-                      <p class="notification-text">{{ notif.texto }}</p>
-                      <span class="notification-time">{{ notif.tiempo }}</span>
-                    </div>
-                  }
-                  <div class="notifications-footer">
-                    <button (click)="navigateToAlertas()">Ver todas las alertas →</button>
-                  </div>
-                }
-              </div>
-            </div>
-          }
-        </div>
-
-        <div class="profile-card-container">
-          <div class="profile-card" (click)="toggleProfileMenu($event)" title="Perfil de Usuario">
-            <div class="profile-avatar-wrapper">
-              <img [src]="userAvatar || '/images/carlos_avatar.png'" alt="Avatar" class="profile-avatar">
-            </div>
-            <div class="profile-info">
-              <a [routerLink]="['/casa']" class="profile-name" title="Hogares" (click)="$event.stopPropagation()">{{ userName }}</a>
-              <span class="profile-status">{{ userProfile }}</span>
-            </div>
-          </div>
-          @if (showProfileMenu) {
-            <div class="profile-dropdown" (click)="$event.stopPropagation()">
-              <div class="dropdown-header">
-                <p class="dropdown-email">{{ userEmail }}</p>
-              </div>
-              <div class="dropdown-actions">
-                <a [routerLink]="['/perfil']" class="dropdown-item">Ir a Perfil</a>
-                <button (click)="logout()" class="dropdown-item logout-btn">Cerrar Sesión</button>
-              </div>
-            </div>
-          }
+        <div class="profile-info">
+          <span class="profile-name" style="text-decoration: none;">{{ stateService.usuario.nombre }}</span>
+          <span class="profile-status" style="letter-spacing: 0.5px;">{{ stateService.userRole }}</span>
         </div>
       </div>
     </header>

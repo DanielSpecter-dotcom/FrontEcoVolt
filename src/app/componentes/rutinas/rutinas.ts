@@ -15,10 +15,6 @@ import { CasaDTO } from '../../modelos';
   styleUrl: './rutinas.css',
 })
 export class Rutinas implements OnInit {
-  // Dropdown states
-  showProfileMenu = false;
-  showNotifications = false;
-
   selectedRoutine: Rutina | null = null;
 
   // Working copy for editing
@@ -68,49 +64,7 @@ export class Rutinas implements OnInit {
     });
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userName(): string {
-    return this.stateService.usuario.nombre;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter(n => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach(n => n.leido = true);
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   get routines(): Rutina[] {
     return this.stateService.rutinasDeCasaSeleccionada;
@@ -127,9 +81,7 @@ export class Rutinas implements OnInit {
     }));
   }
 
-  get userAvatar(): string | null {
-    return this.stateService.usuario.avatar;
-  }
+
 
   selectRoutine(routine: Rutina) {
     this.selectedRoutine = routine;
@@ -169,7 +121,7 @@ export class Rutinas implements OnInit {
 
   addActionForSelected() {
     if (!this.selectedAddDeviceId) {
-      alert('Por favor selecciona un dispositivo.');
+      this.stateService.showToast('ADVERTENCIA', 'Selección requerida', 'Por favor selecciona un dispositivo.');
       return;
     }
     const dev = this.registeredDevices.find(d => d.id === this.selectedAddDeviceId);
@@ -177,7 +129,7 @@ export class Rutinas implements OnInit {
 
     const exists = this.editAcciones.some(a => a.dispositivo === dev.nombre);
     if (exists) {
-      alert(`El dispositivo "${dev.nombre}" ya tiene una acción en esta rutina.`);
+      this.stateService.showToast('ADVERTENCIA', 'Duplicado', `El dispositivo "${dev.nombre}" ya tiene una acción en esta rutina.`);
       return;
     }
 
@@ -201,15 +153,15 @@ export class Rutinas implements OnInit {
   saveRoutine() {
     if (!this.selectedRoutine) return;
     if (!this.stateService.selectedCasaId && !this.selectedRoutine.homeId) {
-      alert('Primero selecciona o crea una casa en Dispositivos.');
+      this.stateService.showToast('ADVERTENCIA', 'Sin casa', 'Primero selecciona o crea una casa en Dispositivos.');
       return;
     }
     if (this.editDias.length === 0) {
-      alert('Selecciona al menos un día de ejecución.');
+      this.stateService.showToast('ADVERTENCIA', 'Días requeridos', 'Selecciona al menos un día de ejecución.');
       return;
     }
     if (this.editAcciones.length === 0) {
-      alert('Agrega al menos una acción con dispositivo.');
+      this.stateService.showToast('ADVERTENCIA', 'Acciones requeridas', 'Agrega al menos una acción con dispositivo.');
       return;
     }
 
@@ -233,7 +185,7 @@ export class Rutinas implements OnInit {
       }));
 
     if (this.stateService.isBackendConnected && backendAcciones.length !== this.editAcciones.length) {
-      alert('Todas las acciones deben usar dispositivos creados en el backend.');
+      this.stateService.showToast('ADVERTENCIA', 'Acciones inválidas', 'Todas las acciones deben usar dispositivos creados en el backend.');
       return;
     }
 
@@ -246,10 +198,10 @@ export class Rutinas implements OnInit {
         acciones: backendAcciones,
         enabled: this.editActiva,
       }).subscribe({
-        next: () => alert('Rutina guardada correctamente.'),
+        next: () => this.stateService.showToast('INFO', 'Éxito', 'Rutina guardada correctamente.'),
         error: (err) => {
           console.warn('Error syncing routine:', err);
-          alert('Rutina guardada localmente. Error al sincronizar con el servidor.');
+          this.stateService.showToast('ADVERTENCIA', 'Sincronización', 'Rutina guardada localmente. Error al sincronizar con el servidor.');
         }
       });
     } else if (this.stateService.isBackendConnected) {
@@ -269,16 +221,16 @@ export class Rutinas implements OnInit {
               this.selectRoutine(created);
             }
             this.stateService.saveStateToStorage();
-            alert('Rutina creada correctamente.');
+            this.stateService.showToast('INFO', 'Éxito', 'Rutina creada correctamente.');
           }
         },
         error: (err) => {
           console.warn('Error creating routine:', err);
-          alert(err.error?.message || 'No se pudo crear la rutina en el servidor.');
+          this.stateService.showToast('CRITICA', 'Error', err.error?.message || 'No se pudo crear la rutina en el servidor.');
         }
       });
     } else {
-      alert('Rutina guardada correctamente.');
+      this.stateService.showToast('INFO', 'Éxito', 'Rutina guardada correctamente.');
     }
   }
 
@@ -298,7 +250,7 @@ export class Rutinas implements OnInit {
 
   createRoutine() {
     if (!this.stateService.selectedCasaId) {
-      alert('Primero crea o selecciona una casa en Dispositivos.');
+      this.stateService.showToast('ADVERTENCIA', 'Sin casa', 'Primero crea o selecciona una casa en Dispositivos.');
       return;
     }
     this.createRoutineLocally();
@@ -324,7 +276,7 @@ export class Rutinas implements OnInit {
 
   deleteRoutine(routine: Rutina, event: Event) {
     event.stopPropagation();
-    this.stateService.routines = this.routines.filter(r => r.id !== routine.id);
+    this.stateService.routines = this.stateService.routines.filter(r => r.id !== routine.id);
     if (this.selectedRoutine?.id === routine.id) {
       this.selectedRoutine = this.routines.length > 0 ? this.routines[0] : null;
       if (this.selectedRoutine) {
@@ -341,8 +293,4 @@ export class Rutinas implements OnInit {
     }
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }

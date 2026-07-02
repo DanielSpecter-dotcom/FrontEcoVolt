@@ -21,13 +21,6 @@ export class Dashboard implements OnInit, OnDestroy {
   private pollSub?: Subscription;
   private readonly POLL_INTERVAL_MS = 30000;
 
-  // Dropdown states
-  showProfileMenu = false;
-  showNotifications = false;
-
-  // Search state
-  dashSearchTerm = '';
-
   // Chatbot state
   isChatOpen = false;
   chatInput = '';
@@ -151,45 +144,7 @@ export class Dashboard implements OnInit, OnDestroy {
     return 'system';
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter(n => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach(n => n.leido = true);
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   // Getters connected to StateService
   get userName(): string {
@@ -219,10 +174,10 @@ export class Dashboard implements OnInit, OnDestroy {
   }
 
   get devices(): Dispositivo[] {
-    if (!this.dashSearchTerm.trim()) {
+    if (!this.stateService.searchQuery.trim()) {
       return this.stateService.dispositivosDeCasaSeleccionada;
     }
-    const term = this.dashSearchTerm.toLowerCase();
+    const term = this.stateService.searchQuery.toLowerCase();
     return this.stateService.dispositivosDeCasaSeleccionada.filter(d => d.nombre.toLowerCase().includes(term));
   }
 
@@ -302,7 +257,7 @@ export class Dashboard implements OnInit, OnDestroy {
 
   applyScene(scene: string) {
     if (this.devices.length === 0) {
-      alert('No hay dispositivos registrados para aplicar escenas.');
+      this.stateService.showToast('ADVERTENCIA', 'Sin dispositivos', 'No hay dispositivos registrados para aplicar escenas.');
       return;
     }
 
@@ -482,15 +437,11 @@ export class Dashboard implements OnInit, OnDestroy {
           a.click();
           window.URL.revokeObjectURL(url);
         },
-        error: () => alert('Error al descargar el reporte. Intente nuevamente.')
+        error: () => this.stateService.showToast('CRITICA', 'Error de descarga', 'Error al descargar el reporte. Intente nuevamente.')
       });
     } else {
-      alert('Preparando y descargando tu reporte de consumo energético semanal en PDF...');
+      this.stateService.showToast('INFO', 'Reporte', 'Preparando y descargando tu reporte de consumo energético semanal en PDF...');
     }
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }

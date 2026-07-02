@@ -33,12 +33,7 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './alertas.css',
 })
 export class Alertas implements OnInit {
-  // Dropdown states
-  showProfileMenu = false;
-  showNotifications = false;
-
   filtroActivo: 'TODAS' | 'CRITICA' | 'ADVERTENCIA' | 'INFO' | 'NO_LEIDAS' = 'TODAS';
-  busqueda = '';
   mostrarModal = false;
   alertaSeleccionada: Alerta | null = null;
   selectedDeviceId: number | null = null;
@@ -115,48 +110,7 @@ export class Alertas implements OnInit {
     };
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userName(): string {
-    return this.stateService.usuario.nombre;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter(n => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach(n => n.leido = true);
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-  }
 
   get alertas(): Alerta[] {
     return this.stateService.alertas;
@@ -166,10 +120,6 @@ export class Alertas implements OnInit {
     return this.stateService.dispositivosDeCasaSeleccionada;
   }
 
-  get userAvatar(): string | null {
-    return this.stateService.usuario.avatar;
-  }
-
   get alertasFiltradas(): Alerta[] {
     return this.alertas.filter(a => {
       const matchFiltro =
@@ -177,9 +127,9 @@ export class Alertas implements OnInit {
         this.filtroActivo === 'NO_LEIDAS' ? !a.leida :
         a.tipo === this.filtroActivo;
 
-      const matchBusqueda = this.busqueda.trim() === '' ||
-        a.titulo.toLowerCase().includes(this.busqueda.toLowerCase()) ||
-        a.dispositivo.toLowerCase().includes(this.busqueda.toLowerCase());
+      const matchBusqueda = this.stateService.searchQuery.trim() === '' ||
+        a.titulo.toLowerCase().includes(this.stateService.searchQuery.toLowerCase()) ||
+        a.dispositivo.toLowerCase().includes(this.stateService.searchQuery.toLowerCase());
 
       const matchDevice = !this.selectedDeviceId || a.deviceId === this.selectedDeviceId;
 
@@ -243,16 +193,16 @@ export class Alertas implements OnInit {
 
   guardarLimite() {
     if (!this.selectedDeviceId) {
-      alert('Selecciona un dispositivo.');
+      this.stateService.showToast('ADVERTENCIA', 'Selección requerida', 'Selecciona un dispositivo.');
       return;
     }
     if (!this.limitKwh || this.limitKwh <= 0) {
-      alert('Ingresa un límite mayor a 0 kWh.');
+      this.stateService.showToast('ADVERTENCIA', 'Límite inválido', 'Ingresa un límite mayor a 0 kWh.');
       return;
     }
 
     if (!this.stateService.isBackendConnected) {
-      alert('Necesitas conexión con el backend para configurar límites.');
+      this.stateService.showToast('ADVERTENCIA', 'Sin conexión', 'Necesitas conexión con el backend para configurar límites.');
       return;
     }
 
@@ -272,7 +222,7 @@ export class Alertas implements OnInit {
       },
       error: (err) => {
         this.isSavingLimit = false;
-        alert(err.error?.message || 'No se pudo configurar el límite.');
+        this.stateService.showToast('CRITICA', 'Error', err.error?.message || 'No se pudo configurar el límite.');
       }
     });
   }
@@ -363,8 +313,4 @@ export class Alertas implements OnInit {
     return icons[icono] || 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z';
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }

@@ -15,10 +15,6 @@ import { CasaDTO, HabitacionDTO } from '../../modelos';
   styleUrl: './casa.css',
 })
 export class Casa implements OnInit {
-  // Dropdown states (mismo patrón que el resto de páginas)
-  showProfileMenu = false;
-  showNotifications = false;
-
   isCreatingHome = false;
   newCasaNombre = '';
 
@@ -37,54 +33,16 @@ export class Casa implements OnInit {
     this.stateService.loadFromBackend();
   }
 
-  @HostListener('document:click')
-  closeMenus() {
-    this.showProfileMenu = false;
-    this.showNotifications = false;
-  }
 
-  toggleProfileMenu(event: Event) {
-    event.stopPropagation();
-    this.showProfileMenu = !this.showProfileMenu;
-    this.showNotifications = false;
-  }
-
-  toggleNotifications(event: Event) {
-    event.stopPropagation();
-    this.showNotifications = !this.showNotifications;
-    this.showProfileMenu = false;
-  }
-
-  get userEmail(): string {
-    return this.stateService.usuario.email;
-  }
-
-  get userAvatar(): string | null {
-    return this.stateService.usuario.avatar;
-  }
-
-  get notificationsList() {
-    return this.stateService.notificationsList;
-  }
-
-  get unreadNotificationsCount(): number {
-    return this.stateService.notificationsList.filter((n) => !n.leido).length;
-  }
-
-  markAllNotificationsAsRead() {
-    this.stateService.notificationsList.forEach((n) => (n.leido = true));
-    this.stateService.saveStateToStorage();
-  }
-
-  navigateToAlertas() {
-    this.showNotifications = false;
-    this.router.navigate(['/alertas']);
-  }
 
   // ==================== Casas ====================
 
   get casas(): CasaDTO[] {
-    return this.stateService.casas;
+    if (!this.stateService.searchQuery.trim()) {
+      return this.stateService.casas;
+    }
+    const term = this.stateService.searchQuery.toLowerCase();
+    return this.stateService.casas.filter(c => c.nombre.toLowerCase().includes(term));
   }
 
   get selectedCasaId(): number | null {
@@ -139,20 +97,20 @@ export class Casa implements OnInit {
 
   createHome() {
     if (!this.stateService.esEmpresarial && this.stateService.casas.length >= 1) {
-      alert('Tu plan Personal permite gestionar 1 sola casa. Debes actualizar tu plan para agregar un nuevo hogar.');
+      this.stateService.showToast('ADVERTENCIA', 'Límite de plan', 'Tu plan Personal permite gestionar 1 sola casa. Debes actualizar tu plan para agregar un nuevo hogar.');
       this.router.navigate(['/perfil']);
       return;
     }
 
     const nombre = this.newCasaNombre.trim();
     if (!nombre) {
-      alert('Ingresa un nombre para la casa.');
+      this.stateService.showToast('ADVERTENCIA', 'Campo requerido', 'Ingresa un nombre para la casa.');
       return;
     }
 
     const userId = this.stateService.userId || this.authService.getUserId();
     if (!userId && this.stateService.isBackendConnected) {
-      alert('No se pudo identificar el usuario actual.');
+      this.stateService.showToast('CRITICA', 'Error de sesión', 'No se pudo identificar el usuario actual.');
       return;
     }
 
@@ -170,7 +128,7 @@ export class Casa implements OnInit {
         },
         error: (err) => {
           this.isCreatingHome = false;
-          alert(err.error?.message || 'No se pudo crear la casa.');
+          this.stateService.showToast('CRITICA', 'Error', err.error?.message || 'No se pudo crear la casa.');
         },
       });
       return;
@@ -183,8 +141,4 @@ export class Casa implements OnInit {
     this.isCreatingHome = false;
   }
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/login']);
-  }
 }
